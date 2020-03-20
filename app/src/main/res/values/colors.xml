@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#FFCC66</color>
+    <color name="colorPrimaryDark">#FF9966</color>
+    <color name="colorAccent">#2e86c1</color>
+    <color name="pitch_black">#000000</color>
+    <color name="charcoal">#1c2429</color>
+    <color name="spruce">#374852</color>
+    <color name="pitch_white">#FFFFFF</color>
+    <color name="dull_white">#efefef</color>
+    <color name="bright_blue">#0000AF</color>
+    <color name="dark_blue">#222288</color>
+    <color name="light_green">#8BC34A</color>
+    <color name="light_red">#ff6666</color>
+    <color name="dead_blue">#0e2c40</color>
+    <color name="dark_red">#992222</color>
+</resources>

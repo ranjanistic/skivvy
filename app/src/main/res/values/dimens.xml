@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="base_separation">28dp</dimen>
+    <dimen name="secondary_separation">22dp</dimen>
+    <dimen name="minimum_separation">18dp</dimen>
+    <dimen name="minimum_button_size_circle">24dp</dimen>
+    <dimen name="largest_text_size">32sp</dimen>
+    <dimen name="secondary_text_size">28sp</dimen>
+    <dimen name="smallest_text_size">16sp</dimen>
+
+    <dimen name="corner_container_radius">22dp</dimen>
+</resources>

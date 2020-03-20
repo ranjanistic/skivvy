@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Skivvy</string>
+    <string name="hello">Hello!</string>
+    <string name="mic_open_caption">Say something</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="color_attributes">
+        <attr name="base_text_color" format="color"/>
+        <attr name="secondary_text_color" format="color"/>
+        <attr name="action_text_color" format="color"/>
+        <attr name="base_background_color" format="color"/>
+        <attr name="secondary_background_color" format="color"/>
+        <attr name="action_button_color" format="color"/>
+        <attr name="text_button_color" format="color"/>
+        <attr name="warning_button_color" format="color"/>
+        <attr name="warning_button_color_text" format="color"/>
+        <attr name="action_button_color_text" format="color"/>
+    </declare-styleable>
+</resources>
