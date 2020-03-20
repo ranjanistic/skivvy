@@ -3,4 +3,5 @@
     <string name="app_name">स्किव्वी</string>
     <string name="hello">नमस्ते!</string>
     <string name="mic_open_caption">कुछ कहिए</string>
+    <string name="theme">थीम</string>
 </resources>
