@@ -1,6 +1,28 @@
 <resources>
     <string name="app_name">Skivvy</string>
     <string name="hello">Hello!</string>
-    <string name="mic_open_caption">Say something</string>
+    <string name="mic_open_caption">Tap to command</string>
+    <string name="recognize_error">I didn\'t get it</string>
+    <string name="no_input">You didn\'t say anything </string>
+
     <string name="theme">Theme</string>
+    <string name="bt" translatable="false">bluetooth</string>
+    <string name="wifi" translatable="false">wi-fi</string>
+    <string name="gps" translatable="false">gps</string>
+    <string name="lock_screen" translatable="false">screen lock</string>
+    <string name="screenshot" translatable="false">screenshot</string>
+    <string-array name="lock">
+        <item>lock</item>
+        <item>loc</item>
+        <item>screen lock</item>
+        <item>lock the screen</item>
+        <item>lock screen</item>
+    </string-array>
+    <string-array name="wi_fi">
+        <item>wifi</item>
+        <item>wi-fi</item>
+        <item>open wifi</item>
+        <item>turn on wifi</item>
+    </string-array>
+
 </resources>

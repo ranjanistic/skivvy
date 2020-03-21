@@ -4,4 +4,6 @@
     <string name="hello">नमस्ते!</string>
     <string name="mic_open_caption">कुछ कहिए</string>
     <string name="theme">थीम</string>
+    <string name="recognize_error">मुझे समझ नहीं आया</string>
+    <string name="no_input">कोई निवेश नहीं</string>
 </resources>
