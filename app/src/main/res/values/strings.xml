@@ -7,10 +7,13 @@
 
     <string name="theme">Theme</string>
     <string name="bt" translatable="false">bluetooth</string>
-    <string name="wifi" translatable="false">wi-fi</string>
+    <string name="wifi" translatable="false">wifi</string>
+    <string name="wi_fi" translatable="false">wi-fi</string>
     <string name="gps" translatable="false">gps</string>
     <string name="lock_screen" translatable="false">screen lock</string>
     <string name="screenshot" translatable="false">screenshot</string>
+    <string name="device_admin_request">I need to be a device admin to lock screen</string>
+    <string name="device_admin_persuation">Activate Skivvy as a device admin to lock screen on your command. Don\'t worry, Skivvy is safe and will never harm your device in any way.</string>
     <string-array name="lock">
         <item>lock</item>
         <item>loc</item>
