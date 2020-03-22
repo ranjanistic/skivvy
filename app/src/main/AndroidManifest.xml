@@ -26,13 +26,11 @@
             android:name=".CommandService"
             android:enabled="true"
             android:exported="true"/>
-
         <activity
             android:name=".Splash"
             android:theme="@style/Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

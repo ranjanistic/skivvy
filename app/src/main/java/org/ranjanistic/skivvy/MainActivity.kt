@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.location.LocationManager
 import android.net.wifi.WifiManager
 import android.os.Bundle
@@ -27,6 +28,7 @@ import android.widget.TextView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.text.isDigitsOnly
 import org.ranjanistic.skivvy.R.drawable.*
 import org.ranjanistic.skivvy.R.string.*
 import java.io.File
@@ -52,6 +54,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var packagesAppName:Array<String?>
     private lateinit var packagesName:Array<String?>
     private lateinit var packagesMain:Array<Intent?>
+    private lateinit var packagesIcon:Array<Drawable?>
+    private var packagesTotal:Int = 0
     private var deviceManger: DevicePolicyManager? = null
     private var compName: ComponentName? = null
     var adminActive:Boolean? = false
@@ -89,9 +93,18 @@ class MainActivity : AppCompatActivity() {
         })
 
         receiver?.setOnClickListener {
+            setButtonState(false)
             normalView()
             startVoiceRecIntent()
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        setButtonState(true)
+    }
+    private fun setButtonState(state:Boolean){
+        receiver?.isClickable = state
     }
 
     private fun normalView(){
@@ -117,6 +130,7 @@ class MainActivity : AppCompatActivity() {
     }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        setButtonState(true)
         tts!!.language = Locale.US
         when(requestCode) {
             CODE_SPEECH_RECORD -> {
@@ -127,9 +141,11 @@ class MainActivity : AppCompatActivity() {
                     outPut?.text = txt
                     if(!respondToCommand(txt)) {
                         if (!appOptions(txt)) {
-                            errorView()
-                            outPut?.text = getString(recognize_error)
-                            speakOut(getString(recognize_error))
+                            if(!directActions(txt)) {
+                                errorView()
+                                outPut?.text = getString(recognize_error)
+                                speakOut(getString(recognize_error))
+                            }
                         }
                     }
                 }
@@ -145,7 +161,7 @@ class MainActivity : AppCompatActivity() {
             CODE_LOCATION_SERVICE ->{
                 val locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    successView()
+                    successView(null)
                     speakOut("All satellites on you now")
                 } else {
                     errorView()
@@ -181,9 +197,9 @@ class MainActivity : AppCompatActivity() {
                 } else if (text == getString(gps)) {
                     locationOps()
                 } else if (text == getString(lock_screen)) {
-
                     deviceLockOps()
                 } else if (text == getString(screenshot)) {
+                     //Runtime.getRuntime().exec("input keyevent 120")
                     takeScreenshot()
                 } else {
                     flag = false
@@ -197,13 +213,11 @@ class MainActivity : AppCompatActivity() {
     }
     private fun bluetoothOps(){
         val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        icon!!.setImageDrawable(getDrawable(ic_bluetooth))
         if (mBluetoothAdapter.isEnabled) {
-            errorView()
             mBluetoothAdapter.disable()
             speakOut("Bluetooth is off")
         } else {
-            successView()
+            successView(getDrawable(ic_bluetooth))
             mBluetoothAdapter.enable()
             speakOut("Bluetooth is on")
         }
@@ -216,9 +230,8 @@ class MainActivity : AppCompatActivity() {
             icon!!.setImageDrawable(getDrawable(ic_wifi_disconnected))
             speakOut("Turned Wi-Fi off")
         } else {
-            successView()
+            successView(getDrawable(ic_wifi_connected))
             wifiManager.isWifiEnabled = true
-            icon!!.setImageDrawable(getDrawable(ic_wifi_connected))
             speakOut("Wi-Fi is looking for available hot spots")
         }
     }
@@ -228,10 +241,9 @@ class MainActivity : AppCompatActivity() {
     }
     private fun deviceLockOps(){
         deviceManger = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-        icon!!.setImageDrawable(getDrawable(ic_glossylock))
         if (deviceManger!!.isAdminActive(ComponentName(this, Administrator::class.java))) {
-            successView()
-            speakOut("Locking")
+            successView(getDrawable(ic_glossylock))
+            speakOut("Locked")
             deviceManger!!.lockNow()
         } else {
             speakOut(getString(device_admin_request))
@@ -243,34 +255,52 @@ class MainActivity : AppCompatActivity() {
 
     private fun appOptions(text: String?):Boolean{
         var flag = false
-        var i = 0
         if(text!=null) {
-            while (i < packagesName.size) {
-                if (text.let { packagesAppName[i]!!.indexOf(it) } != -1) {
-                    flag = successView()
-                    startActivityForResult(Intent(packagesMain[i]), CODE_OTHER_APP)
-                    break
-                } else if (text.let { packagesName[i]!!.indexOf(it) } != -1) {
-                    flag = successView()
-                    startActivityForResult(Intent(packagesMain[i]), CODE_OTHER_APP)
-                    break
+            if (packagesTotal > 0) {
+                var i=0
+                while (i < packagesTotal) {
+                    if (text.let { packagesAppName[i]!!.indexOf(it) } != -1) {
+                        flag = successView(packagesIcon[i])
+                        startActivityForResult(Intent(packagesMain[i]), CODE_OTHER_APP)
+                        break
+                    } else if (text.let { packagesName[i]!!.indexOf(it) } != -1) {
+                        flag = successView(packagesIcon[i])
+                        startActivityForResult(Intent(packagesMain[i]), CODE_OTHER_APP)
+                        break
+                    }
+                    ++i
                 }
-                ++i
+            } else {
+                speakOut("Internal error")
             }
         } else {
             flag = errorView()
         }
         return flag
     }
+
+    private fun directActions(text: String?):Boolean{
+        var flag = false
+        fun String.intOrString(): Any {
+            return when(val v = toIntOrNull()) {
+                null -> this
+                else -> v
+            }
+        }
+        return flag
+    }
     private fun getPackages(){
         val pm: PackageManager = packageManager
         val packages: List<ApplicationInfo> = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+        packagesTotal = packages.size
         packagesAppName = arrayOfNulls(packages.size)
         packagesName = arrayOfNulls(packages.size)
+        packagesIcon = arrayOfNulls(packages.size)
         packagesMain = arrayOfNulls(packages.size)
         for ((counter, packageInfo) in packages.withIndex()) {
             packagesAppName[counter] = pm.getApplicationLabel(packageInfo).toString()
             packagesName[counter] = packageInfo.packageName
+            packagesIcon[counter] = pm.getApplicationIcon(packageInfo)
             packagesMain[counter] = pm.getLaunchIntentForPackage(packageInfo.packageName)
         }
     }
@@ -306,7 +336,7 @@ class MainActivity : AppCompatActivity() {
      }
 
     override fun onBackPressed() {
-        speakOut("Bye")
+        speakOut("I am, Skivvy")
         loading?.startAnimation(exitAnimation)
         super.onBackPressed()
     }
@@ -316,11 +346,13 @@ class MainActivity : AppCompatActivity() {
         loading?.setImageDrawable(getDrawable(ic_red_dotsincircle))
         return false
     }
-    private fun successView():Boolean{
+    private fun successView(image:Drawable?):Boolean{
         loading?.setImageDrawable(getDrawable(ic_green_dotsincircle))
+        icon?.setImageDrawable(image)
         return true
     }
      private fun speakOut(text:String) {
+         outPut?.text = text
          tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null,"")
      }
  }

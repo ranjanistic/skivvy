@@ -1,8 +1,8 @@
 <resources>
 
     <style name="Splash" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
-        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
+        <item name="android:navigationBarColor">@color/charcoal</item>
+        <item name="android:statusBarColor">@color/charcoal</item>
         <item name="android:background">@drawable/splash</item>
     </style>
     <!-- Base application theme. -->
