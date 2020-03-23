@@ -27,7 +27,7 @@
     </style>
     <style name="DarkTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:statusBarColor">@color/charcoal</item>
+        <item name="android:statusBarColor">@color/dead_blue</item>
         <item name="android:navigationBarColor">@color/charcoal</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>

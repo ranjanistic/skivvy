@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid
+        android:color="@color/dead_blue"/>
+    <corners
+        android:bottomRightRadius="@dimen/base_separation"
+        android:bottomLeftRadius="@dimen/base_separation"/>
+</shape>

@@ -18,6 +18,22 @@
     <string name="speech_activation_button">button</string>
     <string name="do_u_want_open">Do you want me to open&#160;</string>
     <string name="opening">Opening&#160;</string>
+    <string name="gps_enabled">All satellites on you now</string>
+    <string name="gps_is_off">GPS not enabled</string>
+    <string name="bt_off">Bluetooth is off</string>
+    <string name="bt_on">Bluetooth is on</string>
+    <string name="wifi_off">Turned Wi-Fi off</string>
+    <string name="wifi_on">Wi-Fi is looking for available hot spots</string>
+    <string name="screen_locked">Locked</string>
+    <string name="internal_error">Internal error</string>
+    <string name="snap_success">screen shot taken</string>
+    <string name="snap_failed">Can\'t take screenshot</string>
+    <string name="exit_msg">Bye!</string>
+    <string name="okay">Okay</string>
+    <string name="null_variable_error">Sorry, I forgot your command</string>
+    <string name="error">Error</string>
+    <string name="language_not_supported">The Language specified is not supported</string>
+    <string name="output_error">Error in speaking</string>
     <string-array name="lock">
         <item>lock</item>
         <item>loc</item>

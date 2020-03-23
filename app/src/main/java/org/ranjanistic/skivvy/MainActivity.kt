@@ -22,10 +22,7 @@ import android.speech.tts.UtteranceProgressListener
 import android.text.format.DateFormat
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import android.widget.Toast.LENGTH_SHORT
 import androidx.appcompat.app.AppCompatActivity
 import org.ranjanistic.skivvy.R.drawable.*
@@ -72,7 +69,7 @@ class MainActivity : AppCompatActivity() {
         compName = ComponentName(this, Administrator::class.java)
         adminActive = deviceManger!!.isAdminActive(compName!!)
         locale = Locale.US
-        findViewById<Button>(R.id.setting)
+        findViewById<ImageButton>(R.id.setting)
             .setOnClickListener {
                 startService(Intent(this, CommandService::class.java))
             }
@@ -92,10 +89,10 @@ class MainActivity : AppCompatActivity() {
             if (it == TextToSpeech.SUCCESS) {
                 result = tts!!.setLanguage(locale)
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED)
-                    Toast.makeText(this, "The Language specified is not supported", LENGTH_SHORT)
+                    Toast.makeText(this, getString(language_not_supported), LENGTH_SHORT)
                         .show()
             } else
-                Toast.makeText(this, "Error in speaking", LENGTH_SHORT).show()
+                Toast.makeText(this, getString(output_error), LENGTH_SHORT).show()
         })
 
         receiver?.setOnClickListener {
@@ -135,7 +132,7 @@ class MainActivity : AppCompatActivity() {
         if (intent.resolveActivity(packageManager) != null)
             startActivityForResult(intent, code)
         else
-            Toast.makeText(this, "Error", LENGTH_SHORT).show()
+            Toast.makeText(this, getString(error), LENGTH_SHORT).show()
     }
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -178,14 +175,14 @@ class MainActivity : AppCompatActivity() {
                                     )
                                     tempPackageIndex = null
                                 } else {
-                                    speakOut("Sorry, I forgot your command")
+                                    speakOut(getString(null_variable_error))
                                 }
                             } else if (resources.getStringArray(R.array.denials)
                                     .contains(txt)
                             ) {
                                 tempPackageIndex = null
                                 normalView()
-                                speakOut("Okay")
+                                speakOut(getString(okay))
                             } else {
                                 waitingView(null)
                                 speakOut(getString(recognize_error) + getString(do_u_want_open) + packagesAppName[tempPackageIndex!!] + "?")
@@ -205,10 +202,10 @@ class MainActivity : AppCompatActivity() {
                         applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                         successView(getDrawable(ic_location_pointer))
-                        speakOut("All satellites on you now")
+                        speakOut(getString(gps_enabled))
                     } else {
                         errorView()
-                        speakOut("GPS not enabled")
+                        speakOut(getString(gps_is_off))
                     }
                 }
                 CODE_LOCK_SCREEN -> {
@@ -226,6 +223,13 @@ class MainActivity : AppCompatActivity() {
         var i = 0
         var flag = false
         val arr: IntArray = intArrayOf(bt, screenshot, lock_screen, wifi, gps, wi_fi,exit)
+            /*val array  = arrayOf(R.array.lock,R.array.wi_fi,)
+        while(i<array.size){
+            if(resources.getStringArray(array[i]).contains(text)){
+
+            }
+            ++i
+        }*/
         while (i < arr.size) {
             if (text == (getString(arr[i]))) {
                 flag = true
@@ -242,7 +246,6 @@ class MainActivity : AppCompatActivity() {
                 } else if (text == getString(lock_screen)) {
                     deviceLockOps()
                 } else if (text == getString(screenshot)) {
-                     //Runtime.getRuntime().exec("input keyevent 120")
                     takeScreenshot()
                 } else if(text == getString(exit)){
                     this.finish()
@@ -260,22 +263,22 @@ class MainActivity : AppCompatActivity() {
         val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         if (mBluetoothAdapter.isEnabled) {
             mBluetoothAdapter.disable()
-            speakOut("Bluetooth is off")
+            speakOut(getString(bt_off))
         } else {
             successView(getDrawable(ic_bluetooth))
             mBluetoothAdapter.enable()
-            speakOut("Bluetooth is on")
+            speakOut(getString(bt_on))
         }
     }
     private fun wifiOps(){
         val wifiManager: WifiManager = getSystemService(Context.WIFI_SERVICE) as WifiManager
         if(wifiManager.isWifiEnabled) {
             wifiManager.isWifiEnabled = false
-            speakOut("Turned Wi-Fi off")
+            speakOut(getString(wifi_off))
         } else {
             successView(getDrawable(ic_wifi_connected))
             wifiManager.isWifiEnabled = true
-            speakOut("Wi-Fi is looking for available hot spots")
+            speakOut(getString(wifi_on))
         }
     }
     private fun locationOps(){
@@ -287,7 +290,7 @@ class MainActivity : AppCompatActivity() {
         deviceManger = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         if (deviceManger!!.isAdminActive(ComponentName(this, Administrator::class.java))) {
             successView(getDrawable(ic_glossylock))
-            speakOut("Locked")
+            speakOut(getString(screen_locked))
             deviceManger!!.lockNow()
         } else {
             waitingView(getDrawable(ic_glossylock))
@@ -310,7 +313,7 @@ class MainActivity : AppCompatActivity() {
                         break
                     }else if (text == packagesAppName[i]) {
                         flag = successView(packagesIcon[i])
-                        speakOut("Opening " + packagesAppName[i])
+                        speakOut(getString(opening) + packagesAppName[i])
                         startActivityForResult(Intent(packagesMain[i]), CODE_OTHER_APP)
                         break
                     } else if (text.let { packagesName[i]!!.indexOf(it) } != -1) {
@@ -325,7 +328,7 @@ class MainActivity : AppCompatActivity() {
                     ++i
                 }
             } else {
-                speakOut("Internal error")
+                speakOut(getString(internal_error))
             }
         } else {
             flag = errorView()
@@ -334,9 +337,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun directActions(text: String?):Boolean{
-        var flag = false
-
-        return flag
+        return false
     }
     private fun getLocalPackages(){
         var counter = 0
@@ -375,17 +376,17 @@ class MainActivity : AppCompatActivity() {
             bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
             outputStream.flush()
             outputStream.close()
-            speakOut("screen shot taken")
+            speakOut(getString(snap_success))
         } catch (e: Throwable) {
             errorView()
-            speakOut("Can't take screenshot")
+            speakOut(getString(snap_failed))
             e.printStackTrace()
         }
     }
 
      public override fun onDestroy() {
          loading?.startAnimation(exitAnimation)
-         speakOut("Bye!")
+         speakOut(getString(exit_msg))
          if (tts != null) {
              tts!!.stop()
              tts!!.shutdown()
@@ -394,7 +395,7 @@ class MainActivity : AppCompatActivity() {
      }
 
     override fun onBackPressed() {
-        speakOut("Bye!")
+        speakOut(getString(exit_msg))
         loading?.startAnimation(exitAnimation)
         super.onBackPressed()
     }
