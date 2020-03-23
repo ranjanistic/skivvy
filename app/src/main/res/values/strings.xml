@@ -2,18 +2,22 @@
     <string name="app_name">Skivvy</string>
     <string name="hello">Hello!</string>
     <string name="mic_open_caption">Tap to command</string>
-    <string name="recognize_error">I didn\'t get it</string>
-    <string name="no_input">You didn\'t say anything </string>
+    <string name="recognize_error">I didn\'t get it.&#160;</string>
+    <string name="no_input">You didn\'t say anything</string>
 
     <string name="theme">Theme</string>
     <string name="bt" translatable="false">bluetooth</string>
     <string name="wifi" translatable="false">wifi</string>
     <string name="wi_fi" translatable="false">wi-fi</string>
+    <string name="exit" translatable="false">bye</string>
     <string name="gps" translatable="false">gps</string>
     <string name="lock_screen" translatable="false">screen lock</string>
     <string name="screenshot" translatable="false">screenshot</string>
     <string name="device_admin_request">I need to be a device admin to lock screen</string>
     <string name="device_admin_persuation">Activate Skivvy as a device admin to lock screen on your command. Don\'t worry, Skivvy is safe and will never harm your device in any way.</string>
+    <string name="speech_activation_button">button</string>
+    <string name="do_u_want_open">Do you want me to open&#160;</string>
+    <string name="opening">Opening&#160;</string>
     <string-array name="lock">
         <item>lock</item>
         <item>loc</item>
@@ -27,5 +31,20 @@
         <item>open wifi</item>
         <item>turn on wifi</item>
     </string-array>
-
+    <string-array name="acceptances">
+        <item>yes</item>
+        <item>yep</item>
+        <item>yup</item>
+        <item>yups</item>
+        <item>yeah</item>
+        <item>yo</item>
+    </string-array>
+    <string-array name="denials">
+        <item>no</item>
+        <item>nope</item>
+        <item>nopes</item>
+        <item>nah</item>
+        <item>don\'t</item>
+        <item>stop</item>
+    </string-array>
 </resources>

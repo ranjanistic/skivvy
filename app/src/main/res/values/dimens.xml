@@ -6,7 +6,7 @@
     <dimen name="minimum_button_size_circle">24dp</dimen>
     <dimen name="largest_text_size">32sp</dimen>
     <dimen name="secondary_text_size">24sp</dimen>
-    <dimen name="smallest_text_size">16sp</dimen>
+    <dimen name="smallest_text_size">14sp</dimen>
     <dimen name="normal_text_size">18sp</dimen>
     <dimen name="corner_container_radius">22dp</dimen>
 </resources>

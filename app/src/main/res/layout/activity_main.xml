@@ -41,6 +41,49 @@
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintHorizontal_bias="1"
     app:layout_constraintVertical_bias="0"/>
+
+    <ImageView
+        android:id="@+id/actionIcon"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:scaleType="fitCenter"
+        app:layout_constraintStart_toStartOf="@id/loader"
+        app:layout_constraintEnd_toEndOf="@id/loader"
+        app:layout_constraintTop_toTopOf="@id/loader"
+        app:layout_constraintBottom_toBottomOf="@id/loader"/>
+    <ImageView
+        android:id="@+id/loader"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/textInput"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/ic_dotsincircle"
+        app:layout_constraintVertical_bias="0"/>
+
+    <TextView
+        android:id="@+id/textInput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/smallest_text_size"
+        android:textColor="?attr/base_text_color"
+        android:padding="@dimen/minimum_separation"
+        android:gravity="center"
+        app:layout_constraintStart_toStartOf="@id/loader"
+        app:layout_constraintEnd_toEndOf="@id/loader"
+        app:layout_constraintBottom_toTopOf="@id/textOutput"/>
+    <TextView
+        android:id="@+id/textOutput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/normal_text_size"
+        android:textColor="?attr/base_text_color"
+        android:padding="@dimen/secondary_separation"
+        android:gravity="center"
+        app:layout_constraintStart_toStartOf="@id/loader"
+        app:layout_constraintEnd_toEndOf="@id/loader"
+        app:layout_constraintBottom_toTopOf="@id/receiverBtn"/>
     <TextView
         android:id="@+id/receiverBtn"
         android:layout_width="wrap_content"
@@ -54,41 +97,9 @@
         android:text="@string/mic_open_caption"
         android:textColor="?attr/secondary_text_color"
         android:textSize="@dimen/secondary_text_size"
-        android:layout_margin="@dimen/minimum_separation"
+        android:layout_margin="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <TextView
-        android:id="@+id/textOutput"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="@dimen/normal_text_size"
-        android:textColor="?attr/base_text_color"
-        android:padding="@dimen/secondary_separation"
-        android:gravity="center"
-        app:layout_constraintStart_toStartOf="@id/loader"
-        app:layout_constraintEnd_toEndOf="@id/loader"
-        app:layout_constraintBottom_toTopOf="@id/receiverBtn"/>
-
-    <ImageView
-        android:id="@+id/loader"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/textOutput"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@drawable/ic_dotsincircle"
-        app:layout_constraintVertical_bias="0"/>
-    <ImageView
-        android:id="@+id/actionIcon"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:layout_margin="0dp"
-        android:scaleType="fitCenter"
-        app:layout_constraintStart_toStartOf="@id/loader"
-        app:layout_constraintEnd_toEndOf="@id/loader"
-        app:layout_constraintTop_toTopOf="@id/loader"
-        app:layout_constraintBottom_toBottomOf="@id/loader"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
