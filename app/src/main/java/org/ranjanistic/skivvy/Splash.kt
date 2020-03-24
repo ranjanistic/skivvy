@@ -9,11 +9,13 @@ import androidx.core.content.ContextCompat
 import java.util.concurrent.Executor
 
 class Splash : AppCompatActivity() {
+    lateinit var skivvy: Skivvy
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        skivvy = this.application as Skivvy
         val intent= Intent(this, MainActivity::class.java)
         if(getBiometricStatus()) {
             executor = ContextCompat.getMainExecutor(this)
@@ -41,7 +43,7 @@ class Splash : AppCompatActivity() {
         }
     }
     private fun getBiometricStatus():Boolean{
-        return getSharedPreferences("appLock", MODE_PRIVATE)
-            .getBoolean("fingerprint", false)
+        return getSharedPreferences(skivvy.PREF_HEAD_SECURITY, MODE_PRIVATE)
+            .getBoolean(skivvy.PREF_KEY_BIOMETRIC, false)
     }
 }

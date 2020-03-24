@@ -10,6 +10,7 @@ import androidx.core.content.ContextCompat
 import java.util.concurrent.Executor
 
 class Setup : AppCompatActivity() {
+    lateinit var skivvy:Skivvy
     private lateinit var training:TextView
     private lateinit var mute:TextView
     private lateinit var biometrics:TextView
@@ -19,13 +20,14 @@ class Setup : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_setup)
+        skivvy = this.application as Skivvy
         training = findViewById(R.id.trainingModeBtn)
         mute = findViewById(R.id.muteUnmuteBtn)
         biometrics = findViewById(R.id.biometricsBtn)
         setTrainingMode(getTrainingStatus())
         saveMuteStatus(getMuteStatus())
         setBiometricsStatus(getBiometricStatus())
-        if(getBiometricStatus()) {authSetup()}
+        authSetup()
         training.setOnClickListener{
             setTrainingMode(!getTrainingStatus())
         }
@@ -44,11 +46,6 @@ class Setup : AppCompatActivity() {
         executor = ContextCompat.getMainExecutor(this)
         biometricPrompt = BiometricPrompt(this, executor,
             object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationError(errorCode: Int,
-                                                   errString: CharSequence) {
-                    super.onAuthenticationError(errorCode, errString)
-                }
-
                 override fun onAuthenticationSucceeded(
                     result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
@@ -62,8 +59,8 @@ class Setup : AppCompatActivity() {
             .build()
     }
     private fun setBiometricsStatus(isEnabled:Boolean){
-        getSharedPreferences("appLock", MODE_PRIVATE).edit()
-            .putBoolean("fingerprint",isEnabled).apply()
+        getSharedPreferences(skivvy.PREF_HEAD_SECURITY, MODE_PRIVATE).edit()
+            .putBoolean(skivvy.PREF_KEY_BIOMETRIC,isEnabled).apply()
         if(isEnabled) {
             biometrics.text = getString(R.string.disable_fingerprint)
             biometrics.setBackgroundResource(R.drawable.red_square_round_button)
@@ -74,12 +71,12 @@ class Setup : AppCompatActivity() {
         }
     }
     private fun getBiometricStatus():Boolean{
-        return getSharedPreferences("appLock", MODE_PRIVATE)
-            .getBoolean("fingerprint", false)
+        return getSharedPreferences(skivvy.PREF_HEAD_SECURITY, MODE_PRIVATE)
+            .getBoolean(skivvy.PREF_KEY_BIOMETRIC, false)
     }
     private fun saveMuteStatus(isMuted:Boolean){
-        getSharedPreferences("voicePreference", MODE_PRIVATE).edit()
-            .putBoolean("muted",isMuted ).apply()
+        getSharedPreferences(skivvy.PREF_HEAD_VOICE, MODE_PRIVATE).edit()
+            .putBoolean(skivvy.PREF_KEY_MUTE_UNMUTE,isMuted ).apply()
         if(isMuted) {
             mute.text = getString(R.string.unmute_text)
             mute.setBackgroundResource(R.drawable.red_square_round_button)
@@ -91,8 +88,8 @@ class Setup : AppCompatActivity() {
 
     }
     private fun setTrainingMode(isTraining:Boolean){
-        getSharedPreferences("training", MODE_PRIVATE).edit()
-            .putBoolean("status",isTraining ).apply()
+        getSharedPreferences(skivvy.PREF_HEAD_APP_MODE, MODE_PRIVATE).edit()
+            .putBoolean(skivvy.PREF_KEY_TRAINING,isTraining ).apply()
         if(isTraining){
             training.text = getString(R.string.deactivate_training_text)
         } else{
@@ -100,11 +97,11 @@ class Setup : AppCompatActivity() {
         }
     }
     private fun getTrainingStatus():Boolean{
-        return getSharedPreferences("training", MODE_PRIVATE)
-            .getBoolean("status", false)
+        return getSharedPreferences(skivvy.PREF_HEAD_APP_MODE, MODE_PRIVATE)
+            .getBoolean(skivvy.PREF_KEY_TRAINING, false)
     }
     private fun getMuteStatus():Boolean{
-        return getSharedPreferences("voicePreference", MODE_PRIVATE)
-            .getBoolean("muted", false)
+        return getSharedPreferences(skivvy.PREF_HEAD_VOICE, MODE_PRIVATE)
+            .getBoolean(skivvy.PREF_KEY_MUTE_UNMUTE, false)
     }
 }

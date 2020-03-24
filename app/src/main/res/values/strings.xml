@@ -84,6 +84,7 @@
     <string name="call_permit_denied">You didn\'t allow me to make calls.</string>
     <string name="should_i_call">Should I call&#160;</string>
     <string name="storage_permission_denied">You didn\'t allow me to store screenshots on device</string>
+    <string name="contact_permission_denied">You didn\'t allow me to access your contacts</string>
     <string name="unmute_text">Un-mute speech output</string>
     <string name="mute_text">Mute speech output</string>
     <string name="activate_training_text">Activate training mode</string>
@@ -93,4 +94,7 @@
     <string name="auth_demand_title">Skivvy access demand</string>
     <string name="auth_demand_subtitle">I need your fingerprint</string>
     <string name="other_auth_ops">Use account password</string>
+    <string name="require_physical_permission">I need your physical permission</string>
+    <string name="i_am">I am&#160;</string>
+    <string name="coming_soon">Coming soon</string>
 </resources>
