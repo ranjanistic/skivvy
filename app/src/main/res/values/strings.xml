@@ -6,7 +6,26 @@
     <string name="no_input">You didn\'t say anything</string>
 
     <string name="theme">Theme</string>
-
+    <string-array name="acceptances">
+        <item>yes</item>
+        <item>yep</item>
+        <item>yup</item>
+        <item>yups</item>
+        <item>yeah</item>
+        <item>yo</item>
+    </string-array>
+    <string-array name="denials">
+        <item>no</item>
+        <item>nope</item>
+        <item>nopes</item>
+        <item>nah</item>
+        <item>don\'t</item>
+        <item>stop</item>
+    </string-array>
+    <string-array name="setup_list">
+        <item>setup</item>
+        <item>set up</item>
+    </string-array>
     <string-array name="bt_list">
         <item>bluetooth</item>
         <item>open bluetooth</item>
@@ -62,20 +81,16 @@
     <string name="error">Error</string>
     <string name="language_not_supported">The Language specified is not supported</string>
     <string name="output_error">Error in speaking</string>
-    <string-array name="acceptances">
-        <item>yes</item>
-        <item>yep</item>
-        <item>yup</item>
-        <item>yups</item>
-        <item>yeah</item>
-        <item>yo</item>
-    </string-array>
-    <string-array name="denials">
-        <item>no</item>
-        <item>nope</item>
-        <item>nopes</item>
-        <item>nah</item>
-        <item>don\'t</item>
-        <item>stop</item>
-    </string-array>
+    <string name="call_permit_denied">You didn\'t allow me to make calls.</string>
+    <string name="should_i_call">Should I call&#160;</string>
+    <string name="storage_permission_denied">You didn\'t allow me to store screenshots on device</string>
+    <string name="unmute_text">Un-mute speech output</string>
+    <string name="mute_text">Mute speech output</string>
+    <string name="activate_training_text">Activate training mode</string>
+    <string name="deactivate_training_text">Deactivate training mode</string>
+    <string name="disable_fingerprint">Disable biometrics</string>
+    <string name="enable_fingerprint">Enable biometrics</string>
+    <string name="auth_demand_title">Skivvy access demand</string>
+    <string name="auth_demand_subtitle">I need your fingerprint</string>
+    <string name="other_auth_ops">Use account password</string>
 </resources>
