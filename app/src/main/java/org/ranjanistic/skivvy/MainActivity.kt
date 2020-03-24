@@ -32,7 +32,7 @@ import java.io.FileOutputStream
 import java.util.*
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(){
     var activityManager: ActivityManager? = null
     private var tts: TextToSpeech? = null
     private var outPut: TextView? = null
@@ -42,8 +42,11 @@ class MainActivity : AppCompatActivity() {
     private var rotateSlow: Animation? = null
     private var exitAnimation: Animation? = null
     private var fadeAnimation: Animation? = null
+    private var bubbleAnimation: Animation? = null
+    private var fallAnimation: Animation? = null
     private lateinit var locale:Locale
     private var receiver: TextView? = null
+    private var greet: TextView? = null
     private var CODE_SPEECH_RECORD = 10
     private var CODE_OTHER_APP = 11
     private var CODE_OTHER_APP_CONF = 12
@@ -69,10 +72,15 @@ class MainActivity : AppCompatActivity() {
         compName = ComponentName(this, Administrator::class.java)
         adminActive = deviceManger!!.isAdminActive(compName!!)
         locale = Locale.US
-        findViewById<ImageButton>(R.id.setting)
-            .setOnClickListener {
-                startService(Intent(this, CommandService::class.java))
-            }
+        bubbleAnimation = AnimationUtils.loadAnimation(this,R.anim.bubble_wave)
+        fallAnimation = AnimationUtils.loadAnimation(this,R.anim.fall_back)
+        val backfall:ImageView = findViewById(R.id.backdrop)
+        backfall.startAnimation(fallAnimation)
+        val setting:ImageButton = findViewById(R.id.setting)
+        setting.setOnClickListener {
+            startActivity(Intent(this,Setup::class.java))
+        }
+        setting.startAnimation(bubbleAnimation)
         outPut = findViewById(R.id.textOutput)
         input = findViewById(R.id.textInput)
         loading = findViewById(R.id.loader)
@@ -83,6 +91,9 @@ class MainActivity : AppCompatActivity() {
         fadeAnimation = AnimationUtils.loadAnimation(this, R.anim.fade)
         exitAnimation = AnimationUtils.loadAnimation(this, R.anim.rotate_exit)
         receiver = findViewById(R.id.receiverBtn)
+        receiver!!.startAnimation(bubbleAnimation)
+        greet = findViewById(R.id.greeting)
+        greet!!.startAnimation(bubbleAnimation)
         normalView()
         var result: Int?
         tts = TextToSpeech(this, TextToSpeech.OnInitListener {
@@ -220,42 +231,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun respondToCommand(text:String?):Boolean{
-        var i = 0
-        var flag = false
-        val arr: IntArray = intArrayOf(bt, screenshot, lock_screen, wifi, gps, wi_fi,exit)
-            /*val array  = arrayOf(R.array.lock,R.array.wi_fi,)
-        while(i<array.size){
-            if(resources.getStringArray(array[i]).contains(text)){
-
+        var flag = true
+        val array = arrayOf(R.array.bt_list,R.array.wifi_list,R.array.gps_list,R.array.lock_list,R.array.snap_list)
+        when {
+            text == "setup" ->{
+              startActivity(Intent(this,Setup::class.java))
             }
-            ++i
-        }*/
-        while (i < arr.size) {
-            if (text == (getString(arr[i]))) {
-                flag = true
-                if (text == getString(bt)) {
-                    bluetoothOps()
-                } else if (text == getString(wifi)) {
-                    waitingView(getDrawable(ic_wifi_connected))
-                    wifiOps()
-                } else if(text == getString(wi_fi)){
-                    waitingView(getDrawable(ic_wifi_connected))
-                    wifiOps()
-                } else if (text == getString(gps)) {
-                    locationOps()
-                } else if (text == getString(lock_screen)) {
-                    deviceLockOps()
-                } else if (text == getString(screenshot)) {
-                    takeScreenshot()
-                } else if(text == getString(exit)){
-                    this.finish()
-                } else {
-                    flag = false
-                    break
-                }
-                break
+            resources.getStringArray(array[0]).contains(text) -> {
+                bluetoothOps()
             }
-            ++i
+            resources.getStringArray(array[1]).contains(text) -> {
+                waitingView(getDrawable(ic_wifi_connected))
+                wifiOps()
+            }
+            resources.getStringArray(array[2]).contains(text) -> {
+                locationOps()
+            }
+            resources.getStringArray(array[3]).contains(text) -> {
+                deviceLockOps()
+            }
+            resources.getStringArray(array[4]).contains(text) -> {
+                takeScreenshot()
+            }
+            text == getString(exit) -> {
+                this.finish()
+            }
+            else -> {
+                flag = false
+            }
         }
         return flag
     }
@@ -311,7 +314,7 @@ class MainActivity : AppCompatActivity() {
                         flag = true
                         speakOut("I am " +  getString(app_name))
                         break
-                    }else if (text == packagesAppName[i]) {
+                    } else if (text == packagesAppName[i]) {
                         flag = successView(packagesIcon[i])
                         speakOut(getString(opening) + packagesAppName[i])
                         startActivityForResult(Intent(packagesMain[i]), CODE_OTHER_APP)

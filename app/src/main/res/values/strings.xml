@@ -6,13 +6,41 @@
     <string name="no_input">You didn\'t say anything</string>
 
     <string name="theme">Theme</string>
-    <string name="bt" translatable="false">bluetooth</string>
-    <string name="wifi" translatable="false">wifi</string>
-    <string name="wi_fi" translatable="false">wi-fi</string>
+
+    <string-array name="bt_list">
+        <item>bluetooth</item>
+        <item>open bluetooth</item>
+        <item>turn bluetooth</item>
+    </string-array>
+    <string-array name="wifi_list">
+        <item>wi-fi</item>
+        <item>wifi</item>
+        <item>open wifi</item>
+        <item>open wi-fi</item>
+        <item>wi fi</item>
+        <item>open wi fi</item>
+    </string-array>
+    <string-array name="gps_list">
+        <item>gps</item>
+        <item>global positioning system</item>
+        <item>open gps</item>
+        <item>location</item>
+    </string-array>
+    <string-array name="lock_list">
+        <item>loc</item>
+        <item>lockup</item>
+        <item>lock up</item>
+        <item>screen lock</item>
+        <item>lock screen</item>
+        <item>sleep</item>
+    </string-array>
+    <string-array name="snap_list">
+        <item>snapshot</item>
+        <item>screenshot</item>
+        <item>take screenshot</item>
+    </string-array>
     <string name="exit" translatable="false">bye</string>
-    <string name="gps" translatable="false">gps</string>
-    <string name="lock_screen" translatable="false">screen lock</string>
-    <string name="screenshot" translatable="false">screenshot</string>
+
     <string name="device_admin_request">I need to be a device admin to lock screen</string>
     <string name="device_admin_persuation">Activate Skivvy as a device admin to lock screen on your command. Don\'t worry, Skivvy is safe and will never harm your device in any way.</string>
     <string name="speech_activation_button">button</string>
@@ -34,19 +62,6 @@
     <string name="error">Error</string>
     <string name="language_not_supported">The Language specified is not supported</string>
     <string name="output_error">Error in speaking</string>
-    <string-array name="lock">
-        <item>lock</item>
-        <item>loc</item>
-        <item>screen lock</item>
-        <item>lock the screen</item>
-        <item>lock screen</item>
-    </string-array>
-    <string-array name="wi_fi">
-        <item>wifi</item>
-        <item>wi-fi</item>
-        <item>open wifi</item>
-        <item>turn on wifi</item>
-    </string-array>
     <string-array name="acceptances">
         <item>yes</item>
         <item>yep</item>
