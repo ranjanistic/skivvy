@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">Skivvy</string>
     <string name="hello">Hello!</string>
-    <string name="mic_open_caption">Tap to command</string>
+    <string name="mic_open_caption">Command</string>
     <string name="recognize_error">I didn\'t get it.&#160;</string>
     <string name="no_input">You didn\'t say anything</string>
-
     <string name="theme">Theme</string>
+
     <string-array name="acceptances">
         <item>yes</item>
         <item>yep</item>
@@ -46,7 +46,7 @@
         <item>location</item>
     </string-array>
     <string-array name="lock_list">
-        <item>loc</item>
+        <item>lock</item>
         <item>lockup</item>
         <item>lock up</item>
         <item>screen lock</item>
@@ -62,7 +62,7 @@
 
     <string name="device_admin_request">I need to be a device admin to lock screen</string>
     <string name="device_admin_persuation">Activate Skivvy as a device admin to lock screen on your command. Don\'t worry, Skivvy is safe and will never harm your device in any way.</string>
-    <string name="speech_activation_button">button</string>
+    <string name="speech_activation_button" translatable="false">button</string>
     <string name="do_u_want_open">Do you want me to open&#160;</string>
     <string name="opening">Opening&#160;</string>
     <string name="gps_enabled">All satellites on you now</string>
@@ -97,4 +97,9 @@
     <string name="require_physical_permission">I need your physical permission</string>
     <string name="i_am">I am&#160;</string>
     <string name="coming_soon">Coming soon</string>
+    <string name="calling">Calling&#160;</string>
+    <string name="app_tag_line">An experiment of Priyanshu Ranjan</string>
+    <string name="call">call</string>
+    <string name="device_admin_failure">You didn\'t activate me as a device admin</string>
+    <string name="contact_not_found">No such contact</string>
 </resources>

@@ -1,4 +1,4 @@
-@file:Suppress( "PrivatePropertyName")
+@file:Suppress( "PrivateProp ertyName")
 
 package org.ranjanistic.skivvy
 
@@ -8,12 +8,14 @@ import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.bluetooth.BluetoothAdapter
 import android.content.ComponentName
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.location.LocationManager
 import android.net.Uri
@@ -21,18 +23,18 @@ import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.os.Environment
 import android.provider.ContactsContract
+import android.provider.MediaStore
 import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
-import android.widget.Toast.LENGTH_SHORT
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import org.ranjanistic.skivvy.R.drawable.*
@@ -54,7 +56,6 @@ class MainActivity : AppCompatActivity(){
     private var bubbleAnimation: Animation? = null
     private var fallAnimation: Animation? = null
     private var riseAnimation:Animation? = null
-    private lateinit var locale:Locale
     private var receiver: TextView? = null
     private lateinit var setting:ImageButton
     private var greet: TextView? = null
@@ -63,23 +64,23 @@ class MainActivity : AppCompatActivity(){
     private var icon: ImageView? = null
     private var txt: String? = null
     private var tempPhone:String? = null
+    private var tempContact:String? = null
     private lateinit var backfall: ImageView
     private lateinit var packagesAppName:Array<String?>
     private lateinit var packagesName:Array<String?>
     private lateinit var packagesMain:Array<Intent?>
     private lateinit var packagesIcon:Array<Drawable?>
     lateinit var skivvy:Skivvy
-    lateinit var context:Context
+    private lateinit var context:Context
     private var packagesTotal:Int = 0
     private var deviceManger: DevicePolicyManager? = null
     private var compName: ComponentName? = null
-    lateinit var contact:ContactModel
+    private var contact:ContactModel = ContactModel()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         context = this
         skivvy = this.application as Skivvy
-
         setViewAndDefaults()
         loadDefaultAnimations()
         normalView()
@@ -87,18 +88,19 @@ class MainActivity : AppCompatActivity(){
         tts = TextToSpeech(context, TextToSpeech.OnInitListener {
             when(it){
                 TextToSpeech.SUCCESS ->{
-                    when(tts!!.setLanguage(locale)){
+                    when(tts!!.setLanguage(skivvy.locale)){
                         TextToSpeech.LANG_MISSING_DATA,
                         TextToSpeech.LANG_NOT_SUPPORTED -> outPut!!.text =  getString(language_not_supported)
                     }
                 } else -> outPut!!.text =  getString(output_error)
             }
         })
+        //TODO: Long running task to be in background
         getLocalPackages()
     }
 
     private fun setViewAndDefaults(){
-        locale = Locale.US
+        skivvy.locale = Locale.US
         setting = findViewById(R.id.setting)
         outPut = findViewById(R.id.textOutput)
         input = findViewById(R.id.textInput)
@@ -145,8 +147,19 @@ class MainActivity : AppCompatActivity(){
         when(requestCode){
             skivvy.CODE_CALL_REQUEST -> {
                 if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    speakOut(getString(should_i_call)+"$tempPhone?", skivvy.CODE_CALL_CONF)
+                    when {
+                        contact.phoneList[0]!=null -> {
+                            speakOut(getString(should_i_call) + "${contact.displayName}?", skivvy.CODE_CONTACT_CALL_CONF)
+                        }
+                        tempPhone!=null -> {
+                            speakOut(getString(should_i_call) + "$tempPhone?", skivvy.CODE_CALL_CONF)
+                        }
+                        else -> {
+                            speakOut(getString(null_variable_error))
+                        }
+                    }
                 } else {
+                    tempPhone = null
                     errorView()
                     speakOut(getString(call_permit_denied))
                 }
@@ -161,7 +174,11 @@ class MainActivity : AppCompatActivity(){
             }
             skivvy.CODE_CONTACTS_REQUEST->{
                 if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    speakOut(getString(coming_soon))
+                    if(tempContact!=null) {
+                        contactOps(tempContact!!)
+                    } else {
+                        speakOut(getString(null_variable_error))
+                    }
                 }  else {
                     errorView()
                     speakOut(getString(contact_permission_denied))
@@ -174,101 +191,139 @@ class MainActivity : AppCompatActivity(){
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         setButtonsClickable(true)
-        tts!!.language = locale
-            when (requestCode) {
-                skivvy.CODE_SPEECH_RECORD -> {
-                        if (resultCode == Activity.RESULT_OK  && data!=null) {
-                            txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
-                                .toLowerCase(locale)
-                            if (txt != null) {
-                                input?.text = txt
-                                if (!respondToCommand(txt)) {
-                                    if (!appOptions(txt)) {
-                                        if (!directActions(txt!!)) {
-                                            errorView()
-                                            speakOut(getString(recognize_error))
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            speakOut(getString(no_input))
-                        }
-                }
-                skivvy.CODE_OTHER_APP_CONF -> {
-                    if (resultCode == Activity.RESULT_OK && data!=null) {
-                        txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString().toLowerCase(locale)
-                        if (txt != null) {
-                            if (resources.getStringArray(R.array.acceptances).contains(txt)) {
-                                if (tempPackageIndex != null) {
-                                    successView(packagesIcon[tempPackageIndex!!])
-                                    speakOut(getString(opening) + packagesAppName[tempPackageIndex!!])
-                                    startActivityForResult(
-                                        Intent(packagesMain[tempPackageIndex!!]),
-                                        skivvy.CODE_OTHER_APP
-                                    )
-                                    tempPackageIndex = null
-                                } else {
+        tts!!.language = skivvy.locale
+        when (requestCode) {
+            skivvy.CODE_SPEECH_RECORD -> {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                        .toLowerCase(skivvy.locale)
+                    if (txt != null) {
+                        input?.text = txt
+                        if (!respondToCommand(txt)) {
+                            if (!appOptions(txt)) {
+                                if (!directActions(txt!!)) {
                                     errorView()
-                                    speakOut(getString(null_variable_error))
+                                    speakOut(getString(recognize_error))
                                 }
-                            } else if (resources.getStringArray(R.array.denials).contains(txt)) {
-                                tempPackageIndex = null
-                                normalView()
-                                speakOut(getString(okay))
-                            } else {
-                                waitingView(packagesIcon[tempPackageIndex!!])
-                                speakOut(getString(recognize_error) + getString(do_u_want_open) + packagesAppName[tempPackageIndex!!] + "?",skivvy.CODE_OTHER_APP_CONF)
-                            }
-                        }
-                    } else {
-                        normalView()
-                        speakOut(getString(no_input))
-                    }
-                }
-                skivvy.CODE_OTHER_APP -> {
-                    txt = null
-                    tempPackageIndex = null
-                }
-                skivvy.CODE_LOCATION_SERVICE -> {
-                    val locationManager =
-                        applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                    if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                        successView(getDrawable(ic_location_pointer))
-                        speakOut(getString(gps_enabled))
-                    } else {
-                        errorView()
-                        speakOut(getString(gps_is_off))
-                    }
-                }
-                skivvy.CODE_LOCK_SCREEN -> {
-                    if (resultCode == Activity.RESULT_OK) {
-                        deviceLockOps()
-                    } else {
-                        errorView()
-                        speakOut(getString(device_admin_request))
-                    }
-                }
-                skivvy.CODE_CALL_CONF  ->{
-                    if(resultCode  == Activity.RESULT_OK && data!=null){
-                        txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString().toLowerCase(locale)
-                        when {
-                            resources.getStringArray(R.array.acceptances).contains(txt) -> {
-                                callingOps(tempPhone)
-                                tempPhone = null
-                            }
-                            resources.getStringArray(R.array.denials).contains(txt) -> {
-                                tempPhone = null
-                                normalView()
-                            }
-                            else -> {
-                                waitingView(getDrawable(ic_glossyphone))
-                                speakOut(getString(recognize_error) + getString(should_i_call)+"$tempPhone?", skivvy.CODE_CALL_CONF)
                             }
                         }
                     }
+                } else {
+                    speakOut(getString(no_input))
                 }
             }
+            skivvy.CODE_OTHER_APP_CONF -> {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                        .toLowerCase(skivvy.locale)
+                    if (txt != null) {
+                        if (resources.getStringArray(R.array.acceptances).contains(txt)) {
+                            if (tempPackageIndex != null) {
+                                successView(packagesIcon[tempPackageIndex!!])
+                                speakOut(getString(opening) + packagesAppName[tempPackageIndex!!])
+                                startActivityForResult(
+                                    Intent(packagesMain[tempPackageIndex!!]),
+                                    skivvy.CODE_OTHER_APP
+                                )
+                                tempPackageIndex = null
+                            } else {
+                                errorView()
+                                speakOut(getString(null_variable_error))
+                            }
+                        } else if (resources.getStringArray(R.array.denials).contains(txt)) {
+                            tempPackageIndex = null
+                            normalView()
+                            speakOut(getString(okay))
+                        } else {
+                            waitingView(packagesIcon[tempPackageIndex!!])
+                            speakOut(
+                                getString(recognize_error) + getString(do_u_want_open) + packagesAppName[tempPackageIndex!!] + "?",
+                                skivvy.CODE_OTHER_APP_CONF
+                            )
+                        }
+                    }
+                } else {
+                    normalView()
+                    speakOut(getString(no_input))
+                }
+            }
+            skivvy.CODE_OTHER_APP -> {
+                txt = null
+                tempPackageIndex = null
+            }
+            skivvy.CODE_LOCATION_SERVICE -> {
+                val locationManager =
+                    applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    successView(getDrawable(ic_location_pointer))
+                    speakOut(getString(gps_enabled))
+                } else {
+                    errorView()
+                    speakOut(getString(gps_is_off))
+                }
+            }
+            skivvy.CODE_LOCK_SCREEN -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    deviceLockOps()
+                } else {
+                    errorView()
+                    speakOut(getString(device_admin_failure))
+                }
+            }
+            skivvy.CODE_CALL_CONF -> {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                        .toLowerCase(skivvy.locale)
+                    when {
+                        resources.getStringArray(R.array.acceptances).contains(txt) -> {
+                            successView(getDrawable(ic_glossyphone))
+                            callingOps(tempPhone)
+                            tempPhone = null
+                        }
+                        resources.getStringArray(R.array.denials).contains(txt) -> {
+                            tempPhone = null
+                            normalView()
+                        }
+                        else -> {
+                            waitingView(getDrawable(ic_glossyphone))
+                            speakOut(
+                                getString(recognize_error) + getString(should_i_call) + "$tempPhone?",
+                                skivvy.CODE_CALL_CONF
+                            )
+                        }
+                    }
+                } else {
+                    normalView()
+                    speakOut(getString(no_input))
+                }
+            }
+            skivvy.CODE_CONTACT_CALL_CONF -> {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString().toLowerCase(skivvy.locale)
+                    when {
+                        resources.getStringArray(R.array.acceptances).contains(txt) -> {
+                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                                speakOut(getString(require_physical_permission))
+                                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CALL_PHONE), skivvy.CODE_CALL_REQUEST)
+                            } else {
+                                successView(null)
+                                callingOps(contact.phoneList[0], contact.displayName)
+                            }
+                        }
+                        resources.getStringArray(R.array.denials).contains(txt) -> {
+                            normalView()
+                            speakOut(getString(okay))
+                        }
+                        else -> {
+                            speakOut(getString(recognize_error) + getString(should_i_call) + "${contact.displayName}?", skivvy.CODE_CONTACT_CALL_CONF)
+                        }
+                    }
+                } else {
+                    normalView()
+                    speakOut(getString(no_input))
+                }
+            }
+        }
     }
 
     //actions invoking quick commands
@@ -358,7 +413,7 @@ class MainActivity : AppCompatActivity(){
             if (packagesTotal > 0) {
                 var i=0
                 while (i < packagesTotal) {
-                    if(text == getString(app_name).toLowerCase(locale)){
+                    if(text == getString(app_name).toLowerCase(skivvy.locale)){
                         flag = true
                         speakOut(getString(i_am) +  getString(app_name))
                         break
@@ -390,38 +445,49 @@ class MainActivity : AppCompatActivity(){
     //action invoking direct intents
     private fun directActions(text: String):Boolean{
         var localTxt = text
-        if(localTxt.contains("call")) {
+        if(localTxt.contains(getString(call))) {
             waitingView(getDrawable(ic_glossyphone))
             localTxt = localTxt.replace("call", "",true)
             tempPhone = localTxt.replace("[^0-9]".toRegex(), "")
             if(tempPhone!=null) {
-                return if (tempPhone!!.contains("[0-9]".toRegex())) {
+                 if (tempPhone!!.contains("[0-9]".toRegex())) {
                     if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
                         speakOut(getString(require_physical_permission))
                         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CALL_PHONE),
                             skivvy.CODE_CALL_REQUEST)
                     } else {
-                        speakOut(getString(should_i_call) + "$tempPhone ?", skivvy.CODE_CALL_CONF)
+                        speakOut(getString(should_i_call) + "$tempPhone?", skivvy.CODE_CALL_CONF)
                     }
-                    true
-                } else {
-                    contactOps(localTxt)
-                    true
-                }
+                 } else {
+                     //speakOut("Looking into contacts")
+                    return contactOps(localTxt)
+                 }
             } else {
                 return false
             }
+            return true
         } else if(localTxt.contains("email") || localTxt.contains("mail")){
-            localTxt = localTxt.replace("email","",true)
-            localTxt = localTxt.replace("mail","",true)
+            speakOut("yeah email")
+            return true
         }
         return false
     }
     @SuppressLint("MissingPermission")
     private fun callingOps(number:String?){
         if(number!=null) {
-            successView(getDrawable(ic_glossyphone))
-            speakOut("Calling $number")
+            speakOut(getString(calling)+"$number")
+            val intent = Intent(Intent.ACTION_CALL)
+            intent.data = Uri.parse("tel:$number")
+            startActivity(intent)
+        } else {
+            errorView()
+            speakOut(getString(null_variable_error))
+        }
+    }
+    @SuppressLint("MissingPermission")
+    private fun callingOps(number:String?,name: String){
+        if(number!=null) {
+            speakOut(getString(calling)+name)
             val intent = Intent(Intent.ACTION_CALL)
             intent.data = Uri.parse("tel:$number")
             startActivity(intent)
@@ -432,19 +498,78 @@ class MainActivity : AppCompatActivity(){
     }
 
     //TODO: Contacts search and dial
-    private fun contactOps(name:String){
-        var localName = name.replace("[^a-zA-Z]".toRegex(),"")
-        val cursor: Cursor? = contentResolver.query(
-            ContactsContract.Contacts.CONTENT_URI, arrayOf(ContactsContract.Contacts.PHOTO_ID, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts._ID),
-            ContactsContract.Contacts.HAS_PHONE_NUMBER, null,
-            ContactsContract.Contacts.DISPLAY_NAME
-        )
+    private fun contactOps(name:String):Boolean{
+        waitingView(getDrawable(ic_glossyphone))
+        var isContactPresent = false
+        var isPhoneNumberPresent = false
+        var isImagePresent = false
+        tempContact = name.trim()
+        Log.d("CID-IN",tempContact!!)
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             speakOut(getString(require_physical_permission))
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS),skivvy.CODE_CONTACTS_REQUEST)
         } else {
-            speakOut(getString(coming_soon))
+            //TODO: Inspect this
+            val cr: ContentResolver = contentResolver
+            val cur: Cursor? = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
+            if (cur?.count !! > 0) {
+                while (cur.moveToNext()) {
+                    val n = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
+                    Log.d("CID",n)
+                    if(tempContact ==  n.toLowerCase(skivvy.locale)){
+                        isContactPresent = true
+                        contact.contactID = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID))
+                        contact.displayName = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
+                        val pUri = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
+                        if(pUri!=null){
+                            contact.photoID =pUri
+                            isImagePresent = true
+                        }
+                        if (cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)).toInt() > 0) {
+                            isPhoneNumberPresent = true
+                            val pCur: Cursor? = cr.query(
+                                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                                null,
+                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", arrayOf(contact.contactID),
+                                null)
+                            var o = 0
+                            while (pCur?.moveToNext()!!) {
+                                ++o
+                            }
+                            contact.phoneList = arrayOfNulls(o)
+                            pCur.moveToFirst()
+                            o = 0
+                            while (pCur.moveToNext()) {
+                                val s = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                                contact.phoneList[o] = s
+                                ++o
+                            }
+                            pCur.close()
+                        } else isPhoneNumberPresent = false
+                        break
+                    } else isContactPresent = false
+                }
+            }
+            cur.close()
+            if(isContactPresent){
+                if(isImagePresent) {
+                    val uri:Uri = Uri.parse(contact.photoID)
+                    val bitmap:Bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, uri)
+                    val d: Drawable = BitmapDrawable(resources, bitmap)
+                    waitingView(d)
+                }
+                if(isPhoneNumberPresent){
+                    speakOut(getString(should_i_call) + "${contact.displayName}?",skivvy.CODE_CONTACT_CALL_CONF)
+                } else {
+                    errorView()
+                    speakOut("You don't have ${contact.displayName}'s phone number")
+                }
+            } else {
+                errorView()
+                speakOut(getString(contact_not_found))
+            }
         }
+        return true
     }
 
     //intent voice recognition, code according to action command, serving activity result
@@ -454,7 +579,7 @@ class MainActivity : AppCompatActivity(){
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
             )
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
         if (intent.resolveActivity(packageManager) != null)
             startActivityForResult(intent, code)
         else{
@@ -476,8 +601,8 @@ class MainActivity : AppCompatActivity(){
         for (packageInfo in packages) {
             if(pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
                 packagesAppName[counter] =
-                    pm.getApplicationLabel(packageInfo).toString().toLowerCase(locale)
-                packagesName[counter] = packageInfo.packageName.toLowerCase(locale)
+                    pm.getApplicationLabel(packageInfo).toString().toLowerCase(skivvy.locale)
+                packagesName[counter] = packageInfo.packageName.toLowerCase(skivvy.locale)
                 packagesIcon[counter] = pm.getApplicationIcon(packageInfo)
                 packagesMain[counter] = pm.getLaunchIntentForPackage(packageInfo.packageName)
                 ++counter
@@ -549,7 +674,9 @@ class MainActivity : AppCompatActivity(){
     private fun successView(image:Drawable?):Boolean{
         loading?.startAnimation(focusRotate)
         loading?.setImageDrawable(getDrawable(ic_green_dotsincircle))
-        icon?.setImageDrawable(image)
+        if(image!=null) {
+            icon?.setImageDrawable(image)
+        }
         return true
     }
 
@@ -576,6 +703,10 @@ class MainActivity : AppCompatActivity(){
             override fun onStart(utteranceId: String) {}
         })
             tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
+    }
+    private fun getTrainingStatus():Boolean{
+        return getSharedPreferences(skivvy.PREF_HEAD_APP_MODE, MODE_PRIVATE)
+            .getBoolean(skivvy.PREF_KEY_TRAINING, false)
     }
     private fun getMuteStatus():Boolean{
         return getSharedPreferences(skivvy.PREF_HEAD_VOICE, MODE_PRIVATE)

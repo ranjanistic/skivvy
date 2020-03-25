@@ -2,8 +2,106 @@
 <resources>
     <string name="app_name">स्किव्वी</string>
     <string name="hello">नमस्ते!</string>
-    <string name="mic_open_caption">कुछ कहिए</string>
+    <string name="mic_open_caption">हुक्म</string>
     <string name="theme">थीम</string>
-    <string name="recognize_error">मुझे समझ नहीं आया</string>
-    <string name="no_input">कोई निवेश नहीं</string>
+    <string name="recognize_error">मुझे समझ नहीं आया।&#160;</string>
+    <string name="no_input">आपने कुछ भी नहीं कहा</string>
+
+    <string-array name="acceptances">
+        <item>हाँ</item>
+        <item>हां</item>
+        <item>बिल्कुल</item>
+        <item>ज़रूर</item>
+        <item>ठीक है</item>
+    </string-array>
+
+    <string-array name="denials">
+        <item>नही</item>
+        <item>नहीं</item>
+        <item>ना</item>
+        <item>बिल्कुल नहीं</item>
+        <item>बिल्कुल नही</item>
+        <item>रुको</item>
+    </string-array>
+
+    <string-array name="setup_list">
+        <item>सेट अप</item>
+        <item>व्यवस्था</item>
+    </string-array>
+
+    <string-array name="bt_list">
+        <item>ब्लूटूथ</item>
+        <item> ब्लूटूथ खोलो</item>
+        <item>ब्लूटूथ चालू करो</item>
+    </string-array>
+
+    <string-array name="wifi_list">
+        <item>वाई - फाई</item>
+        <item>वाईफाई</item>
+        <item>वाईफाई चालू करो</item>
+        <item>वाईफाई खोलो</item>
+        <item>वाई फाई</item>
+        <item>वाई फाई खोलो</item>
+    </string-array>
+    <string-array name="gps_list">
+        <item>जीपीएस</item>
+        <item>ग्लोबल पोजिशनिंग सिस्टम</item>
+        <item>जीपीएस खोलो</item>
+        <item>स्थान</item>
+    </string-array>
+    <string-array name="lock_list">
+        <item>लॉक</item>
+        <item>लॉक करो</item>
+        <item>स्क्रीन लॉक</item>
+        <item>लॉक स्क्रीन</item>
+        <item>सो जाओ</item>
+    </string-array>
+    <string-array name="snap_list">
+        <item>स्नैपशॉट</item>
+        <item>स्क्रीनशॉट</item>
+        <item>स्क्रीनशॉट लो</item>
+    </string-array>
+    <string name="exit" translatable="false">bye</string>
+
+
+    <string name="device_admin_request">मुझे स्क्रीन लॉक करने के लिए डिवाइस एडमिन बनना होगा</string>
+    <string name="device_admin_persuation">अपने आदेश पर स्क्रीन लॉक करने के लिए स्किवी को एक डिवाइस एडमिन के रूप में सक्रिय करें। चिंता न करें, स्किवी सुरक्षित है और कभी भी आपके डिवाइस को किसी भी तरह से नुकसान नहीं पहुंचाएगा।</string>
+    <string name="do_u_want_open">क्या आप चाहते हैं कि मैं खोलूं&#160;</string>
+    <string name="opening">मैं खोल रही हूं&#160;</string>
+    <string name="gps_enabled">सभी उपग्रह अब आप पर हैं</string>
+    <string name="gps_is_off">जीपीएस सक्षम नहीं है</string>
+    <string name="bt_off">ब्लूटूथ बंद है</string>
+    <string name="bt_on">ब्लूटूथ चालू है</string>
+    <string name="wifi_off">वाई-फाई को बंद कर दिया</string>
+    <string name="wifi_on">वाईफ़ाई उपलब्ध हॉट स्पॉट की तलाश में है</string>
+    <string name="screen_locked">बंद</string>
+    <string name="internal_error">आंतरिक गलती</string>
+    <string name="snap_success">स्क्रीन शॉट लिया</string>
+    <string name="snap_failed">स्क्रीनशॉट नहीं ले सकते</string>
+    <string name="exit_msg">अलविदा!</string>
+    <string name="okay">ठीक है</string>
+    <string name="null_variable_error">क्षमा करें, मैं आपकी आज्ञा को भूल गयी</string>
+    <string name="error">त्रुटि</string>
+    <string name="language_not_supported">निर्दिष्ट भाषा समर्थित नहीं है</string>
+    <string name="output_error">बोलने में त्रुटि</string>
+    <string name="call_permit_denied">आपने मुझे कॉल करने की अनुमति नहीं दी।</string>
+    <string name="should_i_call">क्या मुझे कॉल करनी चाहिए&#160;</string>
+    <string name="storage_permission_denied">आपने मुझे डिवाइस पर स्क्रीनशॉट स्टोर करने की अनुमति नहीं दी</string>
+    <string name="contact_permission_denied">आपने मुझे अपने संपर्कों तक पहुँचने की अनुमति नहीं दी</string>
+    <string name="unmute_text">अमूक भाषण उत्पादन</string>
+    <string name="mute_text">मूक भाषण उत्पादन</string>
+    <string name="activate_training_text">प्रशिक्षण मोड को सक्रिय करें</string>
+    <string name="deactivate_training_text">प्रशिक्षण मोड निष्क्रिय करें</string>
+    <string name="disable_fingerprint">बायोमेट्रिक अक्षम करें</string>
+    <string name="enable_fingerprint">बायोमेट्रिक्स सक्षम करें</string>
+    <string name="auth_demand_title">स्किव्वी प्रवेश अनुरोध</string>
+    <string name="auth_demand_subtitle">मुझे आपका फिंगरप्रिंट चाहिए</string>
+    <string name="other_auth_ops">खाता पासवर्ड का उपयोग करें</string>
+    <string name="require_physical_permission">मुझे आपकी अनुमति चाहिए</string>
+    <string name="i_am">मैं हूँ&#160;</string>
+    <string name="coming_soon">जल्द आ रहा है</string>
+    <string name="calling">मैं कॉल कर रही हूँ&#160;</string>
+    <string name="app_tag_line">प्रियांशु रंजन का एक प्रयोग</string>
+    <string name="call">कॉल</string>
+
 </resources>

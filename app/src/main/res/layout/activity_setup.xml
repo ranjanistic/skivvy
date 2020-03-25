@@ -60,4 +60,17 @@
         app:layout_constraintTop_toBottomOf="@id/muteUnmuteBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?attr/secondary_text_color"
+        android:textSize="@dimen/smallest_text_size"
+        android:gravity="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="1"
+        android:text="@string/app_tag_line"
+        android:layout_margin="@dimen/minimum_separation"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

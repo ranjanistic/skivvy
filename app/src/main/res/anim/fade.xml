@@ -7,4 +7,9 @@
     android:fromAlpha="0.3"
     android:toAlpha="1"
     android:repeatCount="infinite"/>
+    <scale
+        android:pivotY="50%"
+        android:pivotX="50%"
+        android:toXScale="50%"
+        android:toYScale="50%"/>
 </set>

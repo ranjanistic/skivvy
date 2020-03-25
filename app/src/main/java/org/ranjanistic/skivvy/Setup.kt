@@ -19,8 +19,8 @@ class Setup : AppCompatActivity() {
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_setup)
         skivvy = this.application as Skivvy
+        setContentView(R.layout.activity_setup)
         training = findViewById(R.id.trainingModeBtn)
         mute = findViewById(R.id.muteUnmuteBtn)
         biometrics = findViewById(R.id.biometricsBtn)
