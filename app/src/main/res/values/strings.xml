@@ -100,6 +100,14 @@
     <string name="calling">Calling&#160;</string>
     <string name="app_tag_line">An experiment of Priyanshu Ranjan</string>
     <string name="call">call</string>
-    <string name="device_admin_failure">You didn\'t activate me as a device admin</string>
+    <string name="device_admin_failure">You didn\'t activate me as a device admin.</string>
     <string name="contact_not_found">No such contact</string>
+    <string name="no_contacts_available">You seem to have no contacts.</string>
+    <string name="should_i_email">Should I email&#160;</string>
+    <string name="invalid_call_request">Invalid call request</string>
+    <string name="invalid_email_request">Invalid email address</string>
+    <string name="you_dont_seem_having">You don\'t seem to have&#160;</string>
+    <string name="someone_email_address">\'s email address.</string>
+    <string name="someones_phone_number">\'s phone number.</string>
+    <string name="email">email</string>
 </resources>

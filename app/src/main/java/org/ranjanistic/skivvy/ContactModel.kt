@@ -6,5 +6,5 @@ class ContactModel {
     lateinit var displayName:String
     lateinit var nickName:String
     lateinit var phoneList:Array<String?>
-    lateinit var emailList:Array<String>
+    lateinit var emailList:Array<String?>
 }

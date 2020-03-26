@@ -119,5 +119,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintVertical_bias="1"/>
-
+    <ImageView
+        android:id="@+id/outputStatusView"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        app:layout_constraintTop_toBottomOf="@id/backdrop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="1"
+        android:layout_margin="@dimen/minimum_separation"
+        app:srcCompat="@drawable/ic_speakericon"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
