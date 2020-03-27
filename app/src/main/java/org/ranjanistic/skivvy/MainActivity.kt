@@ -12,13 +12,12 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.database.Cursor
-import android.graphics.Bitmap
+import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.location.LocationManager
 import android.net.Uri
 import android.net.wifi.WifiManager
-import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Environment
 import android.provider.ContactsContract
@@ -47,6 +46,7 @@ import java.util.*
 
 class MainActivity : AppCompatActivity(){
     private var tts: TextToSpeech? = null
+
     private var outPut: TextView? = null
     private var input: TextView? = null
     private var focusRotate: Animation? = null
@@ -57,6 +57,9 @@ class MainActivity : AppCompatActivity(){
     private var bubbleAnimation: Animation? = null
     private var fallAnimation: Animation? = null
     private var riseAnimation:Animation? = null
+    private var extendAnimation:Animation? = null
+    private var fadeOffAnimation:Animation? = null
+    private var translateAnimation:Animation? = null
     private var receiver: TextView? = null
     private lateinit var setting:ImageButton
     private var greet: TextView? = null
@@ -67,6 +70,8 @@ class MainActivity : AppCompatActivity(){
     private var txt: String? = null
     private var tempPhone:String? = null
     private var tempMail:String? = null
+    private var tempMailSubject:String? = null
+    private var tempMailBody:String? = null
     private var tempContact:String? = null
     private var tempContactCode:Int? = null
     private lateinit var backfall: ImageView
@@ -127,15 +132,33 @@ class MainActivity : AppCompatActivity(){
         rotateSlow = AnimationUtils.loadAnimation(context, R.anim.rotate_slow)
         fadeAnimation = AnimationUtils.loadAnimation(context, R.anim.fade)
         exitAnimation = AnimationUtils.loadAnimation(context, R.anim.rotate_exit)
+        /*fadeOffAnimation = AnimationUtils.loadAnimation(context, R.anim.fade_off)
+        translateAnimation = AnimationUtils.loadAnimation(context, R.anim.scale_translate_setting)
+        extendAnimation = AnimationUtils.loadAnimation(context, R.anim.extend_back)
+         */
         backfall.startAnimation(fallAnimation)
         setting.startAnimation(bubbleAnimation)
         receiver!!.startAnimation(bubbleAnimation)
         greet!!.startAnimation(bubbleAnimation)
     }
+    private fun startSettingAnimate(){
+        setting.startAnimation(translateAnimation)
+        backfall.startAnimation(extendAnimation)
+        loading!!.startAnimation(exitAnimation)
+    }
     private fun setListeners(){
+/*        translateAnimation!!.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationEnd(p0: Animation?) {
+            }
+            override fun onAnimationRepeat(p0: Animation?) {}
+            override fun onAnimationStart(p0: Animation?) {}
+        })
+
+ */
         setting.setOnClickListener {
             setButtonsClickable(false)
             startActivity(Intent(context,Setup::class.java))
+            //overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
         }
         receiver?.setOnClickListener {
             setButtonsClickable(false)
@@ -348,8 +371,9 @@ class MainActivity : AppCompatActivity(){
                         .toLowerCase(skivvy.locale)
                     when {
                         resources.getStringArray(R.array.acceptances).contains(txt) -> {
-                            successView(null)
-                            emailingOps(tempMail!!)
+                            //successView(null)
+                            speakOut(getString(what_is_subject),skivvy.CODE_EMAIL_SUBJECT)
+                            //emailingOps(tempMail!!)
                         }
                         resources.getStringArray(R.array.denials).contains(txt) -> {
                             tempMail = null
@@ -374,8 +398,9 @@ class MainActivity : AppCompatActivity(){
                         .toLowerCase(skivvy.locale)
                     when {
                         resources.getStringArray(R.array.acceptances).contains(txt) -> {
-                            successView(null)
-                            contact.emailList[0]?.let { emailingOps(it) }
+                            //successView(null)
+                            tempMail = contact.emailList[0]
+                            speakOut(getString(what_is_subject),skivvy.CODE_EMAIL_SUBJECT)
                         }
                         resources.getStringArray(R.array.denials).contains(txt) -> {
                             normalView()
@@ -384,6 +409,56 @@ class MainActivity : AppCompatActivity(){
                         else -> {
                             speakOut(getString(recognize_error) + getString(should_i_email)+"${contact.emailList[0]}?",
                                 skivvy.CODE_CONTACT_EMAIL_CONF
+                            )
+                        }
+                    }
+                } else {
+                    normalView()
+                    speakOut(getString(no_input))
+                }
+            }
+            skivvy.CODE_EMAIL_SUBJECT->{
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                        .toLowerCase(skivvy.locale)
+                    when {
+                        resources.getStringArray(R.array.denials).contains(txt) -> {
+                            normalView()
+                            speakOut(getString(okay))
+                        }
+                        txt!=null -> {
+                            tempMailSubject = txt
+                            speakOut(getString(subject_added)+getString(what_is_body),skivvy.CODE_EMAIL_BODY)
+                        }
+                        else -> {
+                            speakOut(getString(recognize_error) + getString(what_is_subject),
+                                skivvy.CODE_EMAIL_SUBJECT
+                            )
+                        }
+                    }
+                } else {
+                    normalView()
+                    speakOut(getString(no_input))
+                }
+            }
+            skivvy.CODE_EMAIL_BODY->{
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                        .toLowerCase(skivvy.locale)
+                    when {
+                        resources.getStringArray(R.array.denials).contains(txt) -> {
+                            normalView()
+                            speakOut(getString(okay))
+                        }
+                        txt!=null -> {
+                            successView(null)
+                            tempMailBody = txt
+                            speakOut(getString(body_added) + getString(preparing_email))
+                            emailingOps(tempMail,tempMailSubject,tempMailBody)
+                        }
+                        else -> {
+                            speakOut(getString(recognize_error) + getString(what_is_body),
+                                skivvy.CODE_EMAIL_BODY
                             )
                         }
                     }
@@ -534,12 +609,15 @@ class MainActivity : AppCompatActivity(){
                     localTxt.length>1 -> {
                         contactOps(localTxt, skivvy.CODE_CONTACT_CALL_CONF)
                     }
-                    else -> speakOut(getString(invalid_call_request))
+                    else -> {
+                        errorView()
+                        speakOut(getString(invalid_call_request))
+                    }
                 }
             } else return false
             return true
         } else if(text.contains(getString(email))){
-            waitingView(null)
+            waitingView(getDrawable(ic_email_envelope))
             localTxt = text.replace(getString(email),"",true)
             tempMail = localTxt.replace(" ","")
             tempMail = tempMail!!.trim()
@@ -551,6 +629,7 @@ class MainActivity : AppCompatActivity(){
                     contactOps(localTxt,skivvy.CODE_CONTACT_EMAIL_CONF)
                 }
                 else -> {
+                    errorView()
                     speakOut(getString(invalid_email_request))
                 }
             }
@@ -583,19 +662,14 @@ class MainActivity : AppCompatActivity(){
         }
     }
 
-    private fun emailingOps(email:String){
-        //mailto:darkmodelabs@gmail.com?cc=priyanshuranjan88@gmail.com&subject=Schemester%20User%20Feedback&body=Dear%20developers,%20
-        speakOut("Emailing...")
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("mailto:$email")))
-
+    private fun emailingOps(email:String?,subject:String?,body:String?){
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("mailto:$email?subject=$subject&body=$body")))
     }
 
-    //TODO: Contacts search and dial
     private fun contactOps(name:String,code: Int){
         waitingView(getDrawable(ic_glossyphone))
         var isContactPresent = false
-        var isEmailPresent =false
-        var isImagePresent = false
+        val isEmailPresent: Boolean
         tempContactCode = code
         tempContact = name.trim()
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
@@ -606,10 +680,12 @@ class MainActivity : AppCompatActivity(){
             val cur: Cursor? = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
             if (cur?.count !! > 0) {
                 while (cur.moveToNext()) {
+                    //TODO: Nickname support
                     val dName =
                         cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
                             .toLowerCase(skivvy.locale)
-                    if (tempContact == dName) {
+                    val fName = dName.substringBefore(" ")
+                    if (tempContact == dName || tempContact == fName) {
                         isContactPresent = true
                         contact.contactID =
                             cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID))
@@ -617,18 +693,9 @@ class MainActivity : AppCompatActivity(){
                             cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
                         val dpUri =
                             cur.getString(cur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
-                        isImagePresent = dpUri != null
-                        if (isImagePresent) {
+                        if (dpUri != null) {
                             contact.photoID = dpUri
-                            waitingView(
-                                BitmapDrawable(
-                                    resources,
-                                    MediaStore.Images.Media.getBitmap(
-                                        this.contentResolver,
-                                        Uri.parse(contact.photoID)
-                                    )
-                                )
-                            )
+                            waitingView(BitmapDrawable(resources, MediaStore.Images.Media.getBitmap(this.contentResolver, Uri.parse(contact.photoID))))
                         }
                         val pCur: Cursor? = cr.query(
                             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
@@ -720,11 +787,12 @@ class MainActivity : AppCompatActivity(){
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
             )
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
+            //.putExtra(RecognizerIntent.EXTRA_PROMPT, "Reply");
         if (intent.resolveActivity(packageManager) != null)
             startActivityForResult(intent, code)
         else{
             errorView()
-            outPut!!.text = getString(error)
+            speakOut(getString(internal_error))
         }
     }
 
@@ -792,6 +860,9 @@ class MainActivity : AppCompatActivity(){
 
     private fun normalView(){
         txt = null
+        tempMail = null
+        tempMailSubject = null
+        tempMailBody = null
         tempPackageIndex = null
         loading?.setImageDrawable(getDrawable(ic_dotsincircle))
         loading?.startAnimation(normalRotate)
@@ -857,6 +928,11 @@ class MainActivity : AppCompatActivity(){
         else{
                 if(taskCode!=null)  startVoiceRecIntent(taskCode)
         }
+    }
+
+    private fun getBiometricStatus():Boolean{
+        return getSharedPreferences(skivvy.PREF_HEAD_SECURITY, MODE_PRIVATE)
+            .getBoolean(skivvy.PREF_KEY_BIOMETRIC, false)
     }
 
     private fun getTrainingStatus():Boolean{

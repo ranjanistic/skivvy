@@ -38,7 +38,6 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_margin="@dimen/base_separation"
-    android:padding="4dp"
     android:elevation="16dp"
     app:srcCompat="@drawable/ic_setttings_icon"
     android:background="@drawable/square_round_button"

@@ -4,20 +4,20 @@
     <rotate
         android:repeatMode="reverse"
         android:duration="2500"
+        android:repeatCount="infinite"
         android:fromDegrees="0"
         android:pivotX="50%"
         android:pivotY="50%"
-        android:repeatCount="infinite"
         android:startOffset="0"
         android:toDegrees="720" />
     <scale
-        android:repeatCount="infinite"
         android:repeatMode="reverse"
         android:duration="2500"
+        android:repeatCount="infinite"
         android:fromYScale="100%"
-        android:toYScale="50%"
+        android:toYScale="60%"
         android:fromXScale="100%"
-        android:toXScale="50%"
+        android:toXScale="60%"
         android:pivotY="50%"
         android:pivotX="50%"
         />

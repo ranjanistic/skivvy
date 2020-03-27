@@ -15,6 +15,8 @@
         <item>yo</item>
     </string-array>
     <string-array name="denials">
+        <item>cancel</item>
+        <item>discard</item>
         <item>no</item>
         <item>nope</item>
         <item>nopes</item>
@@ -91,8 +93,8 @@
     <string name="deactivate_training_text">Deactivate training mode</string>
     <string name="disable_fingerprint">Disable biometrics</string>
     <string name="enable_fingerprint">Enable biometrics</string>
-    <string name="auth_demand_title">Skivvy access demand</string>
-    <string name="auth_demand_subtitle">I need your fingerprint</string>
+    <string name="auth_demand_title">Skivvy Access Demand</string>
+    <string name="auth_demand_subtitle">I need your fingerprint.</string>
     <string name="other_auth_ops">Use account password</string>
     <string name="require_physical_permission">I need your physical permission</string>
     <string name="i_am">I am&#160;</string>
@@ -110,4 +112,10 @@
     <string name="someone_email_address">\'s email address.</string>
     <string name="someones_phone_number">\'s phone number.</string>
     <string name="email">email</string>
+    <string name="what_is_subject">What is the subject?</string>
+    <string name="subject_added">Subject added.&#160;</string>
+    <string name="what_is_body">What\'s the body?</string>
+    <string name="body_added">Body added.&#160;</string>
+    <string name="preparing_email">Preparing email to send</string>
+    <string name="biometric_auth_explanation">Authenticate yourself to proceed further. This is required when you are about to perform a sensitive action directly affecting Skivvy\'s functions, or your real life.</string>
 </resources>

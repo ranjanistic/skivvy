@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <set xmlns:android="http://schemas.android.com/apk/res/android"
-    android:interpolator="@android:anim/linear_interpolator">
+    android:interpolator="@android:anim/linear_interpolator"
+    android:fillAfter="true"
+    android:duration="600">
     <scale
-        android:duration="1000"
         android:fromYScale="100%"
         android:toYScale="0"
         android:fromXScale="100%"
@@ -12,7 +13,6 @@
         />
     <rotate
         android:repeatMode="restart"
-        android:duration="2500"
         android:fromDegrees="0"
         android:pivotX="50%"
         android:pivotY="50%"

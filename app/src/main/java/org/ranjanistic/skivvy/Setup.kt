@@ -1,16 +1,23 @@
 package org.ranjanistic.skivvy
 
+import android.media.Image
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
+import android.widget.ImageView
 import android.widget.TextView
+import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import java.util.concurrent.Executor
 
 class Setup : AppCompatActivity() {
     lateinit var skivvy:Skivvy
+    private var scaleAnimation: Animation? = null
+    private lateinit var settingIcon: ImageView
     private lateinit var training:TextView
     private lateinit var mute:TextView
     private lateinit var biometrics:TextView
@@ -21,13 +28,28 @@ class Setup : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         skivvy = this.application as Skivvy
         setContentView(R.layout.activity_setup)
+        settingIcon = findViewById(R.id.settingIcon)
         training = findViewById(R.id.trainingModeBtn)
         mute = findViewById(R.id.muteUnmuteBtn)
         biometrics = findViewById(R.id.biometricsBtn)
+        //scaleAnimation = AnimationUtils.loadAnimation(this,R.anim.scale_translate_setting_reverse)
         setTrainingMode(getTrainingStatus())
         saveMuteStatus(getMuteStatus())
-        setBiometricsStatus(getBiometricStatus())
-        authSetup()
+
+        settingIcon.setOnClickListener{
+            finish()
+            //startFinishAnimation()
+        }
+        /*
+        scaleAnimation!!.setAnimationListener(object : Animation.AnimationListener{
+            override fun onAnimationEnd(p0: Animation?) {
+                finish()
+                overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+            }
+            override fun onAnimationStart(p0: Animation?) {}
+            override fun onAnimationRepeat(p0: Animation?) {}
+        })
+         */
         training.setOnClickListener{
             setTrainingMode(!getTrainingStatus())
         }
@@ -41,6 +63,30 @@ class Setup : AppCompatActivity() {
                 setBiometricsStatus(!getBiometricStatus())
             }
         }
+
+    }
+
+    override fun onStart() {
+        if(checkBioMetrics()) {
+            biometrics.visibility = View.VISIBLE
+            setBiometricsStatus(getBiometricStatus())
+            authSetup()
+        } else {
+            biometrics.visibility = View.GONE
+            setBiometricsStatus(false)
+        }
+        super.onStart()
+    }
+
+    private fun checkBioMetrics():Boolean{
+        val biometricManager = BiometricManager.from(this)
+        return when (biometricManager.canAuthenticate()) {
+            BiometricManager.BIOMETRIC_SUCCESS -> true
+            else -> false
+        }
+    }
+    private fun startFinishAnimation(){
+        settingIcon.startAnimation(scaleAnimation)
     }
     private fun authSetup(){
         executor = ContextCompat.getMainExecutor(this)
@@ -55,7 +101,8 @@ class Setup : AppCompatActivity() {
         promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(getString(R.string.auth_demand_title))
             .setSubtitle(getString(R.string.auth_demand_subtitle))
-            .setNegativeButtonText(getString(R.string.other_auth_ops))
+            .setDescription(getString(R.string.biometric_auth_explanation))
+            .setNegativeButtonText("Discard")
             .build()
     }
     private fun setBiometricsStatus(isEnabled:Boolean){

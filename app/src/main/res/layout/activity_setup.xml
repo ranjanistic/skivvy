@@ -9,9 +9,9 @@
     tools:context=".Setup">
     <ImageView
         android:id="@+id/settingIcon"
-        android:layout_width="0dp"
+        android:layout_width="110dp"
         android:layout_height="110dp"
-        android:layout_margin="@dimen/minimum_separation"
+        android:layout_margin="@dimen/base_separation"
         app:srcCompat="@drawable/ic_setttings_icon"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
