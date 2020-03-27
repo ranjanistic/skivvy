@@ -15,8 +15,6 @@
         <item>yo</item>
     </string-array>
     <string-array name="denials">
-        <item>cancel</item>
-        <item>discard</item>
         <item>no</item>
         <item>nope</item>
         <item>nopes</item>
@@ -24,6 +22,13 @@
         <item>don\'t</item>
         <item>stop</item>
     </string-array>
+
+    <string-array name="disruptions">
+        <item>cancel</item>
+        <item>discard</item>
+        <item>stop</item>
+    </string-array>
+
     <string-array name="setup_list">
         <item>setup</item>
         <item>set up</item>
