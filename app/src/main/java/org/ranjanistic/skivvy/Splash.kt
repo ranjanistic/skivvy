@@ -8,6 +8,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import java.util.concurrent.Executor
 
+@ExperimentalStdlibApi
 class Splash : AppCompatActivity() {
     lateinit var skivvy: Skivvy
     private lateinit var executor: Executor

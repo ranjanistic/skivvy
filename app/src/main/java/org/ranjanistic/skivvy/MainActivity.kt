@@ -28,6 +28,7 @@ import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.animation.Animation
@@ -45,6 +46,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 
+@ExperimentalStdlibApi
 class MainActivity : AppCompatActivity(){
     private var tts: TextToSpeech? = null
 
@@ -246,7 +248,7 @@ class MainActivity : AppCompatActivity(){
                         .toLowerCase(skivvy.locale)
                     if (txt != null) {
                         input?.text = txt
-                        if (!respondToCommand(txt)) {
+                        if (!respondToCommand(txt!!)) {
                             if (!appOptions(txt)) {
                                 if (!directActions(txt!!)) {
                                     errorView()
@@ -487,7 +489,8 @@ class MainActivity : AppCompatActivity(){
 
     //TODO:  Mathematical calculations command
     //actions invoking quick commands
-    private fun respondToCommand(text:String?):Boolean{
+    @ExperimentalStdlibApi
+    private fun respondToCommand(text:String):Boolean{
         val array = arrayOf(R.array.setup_list,R.array.bt_list,R.array.wifi_list,R.array.gps_list,R.array.lock_list,R.array.snap_list)
         when {
             resources.getStringArray(array[0]).contains(text) -> {
@@ -514,7 +517,7 @@ class MainActivity : AppCompatActivity(){
                     takeScreenshot()
                 }
             }
-            text!!.contains("volume")->{
+            text.contains("volume")->{
                 when {
                     text.contains("up") -> volumeOps(true)
                     text.contains("down") -> volumeOps(false)
@@ -524,16 +527,113 @@ class MainActivity : AppCompatActivity(){
             text == getString(exit) -> {
                 finish()
             }
-            text == "grant permissions"->{
-                if(!hasPermissions(this, *skivvy.permissions))
-                ActivityCompat.requestPermissions(this, skivvy.permissions,
-                    skivvy.CODE_ALL_PERMISSIONS)
+            text.contains("calculate") || text.contains("compute") ->{
+                var expression = text.replace("calculate","")
+                expression = expression.replace(" ","")
+                expression = expression.replace("x","*")
+                Log.d("VAL",expression)
+                speakOut(expression)
+                if(!computerOps(expression)){
+                    speakOut("Invalid expression")
+                }
             }
-
+            text == "grant permissions"->{
+                if(!hasPermissions(this, *skivvy.permissions)) {
+                    ActivityCompat.requestPermissions(
+                        this, skivvy.permissions,
+                        skivvy.CODE_ALL_PERMISSIONS
+                    )
+                } else {
+                    speakOut("I have all the permissions that I need from you.")
+                }
+            }
             else -> {
                 return false
             }
         }
+        return true
+    }
+    //TODO: Calculator function
+    @ExperimentalStdlibApi
+    private fun computerOps(expression:String):Boolean {
+        Log.d("CVLexp", expression)
+        var c = 1
+        val operator: Array<Char> = arrayOf('/', '*', '+', '-')
+        while (c < expression.length) {
+            if (!operator.contains(expression[c]))
+                return false
+            c += 2
+        }
+        var divExpression: String? = expression
+        while(divExpression!!.contains('/')){
+            var d1:Float = 0F
+            var d2:Float = 0F
+            var i = 1
+            while(i<expression.length){
+                if(expression[i]=='/'){
+                    divExpression.replace(divExpression,expression.toCharArray(0,i-2).toString())
+                    d1 = expression[i-1].toFloat()
+                    d2 = expression[i+1].toFloat()
+                    val d = d1/d2
+                    divExpression.plus(d.toString())
+                    divExpression.plus(expression.toCharArray(i+2,expression.length).toString())
+                }
+                i += 2
+            }
+        }
+        var mulExpression:String? = divExpression
+        while(mulExpression!!.contains('*')){
+            var m1:Int = 0
+            var m2:Int = 0
+            var i = 1
+            while(i<divExpression.length){
+                if(divExpression[i]=='/'){
+                    mulExpression.replace(mulExpression,divExpression.toCharArray(0,i-2).toString())
+                    m1 = expression[i-1].toInt()
+                    m2 = expression[i+1].toInt()
+                    val m = m1*m2
+                    mulExpression.plus(m.toString())
+                    mulExpression.plus(divExpression.toCharArray(i+2,divExpression.length).toString())
+                }
+                i += 2
+            }
+        }
+        var sumExpression:String? = mulExpression
+        while(sumExpression!!.contains('+')){
+            var s1:Int = 0
+            var s2:Int = 0
+            var i = 1
+            while(i<mulExpression.length){
+                if(mulExpression[i]=='/'){
+                    sumExpression.replace(sumExpression,mulExpression.toCharArray(0,i-2).toString())
+                    s1 = expression[i-1].toInt()
+                    s2 = expression[i+1].toInt()
+                    val s = s1+s2
+                    sumExpression.plus(s.toString())
+                    sumExpression.plus(mulExpression.toCharArray(i+2,mulExpression.length).toString())
+                }
+                i += 2
+            }
+        }
+
+        var subExpression:String? = sumExpression
+        while(subExpression!!.contains('-')){
+            var s1:Int = 0
+            var s2:Int = 0
+            var i = 1
+            while(i<sumExpression.length){
+                if(sumExpression[i]=='/'){
+                    subExpression.replace(subExpression,sumExpression.toCharArray(0,i-2).toString())
+                    s1 = expression[i-1].toInt()
+                    s2 = expression[i+1].toInt()
+                    val s = s1-s2
+                    subExpression.plus(s.toString())
+                    subExpression.plus(sumExpression.toCharArray(i+2,sumExpression.length).toString())
+                }
+                i += 2
+            }
+        }
+        speakOut(subExpression)
         return true
     }
     private fun hasPermissions(context: Context, vararg permissions: String): Boolean = permissions.all {
@@ -636,7 +736,7 @@ class MainActivity : AppCompatActivity(){
             tempPhone = text.replace("[^0-9]".toRegex(), "")
             if(tempPhone!=null) {
                 when {
-                    tempPhone!!.matches(skivvy.phonePattern) ->{
+                    tempPhone!!.contains(skivvy.phonePattern) ->{
                         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
                             speakOut(getString(require_physical_permission))
                             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CALL_PHONE), skivvy.CODE_CALL_REQUEST)
@@ -647,12 +747,13 @@ class MainActivity : AppCompatActivity(){
                             )
                         }
                     }
-                    localTxt.length>1 -> {
-                        contactOps(localTxt, skivvy.CODE_CONTACT_CALL_CONF)
-                    }
                     else -> {
-                        errorView()
-                        speakOut(getString(invalid_call_request))
+                        if(localTxt.length>1) {
+                            contactOps(localTxt, skivvy.CODE_CONTACT_CALL_CONF)
+                        } else {
+                            errorView()
+                            speakOut(getString(invalid_call_request))
+                        }
                     }
                 }
             } else return false
