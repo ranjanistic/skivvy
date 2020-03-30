@@ -45,6 +45,7 @@ import org.ranjanistic.skivvy.R.string.*
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
+import java.util.function.BinaryOperator
 
 @ExperimentalStdlibApi
 class MainActivity : AppCompatActivity(){
@@ -529,13 +530,19 @@ class MainActivity : AppCompatActivity(){
             }
             text.contains("calculate") || text.contains("compute") ->{
                 var expression = text.replace("calculate","")
+                Log.d(TAG,expression)
                 expression = expression.replace(" ","")
                 expression = expression.replace("x","*")
-                Log.d("VAL",expression)
+                expression = expression.replace("dividedby","/")
+                expression = expression.replace("over","/")
+                expression = expression.replace("multipliedby","*")
+                expression = expression.replace("into","*")
+                expression = expression.replace("plus","+")
+                expression = expression.replace("minus","-")
                 speakOut(expression)
                 if(!computerOps(expression)){
                     speakOut("Invalid expression")
-                }
+                } else speakOut("Done")
             }
             text == "grant permissions"->{
                 if(!hasPermissions(this, *skivvy.permissions)) {
@@ -559,12 +566,6 @@ class MainActivity : AppCompatActivity(){
     @ExperimentalStdlibApi
     private fun computerOps(expression:String):Boolean {
         Log.d(TAG, expression)
-        var isDiv = false
-        var isMul  =false
-        var isAdd =false
-        var isSub = false
-        var c = 1
-        var i = 0
         val operatorBool:Array<Boolean> = arrayOf(false,false,false,false)
         val operators: Array<Char> = arrayOf('/', '*', '+', '-')
         var opIndex = 0
@@ -581,16 +582,33 @@ class MainActivity : AppCompatActivity(){
          *  The following block stores the position of operators in the given expression in  a new array (of Integers),
          *  which will help the further block of code to contain and create a distinction between operands (numbers) and operators.
          */
+
         var expIndex = 0
-        var expOperatorPos = intArrayOf()
-        var expOpIndex = 0
+        var count = 0
+        while(expIndex<expression.length){
+            opIndex = 0
+            while(opIndex < operators.size) {
+                if (expression[expIndex] == operators[opIndex]){
+                    ++count         //saving operator positions
+                    Log.d("OPPOSCOUNt", count.toString())
+                }
+                ++opIndex
+            }
+            ++expIndex
+        }
+
+        if(count == 0){
+            return false
+        }
+        expIndex = 0
+        val expOperatorPos = arrayOfNulls<Int>(count)
+         var expOpIndex = 0
         while(expIndex<expression.length){
             opIndex = 0
             while(opIndex < operators.size) {
                 if (expression[expIndex] == operators[opIndex]){
                     expOperatorPos[expOpIndex] = expIndex         //saving operator positions
                     ++expOpIndex
-                    break
                 }
                 ++opIndex
             }
@@ -607,36 +625,91 @@ class MainActivity : AppCompatActivity(){
          *  And stores the next operator '*' at index = 3, and so on. Thus a distinction between operands and operators is created and stored in a new array (of strings).
          */
 
-        var arrayOfExpression = arrayOf<String>()       //new array of strings
-        var expArrayIndex = 0
+        var sizeofArray = 0
         var positionInExpression = 0
         var positionInOperatorPos = 0
-        while(positionInOperatorPos<expOperatorPos.size || positionInExpression<expression.length) {
-            while (positionInExpression < expOperatorPos[positionInOperatorPos]) {
+        while(positionInOperatorPos<expOperatorPos.size && positionInExpression<expression.length) {
+            while (positionInExpression < expOperatorPos[positionInOperatorPos]!!) {
+                ++positionInExpression
+            }
+            ++sizeofArray
+            if (positionInExpression == expOperatorPos[positionInOperatorPos]) {
+                ++sizeofArray
+            }
+            ++positionInExpression
+            ++positionInOperatorPos
+            if(positionInOperatorPos>=expOperatorPos.size){
+                while(positionInExpression<expression.length){
+                    ++positionInExpression
+                }
+            }
+        }
+
+        var arrayOfExpression = arrayOfNulls<String>(sizeofArray+1)
+        var expArrayIndex = 0
+        positionInExpression = 0
+        positionInOperatorPos = 0
+        while(positionInOperatorPos<expOperatorPos.size && positionInExpression<expression.length) {
+            Log.d("expOperatorPos Size",expOperatorPos.size.toString())
+            while (positionInExpression < expOperatorPos[positionInOperatorPos]!!) {
                 arrayOfExpression[expArrayIndex].plus(expression[positionInExpression])
                 ++positionInExpression
             }
-//            if(positionInOperatorPos<expOperatorPos.size){
             ++expArrayIndex
             if (positionInExpression == expOperatorPos[positionInOperatorPos]) {
                 arrayOfExpression[expArrayIndex].plus(expression[positionInExpression])
                 ++expArrayIndex
             }
-//            }
             ++positionInExpression
             ++positionInOperatorPos
-            if(positionInOperatorPos>expOperatorPos.size){
+            if(positionInOperatorPos>=expOperatorPos.size){
                 while(positionInExpression<expression.length){
-                    arrayOfExpression[expArrayIndex].plus(expression[positionInExpression])
-                    ++positionInExpression
+                    if(expArrayIndex<arrayOfExpression.size) {
+                        arrayOfExpression[expArrayIndex].plus(expression[positionInExpression])
+                        ++positionInExpression
+                    } else {
+                        Log.d("INDEX EXPARRAY OUT",expArrayIndex.toString())
+                    }
                 }
             }
         }
 
         /**
          * Now, as we have the new array of strings, having the proper expression, with operators at every even position of
-         * the array (at odd indices), the following block of code will evaluated the expression according to BODMAS rule.
+         * the array (at odd indices), the following block of code will evaluate the expression according to the BODMAS rule.
          */
+        opIndex = 0
+        while(opIndex < operators.size){
+            var opPos = 1
+            while(opPos < arrayOfExpression.size) {
+                if (arrayOfExpression[opPos] == operators[opIndex].toString()) {
+                    val n1 = arrayOfExpression[opPos-1]!!.toInt()
+                    val n2 = arrayOfExpression[opPos+1]!!.toInt()
+                    val n = operate(n1,operators[opIndex],n2)
+                    arrayOfExpression[opPos-1]  = n.toString()
+                    var j = opPos
+                    while(j+2<=arrayOfExpression.size){
+                        arrayOfExpression[j] = arrayOfExpression[j+2]
+                        arrayOfExpression[j+2] = ""
+                        ++j
+                    }
+                }
+                opPos+=2
+            }
+            ++opIndex
+        }
+
+        //TODO: Check Nill
+        var k = 0
+        while(k<arrayOfExpression.size) {
+            if(arrayOfExpression[k]!=null){
+                Log.d(TAG, arrayOfExpression[k]!!)
+            }else{
+                Log.d(TAG, "Nill $k")
+            }
+            ++k
+        }
+        return true
 
 /*
         while (c < expression.length) {
@@ -723,8 +796,18 @@ class MainActivity : AppCompatActivity(){
         return true
 
  */
-        return true
     }
+
+    private fun operate(a:Int, operator:Char, b:Int):Int?{
+        return when(operator){
+            '/'-> a/b
+            '*'-> a*b
+            '+'-> a+b
+            '-'-> a-b
+            else-> null
+        }
+    }
+
     private fun hasPermissions(context: Context, vararg permissions: String): Boolean = permissions.all {
         ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
@@ -1151,11 +1234,11 @@ class MainActivity : AppCompatActivity(){
          outPut?.text = text
          tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
              override fun onDone(utteranceId: String) {
-                 outputStat!!.visibility = View.INVISIBLE
+//                 outputStat!!.visibility = View.INVISIBLE
              }
              override fun onError(utteranceId: String) {}
              override fun onStart(utteranceId: String) {
-                 outputStat!!.visibility = View.VISIBLE
+     //            outputStat!!.visibility = View.VISIBLE
              }
          })
          if(!getMuteStatus()) tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null,"")
@@ -1165,14 +1248,14 @@ class MainActivity : AppCompatActivity(){
         outPut?.text = text
         tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onDone(utteranceId: String) {
-                outputStat!!.visibility = View.INVISIBLE
+          //      outputStat!!.visibility = View.INVISIBLE
                 if(taskCode!=null){ startVoiceRecIntent(taskCode) }
                 setButtonsClickable(true)
             }
             override fun onError(utteranceId: String) {}
             override fun onStart(utteranceId: String) {
                 setButtonsClickable(false)
-                outputStat!!.visibility = View.VISIBLE
+//                outputStat!!.visibility = View.VISIBLE
             }
         })
         if(!getMuteStatus()) tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null,"")
