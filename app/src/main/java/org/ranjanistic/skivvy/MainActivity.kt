@@ -553,30 +553,116 @@ class MainActivity : AppCompatActivity(){
         }
         return true
     }
+
     //TODO: Calculator function
+    private var TAG = "COPS"
     @ExperimentalStdlibApi
     private fun computerOps(expression:String):Boolean {
-        Log.d("CVLexp", expression)
+        Log.d(TAG, expression)
+        var isDiv = false
+        var isMul  =false
+        var isAdd =false
+        var isSub = false
         var c = 1
-        val operator: Array<Char> = arrayOf('/', '*', '+', '-')
+        var i = 0
+        val operatorBool:Array<Boolean> = arrayOf(false,false,false,false)
+        val operators: Array<Char> = arrayOf('/', '*', '+', '-')
+        var opIndex = 0
+        while(opIndex<operators.size){
+            operatorBool[opIndex] = expression.contains(operators[opIndex])
+            ++opIndex
+        }
+        if(!operatorBool.contains(true)){
+            Log.d(TAG,"noOps")
+            return false
+        }
+
+        /**
+         *  The following block stores the position of operators in the given expression in  a new array (of Integers),
+         *  which will help the further block of code to contain and create a distinction between operands (numbers) and operators.
+         */
+        var expIndex = 0
+        var expOperatorPos = intArrayOf()
+        var expOpIndex = 0
+        while(expIndex<expression.length){
+            opIndex = 0
+            while(opIndex < operators.size) {
+                if (expression[expIndex] == operators[opIndex]){
+                    expOperatorPos[expOpIndex] = expIndex         //saving operator positions
+                    ++expOpIndex
+                    break
+                }
+                ++opIndex
+            }
+            ++expIndex
+        }
+
+        /**
+         * The following block extracts values from given expression, char by char, and stores them
+         * in an array of Strings, by grouping digits in form of numbers at the same index as string, and operators in
+         * the expression at a separate index if array of Strings.
+         *  For ex - Let the given expression be :   1234/556*89+4-23
+         *  Starting from index = 0, the following block will store digits till '/'  at index =0 of empty array of Strings, then
+         *  will store '/' itself at index =  1 of empty array of Strings. Then proceeds to store 5, 5  and 6 at the same index = 2 of e.a. of strings.
+         *  And stores the next operator '*' at index = 3, and so on. Thus a distinction between operands and operators is created and stored in a new array (of strings).
+         */
+
+        var arrayOfExpression = arrayOf<String>()       //new array of strings
+        var expArrayIndex = 0
+        var positionInExpression = 0
+        var positionInOperatorPos = 0
+        while(positionInOperatorPos<expOperatorPos.size || positionInExpression<expression.length) {
+            while (positionInExpression < expOperatorPos[positionInOperatorPos]) {
+                arrayOfExpression[expArrayIndex].plus(expression[positionInExpression])
+                ++positionInExpression
+            }
+//            if(positionInOperatorPos<expOperatorPos.size){
+            ++expArrayIndex
+            if (positionInExpression == expOperatorPos[positionInOperatorPos]) {
+                arrayOfExpression[expArrayIndex].plus(expression[positionInExpression])
+                ++expArrayIndex
+            }
+//            }
+            ++positionInExpression
+            ++positionInOperatorPos
+            if(positionInOperatorPos>expOperatorPos.size){
+                while(positionInExpression<expression.length){
+                    arrayOfExpression[expArrayIndex].plus(expression[positionInExpression])
+                    ++positionInExpression
+                }
+            }
+        }
+
+        /**
+         * Now, as we have the new array of strings, having the proper expression, with operators at every even position of
+         * the array (at odd indices), the following block of code will evaluated the expression according to BODMAS rule.
+         */
+
+/*
         while (c < expression.length) {
-            if (!operator.contains(expression[c]))
+            if (!operators.contains(expression[c]))
                 return false
-            c += 2
+            else {
+                var k = i
+                while(k<c)
+                arrayOfExpression[i] = expression[c-1].toString()
+                ++i
+            }
+            ++c
         }
         var divExpression: String? = expression
         while(divExpression!!.contains('/')){
-            var d1:Float = 0F
-            var d2:Float = 0F
+            var d1: Float
+            var d2: Float
             var i = 1
             while(i<expression.length){
                 if(expression[i]=='/'){
-                    divExpression.replace(divExpression,expression.toCharArray(0,i-2).toString())
+                    divExpression = expression.toCharArray(0,i-2).toString()
                     d1 = expression[i-1].toFloat()
                     d2 = expression[i+1].toFloat()
                     val d = d1/d2
-                    divExpression.plus(d.toString())
-                    divExpression.plus(expression.toCharArray(i+2,expression.length).toString())
+                    divExpression += d.toString()
+                    divExpression += expression.toCharArray(i+2,expression.length).toString()
                 }
                 i += 2
             }
@@ -588,12 +674,12 @@ class MainActivity : AppCompatActivity(){
             var i = 1
             while(i<divExpression.length){
                 if(divExpression[i]=='/'){
-                    mulExpression.replace(mulExpression,divExpression.toCharArray(0,i-2).toString())
+                    mulExpression = divExpression.toCharArray(0,i-2).toString()
                     m1 = expression[i-1].toInt()
                     m2 = expression[i+1].toInt()
                     val m = m1*m2
-                    mulExpression.plus(m.toString())
-                    mulExpression.plus(divExpression.toCharArray(i+2,divExpression.length).toString())
+                    mulExpression += m.toString()
+                    mulExpression+=divExpression.toCharArray(i+2,divExpression.length).toString()
                 }
                 i += 2
             }
@@ -605,12 +691,12 @@ class MainActivity : AppCompatActivity(){
             var i = 1
             while(i<mulExpression.length){
                 if(mulExpression[i]=='/'){
-                    sumExpression.replace(sumExpression,mulExpression.toCharArray(0,i-2).toString())
+                    sumExpression = mulExpression.toCharArray(0,i-2).toString()
                     s1 = expression[i-1].toInt()
                     s2 = expression[i+1].toInt()
                     val s = s1+s2
-                    sumExpression.plus(s.toString())
-                    sumExpression.plus(mulExpression.toCharArray(i+2,mulExpression.length).toString())
+                    sumExpression+=s.toString()
+                    sumExpression+=mulExpression.toCharArray(i+2,mulExpression.length).toString()
                 }
                 i += 2
             }
@@ -634,6 +720,9 @@ class MainActivity : AppCompatActivity(){
             }
         }
         speakOut(subExpression)
+        return true
+
+ */
         return true
     }
     private fun hasPermissions(context: Context, vararg permissions: String): Boolean = permissions.all {
