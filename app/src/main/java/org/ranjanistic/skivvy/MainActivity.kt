@@ -252,8 +252,10 @@ class MainActivity : AppCompatActivity(){
                         if (!respondToCommand(txt!!)) {
                             if (!appOptions(txt)) {
                                 if (!directActions(txt!!)) {
-                                    errorView()
-                                    speakOut(getString(recognize_error))
+                                    if(!computerOps(txt!!)) {
+                                        errorView()
+                                        speakOut(getString(recognize_error))
+                                    }
                                 }
                             }
                         }
@@ -498,11 +500,11 @@ class MainActivity : AppCompatActivity(){
               startActivity(Intent(context,Setup::class.java))
             }
             resources.getStringArray(array[1]).contains(text) -> {
-                bluetoothOps()
+                bluetoothOps(text)
             }
             resources.getStringArray(array[2]).contains(text) -> {
                 waitingView(getDrawable(ic_wifi_connected))
-                wifiOps()
+                wifiOps(text)
             }
             resources.getStringArray(array[3]).contains(text) -> {
                 locationOps()
@@ -520,29 +522,25 @@ class MainActivity : AppCompatActivity(){
             }
             text.contains("volume")->{
                 when {
-                    text.contains("up") -> volumeOps(true)
+                    text.contains("up") || text.contains("raise") -> volumeOps(true)
                     text.contains("down") -> volumeOps(false)
                     else -> volumeOps(null)
                 }
             }
+            text == "mute"->{
+                saveMuteStatus(true)
+                speakOut("Muted")
+            }
+            text == "speak"|| text=="unmute"->{
+                if(getMuteStatus()) {
+                    saveMuteStatus(false)
+                    speakOut(getString(okay))
+                } else {
+                    speakOut("Already speaking")
+                }
+            }
             text == getString(exit) -> {
                 finish()
-            }
-            text.contains("calculate") || text.contains("compute") ->{
-                var expression = text.replace("calculate","")
-                Log.d(TAG,expression)
-                expression = expression.replace(" ","")
-                expression = expression.replace("x","*")
-                expression = expression.replace("dividedby","/")
-                expression = expression.replace("over","/")
-                expression = expression.replace("multipliedby","*")
-                expression = expression.replace("into","*")
-                expression = expression.replace("plus","+")
-                expression = expression.replace("minus","-")
-                speakOut(expression)
-                if(!computerOps(expression)){
-                    speakOut("Invalid expression")
-                } else speakOut("Done")
             }
             text == "grant permissions"->{
                 if(!hasPermissions(this, *skivvy.permissions)) {
@@ -561,11 +559,30 @@ class MainActivity : AppCompatActivity(){
         return true
     }
 
+    private fun expressionize(expression: String):String{
+        var finalExpression = expression.replace("calculate","")
+        finalExpression = finalExpression.replace("compute","")
+        finalExpression = finalExpression.replace("solve","")
+        finalExpression = finalExpression.replace(" ","")
+        finalExpression = finalExpression.replace("x","*")
+        finalExpression = finalExpression.replace("dividedby","/")
+        finalExpression = finalExpression.replace("over","/")
+        finalExpression = finalExpression.replace("upon","/")
+        finalExpression = finalExpression.replace("multipliedby","*")
+        finalExpression = finalExpression.replace("by","/")
+        finalExpression = finalExpression.replace("into","*")
+        finalExpression = finalExpression.replace("plus","+")
+        finalExpression = finalExpression.replace("minus","-")
+        return finalExpression
+    }
     //TODO: Calculator function
     private var TAG = "COPS"
     @ExperimentalStdlibApi
-    private fun computerOps(expression:String):Boolean {
-        Log.d(TAG, expression)
+    private fun computerOps(expressionString:String):Boolean {
+        val expression = expressionize(expressionString)
+        if(!expression.contains(skivvy.phonePattern) || expression.contains("[a-zA-Z]".toRegex())){
+            return false
+        }
         val operatorBool:Array<Boolean> = arrayOf(false,false,false,false)
         val operators: Array<Char> = arrayOf('/', '*', '+', '-')
         var opIndex = 0
@@ -574,6 +591,7 @@ class MainActivity : AppCompatActivity(){
             ++opIndex
         }
         if(!operatorBool.contains(true)){
+            speakOut("Invalid expression")
             return false
         }
 
@@ -622,7 +640,7 @@ class MainActivity : AppCompatActivity(){
          *  And stores the next operator '*' at index = 3, and so on. Thus a distinction between operands and operators is created and stored in a new array (of strings).
          */
 
-        var arrayOfExpression = arrayOfNulls<String>(2*totalOps +1)
+        val arrayOfExpression = arrayOfNulls<String>(2*totalOps +1)
         var expArrayIndex = 0
         var positionInExpression = 0
         var positionInOperatorPos = 0
@@ -700,6 +718,7 @@ class MainActivity : AppCompatActivity(){
             }
             ++m
         }
+        speakOut(arrayOfExpression[0]!!)
         return true
         /*
         opIndex = 0
@@ -729,7 +748,7 @@ class MainActivity : AppCompatActivity(){
             ++opIndex
         }
 
-        //TODO: Check Nill
+
         var k = 0
         while(k<arrayOfExpression.size) {
             if(arrayOfExpression[k]!=null){
@@ -840,26 +859,48 @@ class MainActivity : AppCompatActivity(){
     private fun hasPermissions(context: Context, vararg permissions: String): Boolean = permissions.all {
         ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
-    private fun bluetoothOps(){
+    private fun bluetoothOps(text:String){
         val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        if (mBluetoothAdapter.isEnabled) {
-            mBluetoothAdapter.disable()
-            speakOut(getString(bt_off))
+        if(text.contains("on")) {
+            if (mBluetoothAdapter.isEnabled) {
+                successView(getDrawable(ic_bluetooth))
+                speakOut(getString(bt_on))
+            } else {
+                mBluetoothAdapter.enable()
+                successView(getDrawable(ic_bluetooth))
+                speakOut(getString(bt_on))
+            }
         } else {
-            successView(getDrawable(ic_bluetooth))
-            mBluetoothAdapter.enable()
-            speakOut(getString(bt_on))
+            if(mBluetoothAdapter.isEnabled){
+                mBluetoothAdapter.disable()
+                speakOut(getString(bt_off))
+            } else {
+                mBluetoothAdapter.enable()
+                successView(getDrawable(ic_bluetooth))
+                speakOut(getString(bt_on))
+            }
         }
     }
-    private fun wifiOps(){
+    private fun wifiOps(text:String) {
         val wifiManager: WifiManager = getSystemService(Context.WIFI_SERVICE) as WifiManager
-        if(wifiManager.isWifiEnabled) {
-            wifiManager.isWifiEnabled = false
-            speakOut(getString(wifi_off))
+        if (text.contains("on")) {
+            if (!wifiManager.isWifiEnabled) {
+                wifiManager.isWifiEnabled = true
+                successView(getDrawable(ic_wifi_connected))
+                speakOut(getString(wifi_on))
+            } else {
+                successView(getDrawable(ic_wifi_connected))
+                speakOut(getString(wifi_on))
+            }
         } else {
-            successView(getDrawable(ic_wifi_connected))
-            wifiManager.isWifiEnabled = true
-            speakOut(getString(wifi_on))
+            if(wifiManager.isWifiEnabled){
+                wifiManager.isWifiEnabled = false
+                speakOut(getString(wifi_off))
+            } else {
+                successView(getDrawable(ic_wifi_connected))
+                wifiManager.isWifiEnabled = true
+                speakOut(getString(wifi_on))
+            }
         }
     }
     private fun locationOps(){
@@ -886,9 +927,9 @@ class MainActivity : AppCompatActivity(){
     private fun volumeOps(action:Boolean?){
         val audioManager: AudioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         when(action){
-            true -> audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_PLAY_SOUND)
-            false ->audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_PLAY_SOUND)
-            else ->audioManager.adjustVolume(AudioManager.ADJUST_SAME, AudioManager.FLAG_PLAY_SOUND)
+            true -> audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
+            false ->audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
+            else ->audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_SAME, AudioManager.FLAG_SHOW_UI)
         }
     }
 
@@ -1305,5 +1346,9 @@ class MainActivity : AppCompatActivity(){
     private fun getMuteStatus():Boolean{
         return getSharedPreferences(skivvy.PREF_HEAD_VOICE, MODE_PRIVATE)
             .getBoolean(skivvy.PREF_KEY_MUTE_UNMUTE, false)
+    }
+    private fun saveMuteStatus(isMuted:Boolean) {
+        getSharedPreferences(skivvy.PREF_HEAD_VOICE, MODE_PRIVATE).edit()
+            .putBoolean(skivvy.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
     }
  }
