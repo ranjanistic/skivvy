@@ -19,6 +19,7 @@ class Skivvy:Application() {
         Manifest.permission.CALL_PHONE,
         Manifest.permission.ACCESS_WIFI_STATE,
         Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.SEND_SMS,
         Manifest.permission.READ_SMS,
         Manifest.permission.BODY_SENSORS
     )
@@ -37,6 +38,9 @@ class Skivvy:Application() {
     val CODE_CONTACT_EMAIL_CONF = 16
     val CODE_EMAIL_SUBJECT = 17
     val CODE_EMAIL_BODY = 18
+    val CODE_SMS_CONF = 19
+    val CODE_CONTACT_SMS_CONF = 20
+    val CODE_TEXT_MESSAGE_BODY = 21
 
     //command codes
     val CODE_LOCATION_SERVICE = 100

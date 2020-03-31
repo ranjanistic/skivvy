@@ -27,6 +27,7 @@ import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.telephony.SmsManager
 import android.text.format.DateFormat
 import android.util.Log
 import android.view.KeyEvent
@@ -45,7 +46,6 @@ import org.ranjanistic.skivvy.R.string.*
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
-import java.util.function.BinaryOperator
 
 @ExperimentalStdlibApi
 class MainActivity : AppCompatActivity(){
@@ -78,6 +78,7 @@ class MainActivity : AppCompatActivity(){
     private var tempMail:String? = null
     private var tempMailSubject:String? = null
     private var tempMailBody:String? = null
+    private var tempTextBody:String? = null
     private var tempContact:String? = null
     private var tempContactCode:Int? = null
     private lateinit var backfall: ImageView
@@ -387,9 +388,7 @@ class MainActivity : AppCompatActivity(){
                         .toLowerCase(skivvy.locale)
                     when {
                         resources.getStringArray(R.array.acceptances).contains(txt) -> {
-                            //successView(null)
                             speakOut(getString(what_is_subject),skivvy.CODE_EMAIL_SUBJECT)
-                            //emailingOps(tempMail!!)
                         }
                         resources.getStringArray(R.array.denials).contains(txt) -> {
                             tempMail = null
@@ -475,6 +474,84 @@ class MainActivity : AppCompatActivity(){
                             tempMailBody = txt
                             speakOut(getString(body_added) + getString(preparing_email))
                             emailingOps(tempMail,tempMailSubject,tempMailBody)
+                        }
+                        else -> {
+                            speakOut(getString(recognize_error) + getString(what_is_body),
+                                skivvy.CODE_EMAIL_BODY
+                            )
+                        }
+                    }
+                } else {
+                    normalView()
+                    speakOut(getString(no_input))
+                }
+            }
+            skivvy.CODE_SMS_CONF->{
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                        .toLowerCase(skivvy.locale)
+                    when {
+                        resources.getStringArray(R.array.acceptances).contains(txt) -> {
+                            speakOut("What's the message?",skivvy.CODE_TEXT_MESSAGE_BODY)
+                        }
+                        resources.getStringArray(R.array.denials).contains(txt) -> {
+                            tempPhone = null
+                            normalView()
+                            speakOut(getString(okay))
+                        }
+                        else -> {
+                            speakOut(
+                                getString(recognize_error) + "Should I text "+"$tempPhone via SMS?",
+                                skivvy.CODE_SMS_CONF
+                            )
+                        }
+                    }
+                } else {
+                    normalView()
+                    speakOut(getString(no_input))
+                }
+            }
+            skivvy.CODE_CONTACT_SMS_CONF->{
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                        .toLowerCase(skivvy.locale)
+                    when {
+                        resources.getStringArray(R.array.acceptances).contains(txt) -> {
+                            tempPhone = contact.phoneList[tempPhoneNumberIndex!!]
+                            speakOut("What's the message?",skivvy.CODE_TEXT_MESSAGE_BODY)
+                        }
+                        resources.getStringArray(R.array.denials).contains(txt) -> {
+                            tempPhoneNumberIndex = tempPhoneNumberIndex!!+1
+                            if(tempPhoneNumberIndex!=0 && tempPhoneNumberIndex!! < contact.phoneList.size && !resources.getStringArray(R.array.disruptions).contains(txt)){
+                                speakOut("At ${contact.phoneList[tempPhoneNumberIndex!!]}?",skivvy.CODE_CONTACT_SMS_CONF)
+                            } else {
+                                normalView()
+                                speakOut(getString(okay))
+                            }
+                        }
+                        else -> {
+                            speakOut(getString(recognize_error) + "Should I text " + "${contact.displayName} at ${contact.phoneList[tempPhoneNumberIndex!!]} via SMS?", skivvy.CODE_CONTACT_SMS_CONF)
+                        }
+                    }
+                } else {
+                    normalView()
+                    speakOut(getString(no_input))
+                }
+            }
+            skivvy.CODE_TEXT_MESSAGE_BODY->{
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                        .toLowerCase(skivvy.locale)
+                    when {
+                        resources.getStringArray(R.array.disruptions).contains(txt)->{
+                            normalView()
+                            speakOut(getString(okay))
+                        }
+                        txt!=null -> {
+                            successView(null)
+                            tempTextBody = txt
+                            speakOut("Sending SMS at $tempPhone")
+                            textMessageOps(tempPhone!!, tempTextBody!!,skivvy.CODE_SMS_CONF)
                         }
                         else -> {
                             speakOut(getString(recognize_error) + getString(what_is_body),
@@ -975,7 +1052,7 @@ class MainActivity : AppCompatActivity(){
 
     //action invoking direct intents
     private fun directActions(text: String):Boolean{
-        val localTxt:String
+        var localTxt:String
         if(text.contains(getString(call))) {
             waitingView(getDrawable(ic_glossyphone))
             localTxt = text.replace(getString(call), "",true)
@@ -1022,8 +1099,37 @@ class MainActivity : AppCompatActivity(){
                 }
             }
             return true
+        } else if(text.contains("text")){
+            waitingView(null)
+            localTxt = text.replace("text","")
+            localTxt = localTxt.trim()
+            tempPhone = localTxt.replace("[^0-9]".toRegex(), "")
+            when{
+                tempPhone!=null&& tempPhone!!.matches(skivvy.phonePattern)-> {
+                    //TODO: Flip confirmation with asking message details first, for email too.
+                    speakOut("Should I text $tempPhone via SMS?",skivvy.CODE_SMS_CONF)
+                }
+                localTxt.length>1 -> {
+                    contactOps(localTxt,skivvy.CODE_CONTACT_SMS_CONF)
+                }
+                else -> {
+                    errorView()
+                    speakOut("Invalid SMS request")
+                }
+            }
+            return true
         }
         return false
+    }
+
+    private fun textMessageOps(target:String, payLoad:String, code:Int){
+        if(code == skivvy.CODE_SMS_CONF) {
+            successView(null)
+            val sms: SmsManager = SmsManager.getDefault()
+            sms.sendTextMessage(target, null, payLoad, null, null)
+        } else {
+            speakOut("Not yet supported")
+        }
     }
     @SuppressLint("MissingPermission")
     private fun callingOps(number:String?){
@@ -1133,7 +1239,7 @@ class MainActivity : AppCompatActivity(){
                                 speakOut(getString(you_dont_seem_having)+contact.displayName+getString(R.string.someone_email_address))
                             }
                         }
-                        if (tempContactCode == skivvy.CODE_CONTACT_CALL_CONF) {
+                        if (tempContactCode == skivvy.CODE_CONTACT_CALL_CONF || tempContactCode == skivvy.CODE_CONTACT_SMS_CONF) {
                             if (cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)).toInt() > 0) {
                                 pCur!!.moveToFirst()
                                 var size = 0
@@ -1147,13 +1253,26 @@ class MainActivity : AppCompatActivity(){
                                     ++k
                                 }
                                 if(size==1){
-                                    speakOut(
-                                        getString(should_i_call) + "${contact.displayName}?",
-                                        skivvy.CODE_CONTACT_CALL_CONF
-                                    )
+                                    if(tempContactCode == skivvy.CODE_CONTACT_CALL_CONF) {
+                                        speakOut(
+                                            getString(should_i_call) + "${contact.displayName}?",
+                                            skivvy.CODE_CONTACT_CALL_CONF
+                                        )
+                                    } else if(tempContactCode == skivvy.CODE_CONTACT_SMS_CONF){
+                                        speakOut(
+                                            "Should I text " + "${contact.displayName} via SMS?",
+                                            skivvy.CODE_CONTACT_SMS_CONF
+                                        )
+                                    }
                                 } else {
-                                    speakOut("I've got $size phone numbers of ${contact.displayName}.\nShould I call them at " +
-                                            "${contact.phoneList[tempPhoneNumberIndex!!]}?", skivvy.CODE_CONTACT_CALL_CONF)
+                                    speakOut("I've got $size phone numbers of ${contact.displayName}.\n")
+                                    if(tempContactCode == skivvy.CODE_CONTACT_CALL_CONF) {
+                                        speakOut("Should I call them at " +
+                                                "${contact.phoneList[tempPhoneNumberIndex!!]}?", skivvy.CODE_CONTACT_CALL_CONF)
+                                    } else if(tempContactCode == skivvy.CODE_CONTACT_SMS_CONF){
+                                        speakOut("Should I text them at " +
+                                                "${contact.phoneList[tempPhoneNumberIndex!!]}?", skivvy.CODE_CONTACT_SMS_CONF)
+                                    }
                                 }
                             } else {
                                 if (isEmailPresent) {
