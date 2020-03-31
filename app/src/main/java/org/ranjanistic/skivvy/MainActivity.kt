@@ -574,7 +574,6 @@ class MainActivity : AppCompatActivity(){
             ++opIndex
         }
         if(!operatorBool.contains(true)){
-            Log.d(TAG,"noOps")
             return false
         }
 
@@ -584,24 +583,22 @@ class MainActivity : AppCompatActivity(){
          */
 
         var expIndex = 0
-        var count = 0
+        var totalOps = 0
         while(expIndex<expression.length){
             opIndex = 0
             while(opIndex < operators.size) {
                 if (expression[expIndex] == operators[opIndex]){
-                    ++count         //saving operator positions
-                    Log.d("OPPOSCOUNt", count.toString())
+                    ++totalOps         //saving operator positions
                 }
                 ++opIndex
             }
             ++expIndex
         }
-
-        if(count == 0){
+        if(totalOps == 0){
             return false
         }
         expIndex = 0
-        val expOperatorPos = arrayOfNulls<Int>(count)
+        val expOperatorPos = arrayOfNulls<Int>(totalOps)
          var expOpIndex = 0
         while(expIndex<expression.length){
             opIndex = 0
@@ -625,59 +622,84 @@ class MainActivity : AppCompatActivity(){
          *  And stores the next operator '*' at index = 3, and so on. Thus a distinction between operands and operators is created and stored in a new array (of strings).
          */
 
-        var sizeofArray = 0
+        var arrayOfExpression = arrayOfNulls<String>(2*totalOps +1)
+        var expArrayIndex = 0
         var positionInExpression = 0
         var positionInOperatorPos = 0
         while(positionInOperatorPos<expOperatorPos.size && positionInExpression<expression.length) {
             while (positionInExpression < expOperatorPos[positionInOperatorPos]!!) {
-                ++positionInExpression
-            }
-            ++sizeofArray
-            if (positionInExpression == expOperatorPos[positionInOperatorPos]) {
-                ++sizeofArray
-            }
-            ++positionInExpression
-            ++positionInOperatorPos
-            if(positionInOperatorPos>=expOperatorPos.size){
-                while(positionInExpression<expression.length){
-                    ++positionInExpression
+                if(arrayOfExpression[expArrayIndex] == null){
+                    arrayOfExpression[expArrayIndex] = expression[positionInExpression].toString()
+                } else {
+                    arrayOfExpression[expArrayIndex] += expression[positionInExpression].toString()
                 }
-            }
-        }
-
-        var arrayOfExpression = arrayOfNulls<String>(sizeofArray+1)
-        var expArrayIndex = 0
-        positionInExpression = 0
-        positionInOperatorPos = 0
-        while(positionInOperatorPos<expOperatorPos.size && positionInExpression<expression.length) {
-            Log.d("expOperatorPos Size",expOperatorPos.size.toString())
-            while (positionInExpression < expOperatorPos[positionInOperatorPos]!!) {
-                arrayOfExpression[expArrayIndex].plus(expression[positionInExpression])
                 ++positionInExpression
             }
             ++expArrayIndex
             if (positionInExpression == expOperatorPos[positionInOperatorPos]) {
-                arrayOfExpression[expArrayIndex].plus(expression[positionInExpression])
+                if(arrayOfExpression[expArrayIndex] == null){
+                    arrayOfExpression[expArrayIndex] = expression[positionInExpression].toString()
+                } else {
+                    arrayOfExpression[expArrayIndex] += expression[positionInExpression].toString()
+                }
                 ++expArrayIndex
             }
             ++positionInExpression
             ++positionInOperatorPos
             if(positionInOperatorPos>=expOperatorPos.size){
                 while(positionInExpression<expression.length){
-                    if(expArrayIndex<arrayOfExpression.size) {
-                        arrayOfExpression[expArrayIndex].plus(expression[positionInExpression])
-                        ++positionInExpression
+                    if(arrayOfExpression[expArrayIndex] == null){
+                        arrayOfExpression[expArrayIndex] = expression[positionInExpression].toString()
                     } else {
-                        Log.d("INDEX EXPARRAY OUT",expArrayIndex.toString())
+                        arrayOfExpression[expArrayIndex] += expression[positionInExpression].toString()
                     }
+                    ++positionInExpression
                 }
             }
         }
-
         /**
          * Now, as we have the new array of strings, having the proper expression, with operators at every even position of
          * the array (at odd indices), the following block of code will evaluate the expression according to the BODMAS rule.
          */
+
+
+        var nullPosCount = 0
+        opIndex = 0
+        while(opIndex<operators.size){
+            var opPos=1
+            while(opPos<arrayOfExpression.size-nullPosCount) {
+                if (arrayOfExpression[opPos] == operators[opIndex].toString()) {
+                    arrayOfExpression[opPos-1] = operate(arrayOfExpression[opPos-1]!!.toInt(),
+                        operators[opIndex],
+                        arrayOfExpression[opPos+1]!!.toInt()
+                    ).toString()
+                    var j = opPos
+                    while(j+2<arrayOfExpression.size){
+                        arrayOfExpression[j] = arrayOfExpression[j+2]
+                        ++j
+                    }
+                    if(arrayOfExpression.size>3&&arrayOfExpression[opPos] == operators[opIndex].toString()){
+                        Log.d("isSameOperator", "${operators[opIndex]}")
+                        opPos-=2
+                        nullPosCount+=2
+                    }
+                }
+                opPos+=2
+            }
+            ++opIndex
+        }
+
+        var m = 0
+        while(m<arrayOfExpression.size) {
+            if(arrayOfExpression[m]!=null){
+                Log.d("arrayAfterDiv", arrayOfExpression[m]!!)
+            }else{
+                Log.d(TAG, "Nill Div  $m")
+            }
+            ++m
+        }
+        return true
+        /*
         opIndex = 0
         while(opIndex < operators.size){
             var opPos = 1
@@ -692,6 +714,12 @@ class MainActivity : AppCompatActivity(){
                         arrayOfExpression[j] = arrayOfExpression[j+2]
                         arrayOfExpression[j+2] = ""
                         ++j
+                    }
+                    if(arrayOfExpression[opPos] == operators[opIndex].toString()){
+                        val n1 = arrayOfExpression[opPos-1]!!.toInt()
+                        val n2 = arrayOfExpression[opPos+1]!!.toInt()
+                        val n = operate(n1,operators[opIndex],n2)
+                        arrayOfExpression[opPos-1]  = n.toString()
                     }
                 }
                 opPos+=2
@@ -711,7 +739,6 @@ class MainActivity : AppCompatActivity(){
         }
         return true
 
-/*
         while (c < expression.length) {
             if (!operators.contains(expression[c]))
                 return false
