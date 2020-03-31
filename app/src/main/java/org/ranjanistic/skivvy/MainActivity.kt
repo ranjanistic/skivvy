@@ -657,11 +657,13 @@ class MainActivity : AppCompatActivity(){
                 }
             }
         }
+
+
         /**
+         * TODO
          * Now, as we have the new array of strings, having the proper expression, with operators at every even position of
          * the array (at odd indices), the following block of code will evaluate the expression according to the BODMAS rule.
          */
-
 
         var nullPosCount = 0
         opIndex = 0
