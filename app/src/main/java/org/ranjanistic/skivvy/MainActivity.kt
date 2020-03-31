@@ -689,9 +689,9 @@ class MainActivity : AppCompatActivity(){
             var opPos=1
             while(opPos<arrayOfExpression.size-nullPosCount) {
                 if (arrayOfExpression[opPos] == operators[opIndex].toString()) {
-                    arrayOfExpression[opPos-1] = operate(arrayOfExpression[opPos-1]!!.toInt(),
+                    arrayOfExpression[opPos-1] = operate(arrayOfExpression[opPos-1]!!.toFloat(),
                         operators[opIndex],
-                        arrayOfExpression[opPos+1]!!.toInt()
+                        arrayOfExpression[opPos+1]!!.toFloat()
                     ).toString()
                     var j = opPos
                     while(j+2<arrayOfExpression.size){
@@ -709,6 +709,10 @@ class MainActivity : AppCompatActivity(){
             ++opIndex
         }
 
+        /*TODO:
+         * Erroneous output, most of them have last term operated twice. Works fine if operator is same throughout the expression.
+         * Follows BODMAS if arranged in increasing order of operator preference, and gives correct result. As of 01-04-20 1:26:20 (IST).
+         */
         var m = 0
         while(m<arrayOfExpression.size) {
             if(arrayOfExpression[m]!=null){
@@ -846,7 +850,7 @@ class MainActivity : AppCompatActivity(){
  */
     }
 
-    private fun operate(a:Int, operator:Char, b:Int):Int?{
+    private fun operate(a:Float, operator:Char, b:Float):Float?{
         return when(operator){
             '/'-> a/b
             '*'-> a*b
