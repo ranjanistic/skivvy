@@ -188,8 +188,8 @@ class MainActivity : AppCompatActivity(){
             skivvy.CODE_CALL_REQUEST -> {
                 if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     when {
-                        contact.phoneList.isNotEmpty() -> {
-                            speakOut(getString(should_i_call) + "${contact.displayName} at ${contact.phoneList[tempPhoneNumberIndex!!]}?", skivvy.CODE_CONTACT_CALL_CONF)
+                        contact.phoneList!=null -> {
+                            speakOut(getString(should_i_call) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex!!]}?", skivvy.CODE_CONTACT_CALL_CONF)
                         }
                         tempPhone!=null -> {
                             speakOut(getString(should_i_call) + "$tempPhone?", skivvy.CODE_CALL_CONF)
@@ -361,20 +361,20 @@ class MainActivity : AppCompatActivity(){
                                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CALL_PHONE), skivvy.CODE_CALL_REQUEST)
                             } else {
                                 successView(null)
-                                callingOps(contact.phoneList[tempPhoneNumberIndex!!], contact.displayName)
+                                callingOps(contact.phoneList!![tempPhoneNumberIndex!!], contact.displayName!!)
                             }
                         }
                         resources.getStringArray(R.array.denials).contains(txt) -> {
                             tempPhoneNumberIndex = tempPhoneNumberIndex!!+1
-                            if(tempPhoneNumberIndex!=0 && tempPhoneNumberIndex!! < contact.phoneList.size && !resources.getStringArray(R.array.disruptions).contains(txt)){
-                                speakOut("At ${contact.phoneList[tempPhoneNumberIndex!!]}?",skivvy.CODE_CONTACT_CALL_CONF)
+                            if(tempPhoneNumberIndex!=0 && tempPhoneNumberIndex!! < contact.phoneList!!.size && !resources.getStringArray(R.array.disruptions).contains(txt)){
+                                speakOut("At ${contact.phoneList!![tempPhoneNumberIndex!!]}?",skivvy.CODE_CONTACT_CALL_CONF)
                             } else {
                                 normalView()
                                 speakOut(getString(okay))
                             }
                         }
                         else -> {
-                            speakOut(getString(recognize_error) + getString(should_i_call) + "${contact.displayName} at ${contact.phoneList[tempPhoneNumberIndex!!]}?", skivvy.CODE_CONTACT_CALL_CONF)
+                            speakOut(getString(recognize_error) + getString(should_i_call) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex!!]}?", skivvy.CODE_CONTACT_CALL_CONF)
                         }
                     }
                 } else {
@@ -413,20 +413,20 @@ class MainActivity : AppCompatActivity(){
                         .toLowerCase(skivvy.locale)
                     when {
                         resources.getStringArray(R.array.acceptances).contains(txt) -> {
-                            tempMail = contact.emailList[tempEmailIndex!!]
+                            tempMail = contact.emailList!![tempEmailIndex!!]
                             speakOut(getString(what_is_subject),skivvy.CODE_EMAIL_SUBJECT)
                         }
                         resources.getStringArray(R.array.denials).contains(txt) -> {
                             tempEmailIndex = tempEmailIndex!!+1
-                            if(tempEmailIndex!=0 && tempEmailIndex!! < contact.emailList.size && !resources.getStringArray(R.array.disruptions).contains(txt)){
-                                speakOut("At ${contact.emailList[tempEmailIndex!!]}?",skivvy.CODE_CONTACT_EMAIL_CONF)
+                            if(tempEmailIndex!=0 && tempEmailIndex!! < contact.emailList!!.size && !resources.getStringArray(R.array.disruptions).contains(txt)){
+                                speakOut("At ${contact.emailList!![tempEmailIndex!!]}?",skivvy.CODE_CONTACT_EMAIL_CONF)
                             } else {
                                 normalView()
                                 speakOut(getString(okay))
                             }
                         }
                         else -> {
-                            speakOut(getString(recognize_error) + getString(should_i_email)+"${contact.emailList[tempEmailIndex!!]}?",
+                            speakOut(getString(recognize_error) + getString(should_i_email)+"${contact.emailList!![tempEmailIndex!!]}?",
                                 skivvy.CODE_CONTACT_EMAIL_CONF
                             )
                         }
@@ -517,20 +517,28 @@ class MainActivity : AppCompatActivity(){
                         .toLowerCase(skivvy.locale)
                     when {
                         resources.getStringArray(R.array.acceptances).contains(txt) -> {
-                            tempPhone = contact.phoneList[tempPhoneNumberIndex!!]
-                            speakOut("What's the message?",skivvy.CODE_TEXT_MESSAGE_BODY)
+                            speakOut("Sending SMS at $tempPhone")
+                            textMessageOps(tempPhone!!, tempTextBody!!,skivvy.CODE_SMS_CONF)
                         }
                         resources.getStringArray(R.array.denials).contains(txt) -> {
-                            tempPhoneNumberIndex = tempPhoneNumberIndex!!+1
-                            if(tempPhoneNumberIndex!=0 && tempPhoneNumberIndex!! < contact.phoneList.size && !resources.getStringArray(R.array.disruptions).contains(txt)){
-                                speakOut("At ${contact.phoneList[tempPhoneNumberIndex!!]}?",skivvy.CODE_CONTACT_SMS_CONF)
+                            if(contact.phoneList!=null&&tempPhoneNumberIndex!=0 && tempPhoneNumberIndex!! < contact.phoneList!!.size && !resources.getStringArray(R.array.disruptions).contains(txt)){
+                                tempPhone = contact.phoneList!![tempPhoneNumberIndex!!]
+                                speakOut("At $tempPhone?",skivvy.CODE_CONTACT_SMS_CONF)
+                                tempPhoneNumberIndex = tempPhoneNumberIndex!!+1
                             } else {
                                 normalView()
                                 speakOut(getString(okay))
                             }
                         }
                         else -> {
-                            speakOut(getString(recognize_error) + "Should I text " + "${contact.displayName} at ${contact.phoneList[tempPhoneNumberIndex!!]} via SMS?", skivvy.CODE_CONTACT_SMS_CONF)
+                            if(contact.contactID!=null){
+                                speakOut("Should I text " + "${contact.displayName} at $tempPhone via SMS?",
+                                    skivvy.CODE_CONTACT_SMS_CONF)
+                            } else {
+                                speakOut(
+                                    "Should I text $tempPhone via SMS?",
+                                    skivvy.CODE_CONTACT_SMS_CONF)
+                            }
                         }
                     }
                 } else {
@@ -543,19 +551,27 @@ class MainActivity : AppCompatActivity(){
                     txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
                         .toLowerCase(skivvy.locale)
                     when {
-                        resources.getStringArray(R.array.disruptions).contains(txt)->{
+                        resources.getStringArray(R.array.disruptions).contains(txt)
+                        ->{
                             normalView()
                             speakOut(getString(okay))
                         }
                         txt!=null -> {
                             successView(null)
                             tempTextBody = txt
-                            speakOut("Sending SMS at $tempPhone")
-                            textMessageOps(tempPhone!!, tempTextBody!!,skivvy.CODE_SMS_CONF)
+                            if(contact.phoneList!=null){
+                                tempPhone = contact.phoneList!![tempPhoneNumberIndex!!]
+                                speakOut("Should I text " + "${contact.displayName} at $tempPhone via SMS?",
+                                    skivvy.CODE_CONTACT_SMS_CONF)
+                            } else {
+                                speakOut(
+                                    "Should I text $tempPhone via SMS?",
+                                    skivvy.CODE_CONTACT_SMS_CONF)
+                            }
                         }
                         else -> {
-                            speakOut(getString(recognize_error) + getString(what_is_body),
-                                skivvy.CODE_EMAIL_BODY
+                            speakOut(getString(recognize_error) +"What's the message",
+                                skivvy.CODE_TEXT_MESSAGE_BODY
                             )
                         }
                     }
@@ -755,7 +771,6 @@ class MainActivity : AppCompatActivity(){
 
 
         /**
-         * TODO
          * Now, as we have the new array of strings, having the proper expression, with operators at every even position of
          * the array (at odd indices), the following block of code will evaluate the expression according to the BODMAS rule.
          */
@@ -775,21 +790,15 @@ class MainActivity : AppCompatActivity(){
                         arrayOfExpression[j] = arrayOfExpression[j+2]
                         ++j
                     }
-                    if(arrayOfExpression.size>3&&arrayOfExpression[opPos] == operators[opIndex].toString()){
-                        Log.d("isSameOperator", "${operators[opIndex]}")
-                        opPos-=2
-                        nullPosCount+=2
+                    nullPosCount+=2
+                    if(arrayOfExpression.size>3&&arrayOfExpression[opPos] == operators[opIndex].toString()){    //if replacing operator is same as the replaced one
+                        opPos-=2            //index two indices back so that it returns at same position again
                     }
                 }
-                opPos+=2
+                opPos+=2        //next index of operator in array of expression
             }
-            ++opIndex
+            ++opIndex       //next operator
         }
-
-        /*TODO:
-         * Erroneous output, most of them have last term operated twice. Works fine if operator is same throughout the expression.
-         * Follows BODMAS if arranged in increasing order of operator preference, and gives correct result. As of 01-04-20 1:26:20 (IST).
-         */
         var m = 0
         while(m<arrayOfExpression.size) {
             if(arrayOfExpression[m]!=null){
@@ -799,7 +808,7 @@ class MainActivity : AppCompatActivity(){
             }
             ++m
         }
-        speakOut(arrayOfExpression[0]!!)
+        speakOut(arrayOfExpression[0]!!)        //final result stored at index = 0
         return true
         /*
         opIndex = 0
@@ -1099,18 +1108,17 @@ class MainActivity : AppCompatActivity(){
                 }
             }
             return true
-        } else if(text.contains("text")){
+        } else if(text.contains("text")) {
             waitingView(null)
-            localTxt = text.replace("text","")
+            localTxt = text.replace("text", "")
             localTxt = localTxt.trim()
             tempPhone = localTxt.replace("[^0-9]".toRegex(), "")
-            when{
-                tempPhone!=null&& tempPhone!!.matches(skivvy.phonePattern)-> {
-                    //TODO: Flip confirmation with asking message details first, for email too.
-                    speakOut("Should I text $tempPhone via SMS?",skivvy.CODE_SMS_CONF)
+            when {
+                tempPhone!!.contains(skivvy.phonePattern) -> {
+                    speakOut("What's the message?", skivvy.CODE_TEXT_MESSAGE_BODY)
                 }
-                localTxt.length>1 -> {
-                    contactOps(localTxt,skivvy.CODE_CONTACT_SMS_CONF)
+                localTxt.length > 1 -> {
+                    contactOps(localTxt, skivvy.CODE_CONTACT_SMS_CONF)
                 }
                 else -> {
                     errorView()
@@ -1218,16 +1226,16 @@ class MainActivity : AppCompatActivity(){
                             var k = 0
                             //TODO: Multiple email addresses handling
                             while (k < o) {
-                                contact.emailList[k] = eCur.getString(eCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA))
+                                contact.emailList!![k] = eCur.getString(eCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA))
                                 ++k
                             }
                             if (tempContactCode == skivvy.CODE_CONTACT_EMAIL_CONF) {
-                                if(contact.emailList.size>1){
-                                    speakOut("I've got ${contact.emailList.size} email addresses of ${contact.displayName}.\nShould I email them at " +
-                                            "${contact.emailList[tempEmailIndex!!]}?", skivvy.CODE_CONTACT_EMAIL_CONF)
+                                if(contact.emailList!!.size>1){
+                                    speakOut("I've got ${contact.emailList!!.size} email addresses of ${contact.displayName}.\nShould I email them at " +
+                                            "${contact.emailList!![tempEmailIndex!!]}?", skivvy.CODE_CONTACT_EMAIL_CONF)
                                 } else {
                                     speakOut(
-                                        getString(should_i_email) + "${contact.displayName} at ${contact.emailList[tempEmailIndex!!]}?",
+                                        getString(should_i_email) + "${contact.displayName} at ${contact.emailList!![tempEmailIndex!!]}?",
                                         skivvy.CODE_CONTACT_EMAIL_CONF
                                     )
                                 }
@@ -1249,7 +1257,7 @@ class MainActivity : AppCompatActivity(){
                                 var k = 0
                                 //TODO: Multiple phone numbers handling
                                 while (pCur.moveToNext()) {
-                                    contact.phoneList[k] = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                                    contact.phoneList!![k] = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
                                     ++k
                                 }
                                 if(size==1){
@@ -1259,26 +1267,22 @@ class MainActivity : AppCompatActivity(){
                                             skivvy.CODE_CONTACT_CALL_CONF
                                         )
                                     } else if(tempContactCode == skivvy.CODE_CONTACT_SMS_CONF){
-                                        speakOut(
-                                            "Should I text " + "${contact.displayName} via SMS?",
-                                            skivvy.CODE_CONTACT_SMS_CONF
-                                        )
+                                        speakOut("What's the message?",skivvy.CODE_TEXT_MESSAGE_BODY)
                                     }
                                 } else {
                                     speakOut("I've got $size phone numbers of ${contact.displayName}.\n")
                                     if(tempContactCode == skivvy.CODE_CONTACT_CALL_CONF) {
                                         speakOut("Should I call them at " +
-                                                "${contact.phoneList[tempPhoneNumberIndex!!]}?", skivvy.CODE_CONTACT_CALL_CONF)
+                                                "${contact.phoneList!![tempPhoneNumberIndex!!]}?", skivvy.CODE_CONTACT_CALL_CONF)
                                     } else if(tempContactCode == skivvy.CODE_CONTACT_SMS_CONF){
-                                        speakOut("Should I text them at " +
-                                                "${contact.phoneList[tempPhoneNumberIndex!!]}?", skivvy.CODE_CONTACT_SMS_CONF)
+                                        speakOut("What's the message?",skivvy.CODE_TEXT_MESSAGE_BODY)
                                     }
                                 }
                             } else {
                                 if (isEmailPresent) {
                                     speakOut(
                                         getString(you_dont_seem_having)+ contact.displayName +getString(someones_phone_number)+"\n" +
-                                                "Want to contact them at "+ "${contact.emailList[tempEmailIndex!!]}"+ " instead?", skivvy.CODE_CONTACT_EMAIL_CONF)
+                                                "Want to contact them at "+ "${contact.emailList!![tempEmailIndex!!]}"+ " instead?", skivvy.CODE_CONTACT_EMAIL_CONF)
                                 } else {
                                     errorView()
                                     speakOut(getString(you_dont_seem_having)+ contact.displayName +getString(someones_phone_number))
