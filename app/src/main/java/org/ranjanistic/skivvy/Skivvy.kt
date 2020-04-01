@@ -25,8 +25,10 @@ class Skivvy:Application() {
     )
     //defaults
     val locale: Locale = Locale.US
-    val phonePattern = "[0-9]".toRegex()
+    val numberPattern = "[0-9]".toRegex()
+    val textPattern = "[a-zA-Z]".toRegex()
     val emailPattern = "[a-zA-Z0-9._-]+@[a-z.]+\\.+[a-z]+".toRegex()
+    val nonNumeralPattern = "[^0-9]".toRegex()
 
     //action codes
     val CODE_SPEECH_RECORD = 10
@@ -35,12 +37,9 @@ class Skivvy:Application() {
     val CODE_CALL_CONF = 13
     val CODE_CONTACT_CALL_CONF =14
     val CODE_EMAIL_CONF = 15
-    val CODE_CONTACT_EMAIL_CONF = 16
-    val CODE_EMAIL_SUBJECT = 17
-    val CODE_EMAIL_BODY = 18
-    val CODE_SMS_CONF = 19
-    val CODE_CONTACT_SMS_CONF = 20
-    val CODE_TEXT_MESSAGE_BODY = 21
+    val CODE_EMAIL_CONTENT = 16
+    val CODE_SMS_CONF = 17
+    val CODE_TEXT_MESSAGE_BODY = 18
 
     //command codes
     val CODE_LOCATION_SERVICE = 100

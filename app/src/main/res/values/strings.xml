@@ -123,4 +123,9 @@
     <string name="body_added">Body added.&#160;</string>
     <string name="preparing_email">Preparing email to send</string>
     <string name="biometric_auth_explanation">Authenticate yourself to proceed further. This is required when you are about to perform a sensitive action directly affecting Skivvy\'s functions, or your real life.</string>
+    <string name="invalid_expression">Invalid expression</string>
+    <string name="what_is_message">What\'s the message?</string>
+    <string name="should_i_text">Should I text&#160;</string>
+    <string name="via_sms">&#160;via SMS?</string>
+    <string name="sending_sms_at">Sending SMS at&#160;</string>
 </resources>
