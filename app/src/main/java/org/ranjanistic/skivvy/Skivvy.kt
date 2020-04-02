@@ -32,14 +32,12 @@ class Skivvy:Application() {
 
     //action codes
     val CODE_SPEECH_RECORD = 10
-    val CODE_OTHER_APP = 11
-    val CODE_OTHER_APP_CONF = 12
-    val CODE_CALL_CONF = 13
-    val CODE_CONTACT_CALL_CONF =14
-    val CODE_EMAIL_CONF = 15
-    val CODE_EMAIL_CONTENT = 16
-    val CODE_SMS_CONF = 17
-    val CODE_TEXT_MESSAGE_BODY = 18
+    val CODE_APP_CONF = 11
+    val CODE_CALL_CONF = 12
+    val CODE_EMAIL_CONF = 13
+    val CODE_EMAIL_CONTENT = 14
+    val CODE_SMS_CONF = 15
+    val CODE_TEXT_MESSAGE_BODY = 16
 
     //command codes
     val CODE_LOCATION_SERVICE = 100
