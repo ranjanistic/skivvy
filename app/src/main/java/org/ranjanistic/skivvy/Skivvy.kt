@@ -3,6 +3,12 @@ package org.ranjanistic.skivvy
 
 import android.Manifest
 import android.app.Application
+import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 
 class Skivvy:Application() {
@@ -50,4 +56,40 @@ class Skivvy:Application() {
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
     val PREF_HEAD_APP_MODE = "appMode"
     val PREF_KEY_TRAINING = "training"
+
+    //package list variables
+    lateinit var packagesAppName:Array<String?>
+    lateinit var packagesName:Array<String?>
+    lateinit var packagesMain:Array<Intent?>
+    lateinit var packagesIcon:Array<Drawable?>
+    var packagesTotal:Int = 0
+
+    override fun onCreate() {
+        super.onCreate()
+        GlobalScope.launch {    //Long running task, getting all packages
+            getLocalPackages()
+        }
+    }
+    //gets all packages and respective details available on device
+    private fun getLocalPackages(){
+        var counter = 0
+        val pm: PackageManager = packageManager
+        val packages: List<ApplicationInfo> = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+        this.packagesTotal = packages.size
+        this.packagesAppName = arrayOfNulls(this.packagesTotal)
+        this.packagesName = arrayOfNulls(this.packagesTotal)
+        this.packagesIcon = arrayOfNulls(this.packagesTotal)
+        this.packagesMain = arrayOfNulls(this.packagesTotal)
+        for (packageInfo in packages) {
+            if(pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
+                this.packagesAppName[counter] = pm.getApplicationLabel(packageInfo).toString().toLowerCase(this.locale)
+                this.packagesName[counter] = packageInfo.packageName.toLowerCase(this.locale)
+                this.packagesIcon[counter] = pm.getApplicationIcon(packageInfo)
+                this.packagesMain[counter] = pm.getLaunchIntentForPackage(packageInfo.packageName)
+                ++counter
+            } else {
+                --this.packagesTotal    //removing un-launchable packages
+            }
+        }
+    }
 }
