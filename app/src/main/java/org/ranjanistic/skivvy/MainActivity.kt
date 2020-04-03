@@ -291,7 +291,7 @@ class MainActivity : AppCompatActivity() {
                             speakOut(getString(okay))
                         } else {
                             speakOut(
-                                getString(recognize_error) + getString(do_u_want_open) + skivvy.packagesAppName[tempPackageIndex!!] + "?",
+                                getString(recognize_error)+"\n" + getString(do_u_want_open) + skivvy.packagesAppName[tempPackageIndex!!] + "?",
                                 skivvy.CODE_APP_CONF
                             )
                         }
@@ -370,12 +370,12 @@ class MainActivity : AppCompatActivity() {
                         else -> {
                             if (contact.phoneList != null) {
                                 speakOut(
-                                    getString(recognize_error) + getString(should_i_call) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex!!]}?",
+                                    getString(recognize_error)+"\n" + getString(should_i_call) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex!!]}?",
                                     skivvy.CODE_CALL_CONF
                                 )
                             } else {
                                 speakOut(
-                                    getString(recognize_error) + getString(should_i_call) + "$tempPhone?",
+                                    getString(recognize_error) +"\n"+ getString(should_i_call) + "$tempPhone?",
                                     skivvy.CODE_CALL_CONF
                                 )
                             }
@@ -400,7 +400,7 @@ class MainActivity : AppCompatActivity() {
                             if (tempMailSubject == null) {
                                 tempMailSubject = txt
                                 speakOut(
-                                    getString(subject_added) + getString(what_is_body),
+                                    getString(subject_added)+"\n" + getString(what_is_body),
                                     skivvy.CODE_EMAIL_CONTENT
                                 )
                             } else if (tempMailBody == null) {
@@ -408,20 +408,20 @@ class MainActivity : AppCompatActivity() {
                                 if (contact.emailList != null) {
                                     if (contact.emailList!!.size == 1) {
                                         speakOut(
-                                            getString(body_added) +
+                                            getString(body_added)+"\n" +
                                                     getString(should_i_email) + "${contact.displayName} at\n${contact.emailList!![tempEmailIndex!!]}?",
                                             skivvy.CODE_EMAIL_CONF
                                         )
                                     } else {
                                         speakOut(
-                                            getString(body_added) + "I've got ${contact.emailList!!.size} addresses of ${contact.displayName}.\n" +
+                                            getString(body_added) + "I've got ${contact.emailList!!.size} addresses of\n${contact.displayName}.\n" +
                                                     getString(should_i_email) + "them at\n${contact.emailList!![tempEmailIndex!!]}?",
                                             skivvy.CODE_EMAIL_CONF
                                         )
                                     }
                                 } else {
                                     speakOut(
-                                        getString(body_added) +
+                                        getString(body_added)+"\n" +
                                                 getString(should_i_email) + "$tempMail?",
                                         skivvy.CODE_EMAIL_CONF
                                     )
@@ -431,12 +431,12 @@ class MainActivity : AppCompatActivity() {
                         else -> {
                             if (tempMailSubject == null) {
                                 speakOut(
-                                    getString(recognize_error) + getString(what_is_subject),
+                                    getString(recognize_error)+"\n" + getString(what_is_subject),
                                     skivvy.CODE_EMAIL_CONTENT
                                 )
                             } else if (tempMailBody == null) {
                                 speakOut(
-                                    getString(recognize_error) + getString(what_is_body),
+                                    getString(recognize_error)+"\n" + getString(what_is_body),
                                     skivvy.CODE_EMAIL_CONTENT
                                 )
                             }
@@ -485,13 +485,13 @@ class MainActivity : AppCompatActivity() {
                         else -> {
                             if (contact.emailList != null) {
                                 speakOut(
-                                    getString(recognize_error) +
+                                    getString(recognize_error)+"\n" +
                                             getString(should_i_email) + "${contact.displayName} at\n${contact.emailList!![tempEmailIndex!!]}?",
                                     skivvy.CODE_EMAIL_CONF
                                 )
                             } else {
                                 speakOut(
-                                    getString(recognize_error) +
+                                    getString(recognize_error)+"\n" +
                                             getString(should_i_email) + "$tempMail?",
                                     skivvy.CODE_EMAIL_CONF
                                 )
@@ -1309,7 +1309,7 @@ class MainActivity : AppCompatActivity() {
                                 } else {
                                     if (tempContactCode == skivvy.CODE_CALL_CONF) {
                                         speakOut(
-                                            "I've got $size phone numbers of ${contact.displayName}.\nShould I call them at " +
+                                            "I've got $size phone numbers of \n${contact.displayName}.\nShould I call them at " +
                                                     "${contact.phoneList!![tempPhoneNumberIndex!!]}?",
                                             skivvy.CODE_CALL_CONF
                                         )
