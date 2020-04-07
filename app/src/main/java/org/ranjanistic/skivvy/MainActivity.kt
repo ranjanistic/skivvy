@@ -28,6 +28,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.telephony.SmsManager
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.animation.Animation
@@ -180,9 +181,7 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
-            skivvy.CODE_ALL_PERMISSIONS -> {
-                //TODO: if(grantResults[])
-            }
+            skivvy.CODE_ALL_PERMISSIONS -> {}
             skivvy.CODE_CALL_REQUEST -> {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     when {
@@ -595,7 +594,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    //TODO:  Mathematical calculations command
+
     //actions invoking quick commands
     @ExperimentalStdlibApi
     private fun respondToCommand(text: String): Boolean {
@@ -693,12 +692,14 @@ class MainActivity : AppCompatActivity() {
         finalExpression = finalExpression.replace("into", "*")
         finalExpression = finalExpression.replace("plus", "+")
         finalExpression = finalExpression.replace("minus", "-")
+        finalExpression = finalExpression.replace("%of", "p")
+        finalExpression = finalExpression.replace("percentof", "p")
+        finalExpression = finalExpression.replace("hundred", "100")
         return finalExpression
     }
-
+    private val triangleRatios = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec")
     //for direct mathematical operations.
     private fun mathematicalFunctions(expression: String):Boolean{
-        val triangleRatios = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec")
         var trignometric = false
         if (expression.contains(skivvy.textPattern) && expression.contains(skivvy.numberPattern)) {
             var k = 0
@@ -759,22 +760,17 @@ class MainActivity : AppCompatActivity() {
         }
         return false
     }
-
+    private val operators: Array<Char> = arrayOf('p','/', '*', '+', '-')
+    val TAG = "TRIGSTRING"
     //for expression evaluation
     private fun computerOps(expressionString: String): Boolean {
         val expression = expressionize(expressionString)
+        var hasFuncs = false
         if (!expression.contains(skivvy.numberPattern)) {
             return false
         }
-        if(mathematicalFunctions(expression)){
-            return true
-        } else {
-            if (expression.contains(skivvy.textPattern)) {
-                return false
-            }
-        }
-        val operatorBool: Array<Boolean> = arrayOf(false, false, false, false)
-        val operators: Array<Char> = arrayOf('/', '*', '+', '-')
+        val operatorBool: Array<Boolean> = arrayOf(false, false, false, false,false)
+        val functionBool: Array<Boolean> = arrayOf(false, false, false, false,false,false)
         var opIndex = 0
 
         /**
@@ -784,8 +780,26 @@ class MainActivity : AppCompatActivity() {
             operatorBool[opIndex] = expression.contains(operators[opIndex])
             ++opIndex
         }
+        var k = 0
+        while (k < triangleRatios.size) {
+            functionBool[k] = expression.contains(triangleRatios[k])
+            ++k
+        }
+
         if (!operatorBool.contains(true)) {
-            speakOut(getString(invalid_expression))
+            Log.d(TAG,"no ops")
+            return if(mathematicalFunctions(expression)){
+                Log.d(TAG,"but trig")
+                true
+            } else {
+                Log.d(TAG,"no trig")
+                speakOut(getString(invalid_expression))
+                false
+            }
+        } else if(functionBool.contains(true)){
+            Log.d(TAG,"trig and ops")
+            hasFuncs = true
+        } else {
             return false
         }
 
@@ -872,7 +886,18 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
+        //TODO: Decimal inputs to trignometric functions
+        if(hasFuncs) {
+            var f = 0
+            while (f < arrayOfExpression.size) {
+                Log.d(TAG, "$f has ${arrayOfExpression[f]}")
+                if(triangleRatios.contains(arrayOfExpression[f]!!.replace(skivvy.numberPattern,""))) {
+                    arrayOfExpression[f] = functionOperate(arrayOfExpression[f]!!)
+                    Log.d(TAG, "now $f has ${arrayOfExpression[f]}")
+                }
+                f += 2
+            }
+        }
         /**
          * Now, as we have the new array of strings, having the proper
          * expression, with operators at every even position of the array (at odd indices),
@@ -915,12 +940,36 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    private fun functionOperate(func:String):String?{
+        return when{
+            func.contains("sin") ->sin(
+                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+            ).toString()
+            func.contains("cos") ->cos(
+                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+            ).toString()
+            func.contains("tan") ->tan(
+                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+            ).toString()
+            func.contains("cot") ->(1 / tan(
+                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+            )).toString()
+            func.contains("sec") ->(1 / cos(
+                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+            )).toString()
+            func.contains("cosec") ->(1 / sin(
+                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+            )).toString()
+            else ->null
+        }
+    }
     private fun operate(a: Float, operator: Char, b: Float): Float? {
         return when (operator) {
             '/' -> a / b
             '*' -> a * b
             '+' -> a + b
             '-' -> a - b
+            'p'->(a/100)*b
             else -> null
         }
     }
