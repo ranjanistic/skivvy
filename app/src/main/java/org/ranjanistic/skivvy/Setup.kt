@@ -34,7 +34,7 @@ class Setup : AppCompatActivity() {
         biometrics = findViewById(R.id.biometricsBtn)
         //scaleAnimation = AnimationUtils.loadAnimation(this,R.anim.scale_translate_setting_reverse)
         setTrainingMode(getTrainingStatus())
-        saveMuteStatus(getMuteStatus())
+        saveMuteStatus(skivvy.getMuteStatus())
 
         settingIcon.setOnClickListener{
             finish()
@@ -54,13 +54,13 @@ class Setup : AppCompatActivity() {
             setTrainingMode(!getTrainingStatus())
         }
         mute.setOnClickListener {
-            saveMuteStatus(!getMuteStatus())
+            saveMuteStatus(!skivvy.getMuteStatus())
         }
         biometrics.setOnClickListener{
-            if(getBiometricStatus()){
+            if(skivvy.getBiometricStatus()){
                 biometricPrompt.authenticate(promptInfo)
             } else {
-                setBiometricsStatus(!getBiometricStatus())
+                setBiometricsStatus(!skivvy.getBiometricStatus())
             }
         }
 
@@ -69,7 +69,7 @@ class Setup : AppCompatActivity() {
     override fun onStart() {
         if(checkBioMetrics()) {
             biometrics.visibility = View.VISIBLE
-            setBiometricsStatus(getBiometricStatus())
+            setBiometricsStatus(skivvy.getBiometricStatus())
             authSetup()
         } else {
             biometrics.visibility = View.GONE
@@ -95,7 +95,7 @@ class Setup : AppCompatActivity() {
                 override fun onAuthenticationSucceeded(
                     result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    setBiometricsStatus(!getBiometricStatus())
+                    setBiometricsStatus(!skivvy.getBiometricStatus())
                 }
             })
         promptInfo = BiometricPrompt.PromptInfo.Builder()
@@ -116,10 +116,6 @@ class Setup : AppCompatActivity() {
             biometrics.text = getString(R.string.enable_fingerprint)
             biometrics.setBackgroundResource(R.drawable.spruce_square_round_button)
         }
-    }
-    private fun getBiometricStatus():Boolean{
-        return getSharedPreferences(skivvy.PREF_HEAD_SECURITY, MODE_PRIVATE)
-            .getBoolean(skivvy.PREF_KEY_BIOMETRIC, false)
     }
     private fun saveMuteStatus(isMuted:Boolean){
         getSharedPreferences(skivvy.PREF_HEAD_VOICE, MODE_PRIVATE).edit()
@@ -146,9 +142,5 @@ class Setup : AppCompatActivity() {
     private fun getTrainingStatus():Boolean{
         return getSharedPreferences(skivvy.PREF_HEAD_APP_MODE, MODE_PRIVATE)
             .getBoolean(skivvy.PREF_KEY_TRAINING, false)
-    }
-    private fun getMuteStatus():Boolean{
-        return getSharedPreferences(skivvy.PREF_HEAD_VOICE, MODE_PRIVATE)
-            .getBoolean(skivvy.PREF_KEY_MUTE_UNMUTE, false)
     }
 }

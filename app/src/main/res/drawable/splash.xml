@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
-        <color android:color="@color/charcoal" />
+        <color android:color="@color/dead_blue" />
     </item>
     <item>
         <bitmap
-            android:gravity="top"
-            android:src="@drawable/ic_launcher_round" />
+            android:gravity="center"
+            android:src="@drawable/dots_in_circle" />
     </item>
 </layer-list>

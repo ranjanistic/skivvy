@@ -7,9 +7,16 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.biometric.BiometricPrompt
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
+import java.util.concurrent.Executor
 
 class Skivvy:Application() {
     //permission codes
@@ -64,6 +71,7 @@ class Skivvy:Application() {
     lateinit var packagesIcon:Array<Drawable?>
     var packagesTotal:Int = 0
 
+
     override fun onCreate() {
         super.onCreate()
         GlobalScope.launch {    //Long running task, getting all packages
@@ -91,5 +99,22 @@ class Skivvy:Application() {
                 --this.packagesTotal    //removing un-launchable packages
             }
         }
+    }
+
+    fun getBiometricStatus():Boolean{
+        return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_BIOMETRIC, false)
+    }
+    fun setBiometricsStatus(isEnabled:Boolean) {
+        getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
+            .putBoolean(this.PREF_KEY_BIOMETRIC, isEnabled).apply()
+    }
+    fun getMuteStatus():Boolean{
+        return getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_MUTE_UNMUTE, false)
+    }
+    fun saveMuteStatus(isMuted: Boolean) {
+        getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE).edit()
+            .putBoolean(this.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
     }
 }

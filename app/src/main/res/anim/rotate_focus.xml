@@ -15,9 +15,9 @@
         android:duration="2500"
         android:repeatCount="infinite"
         android:fromYScale="100%"
-        android:toYScale="60%"
+        android:toYScale="55%"
         android:fromXScale="100%"
-        android:toXScale="60%"
+        android:toXScale="55%"
         android:pivotY="50%"
         android:pivotX="50%"
         />
