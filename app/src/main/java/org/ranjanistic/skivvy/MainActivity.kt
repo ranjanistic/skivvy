@@ -57,7 +57,7 @@ import kotlin.math.*
 @ExperimentalStdlibApi
 class MainActivity : AppCompatActivity() {
     lateinit var skivvy: Skivvy
-    private var tts: TextToSpeech? = null
+    //private var skivvy.tts: TextToSpeech? = null
     private var outPut: TextView? = null
     private var input: TextView? = null
     private var focusRotate: Animation? = null
@@ -101,18 +101,6 @@ class MainActivity : AppCompatActivity() {
         setViewAndDefaults()
         loadDefaultAnimations()
         normalView()
-        tts = TextToSpeech(context, TextToSpeech.OnInitListener {
-            when (it) {
-                TextToSpeech.SUCCESS -> {
-                    when (tts!!.setLanguage(skivvy.locale)) {
-                        TextToSpeech.LANG_MISSING_DATA,
-                        TextToSpeech.LANG_NOT_SUPPORTED -> outPut!!.text =
-                            getString(language_not_supported)
-                    }
-                }
-                else -> outPut!!.text = getString(output_error)
-            }
-        })
         setListeners()
     }
 
@@ -155,7 +143,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setListeners() {
-/*        translateAnimation!!.setAnimationListener(object : Animation.AnimationListener {
+        setting.setOnClickListener {
+            setButtonsClickable(false)
+            startActivity(Intent(context, Setup::class.java))
+            overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        }
+        receiver?.setOnClickListener {
+            setButtonsClickable(false)
+            normalView()
+            startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
+        }
+        /*        translateAnimation!!.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationEnd(p0: Animation?) {
             }
             override fun onAnimationRepeat(p0: Animation?) {}
@@ -163,16 +161,6 @@ class MainActivity : AppCompatActivity() {
         })
 
  */
-        setting.setOnClickListener {
-            setButtonsClickable(false)
-            startActivity(Intent(context, Setup::class.java))
-            //overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
-        }
-        receiver?.setOnClickListener {
-            setButtonsClickable(false)
-            normalView()
-            startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
-        }
     }
 
     override fun onStart() {
@@ -180,6 +168,9 @@ class MainActivity : AppCompatActivity() {
         setButtonsClickable(true)
     }
 
+    override fun onPostResume() {
+        super.onPostResume()
+    }
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -251,7 +242,7 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         setButtonsClickable(true)
-        tts!!.language = skivvy.locale
+        skivvy.tts!!.language = skivvy.locale
         when (requestCode) {
             skivvy.CODE_SPEECH_RECORD -> {
                 if (resultCode == Activity.RESULT_OK && data != null) {
@@ -616,7 +607,7 @@ class MainActivity : AppCompatActivity() {
             resources.getStringArray(array[0]).contains(text) -> {
                 startActivity(Intent(context, Setup::class.java))
             }
-            resources.getStringArray(array[1]).contains(text) -> {
+            text.contains("bluetooth") -> {
                 bluetoothOps(text)
             }
             resources.getStringArray(array[2]).contains(text) -> {
@@ -647,7 +638,7 @@ class MainActivity : AppCompatActivity() {
             }
             text.contains("search")->{
                 if(text.replace("search","").trim()!="") {
-                    speakOut("Searching via google...")
+                    speakOut("Searching via Google")
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
@@ -704,7 +695,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             text == "get permission" -> {
-                if (!hasPermissions(this, *skivvy.permissions)) {
+                if (!hasPermissions(context, *skivvy.permissions)) {
                     ActivityCompat.requestPermissions(
                         this, skivvy.permissions,
                         skivvy.CODE_ALL_PERMISSIONS
@@ -729,13 +720,31 @@ class MainActivity : AppCompatActivity() {
             ++index
         }
         index = 0
+        val toBePercented = arrayOf("%of","percentof")
+        while(index<toBePercented.size){
+            finalExpression = finalExpression.replace(toBePercented[index],"p")
+            ++index
+        }
+        index = 0
+        val toBeModded = arrayOf("%","mod")
+        while(index<toBeModded.size){
+            finalExpression = finalExpression.replace(toBeModded[index],"m")
+            ++index
+        }
+        index = 0
+        val toBeLogged = arrayOf("naturallogof","naturallog")
+        while(index<toBeLogged.size){
+            finalExpression = finalExpression.replace(toBeLogged[index],"ln")
+            ++index
+        }
+        index = 0
         val toBeMultiplied = arrayOf("x","multipliedby","into","and","of")
         while(index<toBeMultiplied.size){
             finalExpression = finalExpression.replace(toBeMultiplied[index],"*")
             ++index
         }
         index = 0
-        val toBeDivided = arrayOf("by","dividedby","upon","over")
+        val toBeDivided = arrayOf("dividedby","by","upon","over")
         while(index<toBeDivided.size){
             finalExpression = finalExpression.replace(toBeDivided[index],"/")
             ++index
@@ -747,15 +756,9 @@ class MainActivity : AppCompatActivity() {
             ++index
         }
         index = 0
-        val toBeSubtracted = arrayOf("minus")
+        val toBeSubtracted = arrayOf("minus","negative")
         while(index<toBeSubtracted.size){
             finalExpression = finalExpression.replace(toBeSubtracted[index],"-")
-            ++index
-        }
-        index = 0
-        val toBePercented = arrayOf("%of","percentof")
-        while(index<toBePercented.size){
-            finalExpression = finalExpression.replace(toBePercented[index],"p")
             ++index
         }
         index = 0
@@ -772,9 +775,9 @@ class MainActivity : AppCompatActivity() {
         }
         return finalExpression
     }
-    private val triangleRatios = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec","log")
-    private val operators: Array<Char> = arrayOf('^','p','/', '*', '+', '-')
-    val TAG = "TRIGSTRING"
+    private val triangleRatios = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec","log","ln")
+    private val operators: Array<Char> = arrayOf('^','p','/', '*', 'm', '+', '-')
+    private val TAG = "TRIGSTRING"
     //for expression evaluation
     private fun computerOps(expressionString: String): Boolean {
         val expression = expressionize(expressionString)
@@ -810,18 +813,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (!operatorBool.contains(true)) {
-            Log.d(TAG,"no ops")
             return if(functionOperate(expression)!=null){
-                Log.d(TAG,"but trig")
                 speakOut(functionOperate(expression)!!)
                 true
             } else {
-                Log.d(TAG,"no trig")
                 speakOut(getString(invalid_expression))
                 false
             }
         } else if(operatorBool.contains(true)&&functionBool.contains(true)){
-            Log.d(TAG,"trig and ops")
             hasFuncs = true
         }
 
@@ -872,10 +871,10 @@ class MainActivity : AppCompatActivity() {
          *  Thus a distinction between operands and operators is created and stored in a new array (of strings).
          */
 
-        val arrayOfExpression = arrayOfNulls<String>(2 * totalOps + 1)
+        var arrayOfExpression = arrayOfNulls<String>(2 * totalOps + 1)
         var expArrayIndex = 0
-        var positionInExpression = 0
-        var positionInOperatorPos = 0
+        var positionInExpression = expArrayIndex
+        var positionInOperatorPos = positionInExpression
         while (positionInOperatorPos < expOperatorPos.size && positionInExpression < expression.length) {
             while (positionInExpression < expOperatorPos[positionInOperatorPos]!!) {
                 if (arrayOfExpression[expArrayIndex] == null) {
@@ -918,13 +917,29 @@ class MainActivity : AppCompatActivity() {
                 f += 2
             }
         }
+
+        //if operator comes first, shift and place zero there
         var finalCheckIndex = 0
+        if(arrayOfExpression[0] == null){
+            arrayOfExpression[0] = "0"
+        } else if(arrayOfExpression[0]!!.contains(skivvy.nonNumeralPattern)){
+            val array = arrayOfNulls<String>(arrayOfExpression.size+1)
+            array[0] = "0"
+            while(finalCheckIndex<arrayOfExpression.size){
+                array[finalCheckIndex+1] = arrayOfExpression[finalCheckIndex]
+                ++finalCheckIndex
+            }
+            arrayOfExpression = array
+        }
+        //validating final expression
+        finalCheckIndex = 0
         while(finalCheckIndex<arrayOfExpression.size){
-            if(arrayOfExpression[finalCheckIndex]!!.contains(skivvy.textPattern)){
+            if(!arrayOfExpression[finalCheckIndex]!!.contains(skivvy.numberPattern)&&arrayOfExpression[finalCheckIndex]!!.length>1){
                 return false
             }
             ++finalCheckIndex
         }
+
         /**
          * Now, as we have the new array of strings, having the proper
          * expression, with operators at every even position of the array (at odd indices),
@@ -971,25 +986,28 @@ class MainActivity : AppCompatActivity() {
     private fun functionOperate(func:String):String?{
         return when{
             func.contains("sin") ->sin(
-                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
             ).toString()
             func.contains("cos") ->cos(
-                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
             ).toString()
             func.contains("tan") ->tan(
-                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
             ).toString()
             func.contains("cot") ->(1 / tan(
-                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
             )).toString()
             func.contains("sec") ->(1 / cos(
-                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
             )).toString()
             func.contains("cosec") ->(1 / sin(
-                func.replace(skivvy.nonNumeralPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
             )).toString()
             func.contains("log")->{
-                log(func.replace(skivvy.nonNumeralPattern, "").toFloat().toDouble(),10.0).toString()
+                log(func.replace(skivvy.textPattern, "").toFloat(),10F).toString()
+            }
+            func.contains("ln")->{
+                ln1p(func.replace(skivvy.textPattern, "").toFloat()).toString()
             }
             else ->null
         }
@@ -1001,6 +1019,7 @@ class MainActivity : AppCompatActivity() {
             '+' -> a + b
             '-' -> a - b
             'p'->(a/100)*b
+            'm'->a%b
             '^'-> a.toDouble().pow(b.toDouble()).toFloat()
             else -> null
         }
@@ -1036,7 +1055,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun wifiOps(text: String) {
         val wifiManager: WifiManager = getSystemService(Context.WIFI_SERVICE) as WifiManager
-        if (text.contains("on")) {
+        if (text.contains("on")||text.contains("enable")) {
             if (!wifiManager.isWifiEnabled) {
                 wifiManager.isWifiEnabled = true
                 successView(getDrawable(ic_wifi_connected))
@@ -1305,7 +1324,7 @@ class MainActivity : AppCompatActivity() {
                             cur.getString(cur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
                         if (dpUri != null) {
                             contact.photoID = dpUri
-                            val b = MediaStore.Images.Media.getBitmap(this.contentResolver, Uri.parse(contact.photoID))
+                            val b = MediaStore.Images.Media.getBitmap(context.contentResolver, Uri.parse(contact.photoID))
                             val rb:RoundedBitmapDrawable = RoundedBitmapDrawableFactory.create(resources,b)
                             rb.isCircular = true
                             rb.setAntiAlias(true)
@@ -1466,9 +1485,9 @@ class MainActivity : AppCompatActivity() {
     public override fun onDestroy() {
         loading?.startAnimation(exitAnimation)
         speakOut(getString(exit_msg))
-        if (tts != null) {
-            tts!!.stop()
-            tts!!.shutdown()
+        if (skivvy.tts != null) {
+            skivvy.tts!!.stop()
+            skivvy.tts!!.shutdown()
         }
         super.onDestroy()
     }
@@ -1528,7 +1547,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun speakOut(text: String) {
         outPut?.text = text
-        tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+        skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onDone(utteranceId: String) {
 //                 outputStat!!.visibility = View.INVISIBLE
             }
@@ -1538,12 +1557,12 @@ class MainActivity : AppCompatActivity() {
                 //            outputStat!!.visibility = View.VISIBLE
             }
         })
-        if (!skivvy.getMuteStatus()) tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
+        if (!skivvy.getMuteStatus()) skivvy.tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
     }
 
     private fun speakOut(text: String, taskCode: Int?) {
         outPut?.text = text
-        tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+        skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onDone(utteranceId: String) {
                 //      outputStat!!.visibility = View.INVISIBLE
                 if (taskCode != null) {
@@ -1558,7 +1577,7 @@ class MainActivity : AppCompatActivity() {
 //                outputStat!!.visibility = View.VISIBLE
             }
         })
-        if (!skivvy.getMuteStatus()) tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
+        if (!skivvy.getMuteStatus()) skivvy.tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
         else {
             if (taskCode != null) startVoiceRecIntent(taskCode)
         }
@@ -1568,7 +1587,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     private fun authStateAction(){
-        executor = ContextCompat.getMainExecutor(this)
+        executor = ContextCompat.getMainExecutor(context)
         biometricPrompt = BiometricPrompt(this, executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(

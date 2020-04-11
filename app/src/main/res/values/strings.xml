@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Skivvy</string>
-    <string name="hello">Hello!</string>
+    <string name="hello">Hello</string>
     <string name="mic_open_caption">Command</string>
     <string name="recognize_error">I didn\'t get it.&#160;</string>
     <string name="no_input">You didn\'t say anything</string>
