@@ -22,11 +22,14 @@ import android.os.Environment
 import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.provider.Settings
+import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.telephony.SmsManager
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.animation.Animation
@@ -49,10 +52,8 @@ import java.util.concurrent.Executor
 import kotlin.math.*
 
 @ExperimentalStdlibApi
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), RecognitionListener {
     lateinit var skivvy: Skivvy
-
-    //private var skivvy.tts: TextToSpeech? = null
     private var outPut: TextView? = null
     private var input: TextView? = null
     private var focusRotate: Animation? = null
@@ -257,8 +258,8 @@ class MainActivity : AppCompatActivity() {
                     if (txt != null) {
                         input?.text = txt
                         if (!respondToCommand(txt!!)) {
-                            if (!appOptions(txt)) {
-                                if (!directActions(txt!!)) {
+                            if (!directActions(txt!!)) {
+                                if (!appOptions(txt)) {
                                     if (!computerOps(txt!!)) {
                                         errorView()
                                         speakOut(getString(recognize_error))
@@ -727,6 +728,7 @@ class MainActivity : AppCompatActivity() {
         val toBePercented = arrayOf("%of", "percentof")
         val toBeModded = arrayOf("%", "mod")
         val toBeLogged = arrayOf("naturallogof", "naturallog")
+        val toBeLog = arrayOf("logof")
         val toBeMultiplied = arrayOf("x", "multipliedby", "into", "and", "of")
         val toBeDivided = arrayOf("dividedby", "by", "upon", "over")
         val toBeAdded = arrayOf("plus", "or")
@@ -736,12 +738,13 @@ class MainActivity : AppCompatActivity() {
             "raisedtothepowerof", "raisetothepowerof", "raisedtothepower", "raisetothepower",
             "tothepowerof", "tothepower", "raisedto", "raiseto", "raised", "raise", "kipower"
         )
+
         val formatArrays = arrayOf(
-            toBeRemoved, toBePercented, toBeModded,
-            toBeLogged, toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBeNumerized
+            toBeRemoved, toBePercented, toBeModded, toBeLogged, toBeLog,
+            toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBeNumerized
             , toBePowered
         )
-        val replacingArray = arrayOf("", "p", "m", "ln", "*", "/", "+", "-", "100", "^")
+        val replacingArray = arrayOf("", "p", "m", "ln", "log", "*", "/", "+", "-", "100", "^")
         var formatIndex = 0
         while (formatIndex < formatArrays.size) {
             var formatArrayIndex = 0
@@ -757,17 +760,15 @@ class MainActivity : AppCompatActivity() {
         return finalExpression
     }
 
-    private val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln")
-    private val operators: Array<Char> = arrayOf('^', 'p', '/', '*', 'm', '-', '+')
-
     //for expression evaluation
     private fun computerOps(expressionString: String): Boolean {
         val expression = expressionize(expressionString)
         if (!expression.contains(skivvy.numberPattern)) {
             return false
         }
-        val operatorBool = arrayOfNulls<Boolean>(operators.size)
-        val functionBool = arrayOfNulls<Boolean>(mathFunctions.size)
+        val operatorBool = arrayOfNulls<Boolean>(skivvy.operators.size)
+        val functionBool = arrayOfNulls<Boolean>(skivvy.mathFunctions.size)
+
         var f = 0
         while (f < functionBool.size) {
             functionBool[f] = false
@@ -783,13 +784,13 @@ class MainActivity : AppCompatActivity() {
          * Storing availability of all operators in given expression, to an array of booleans.
          */
         var opIndex = 0
-        while (opIndex < operators.size) {
-            operatorBool[opIndex] = expression.contains(operators[opIndex])
+        while (opIndex < operatorBool.size) {
+            operatorBool[opIndex] = expression.contains(skivvy.operators[opIndex])
             ++opIndex
         }
         var funIndex = 0
-        while (funIndex < mathFunctions.size) {
-            functionBool[funIndex] = expression.contains(mathFunctions[funIndex])
+        while (funIndex < functionBool.size) {
+            functionBool[funIndex] = expression.contains(skivvy.mathFunctions[funIndex])
             ++funIndex
         }
         if (!operatorBool.contains(true)) {
@@ -797,17 +798,17 @@ class MainActivity : AppCompatActivity() {
             return true
         }
         /**
-         *  The following block stores the position of operators in the given expression
+         *  The following block stores the position of skivvy.operators in the given expression
          *  in  a new array (of Integers), which will help the further block of code to contain
-         *  and create a distinction between operands (numbers) and operators.
+         *  and create a distinction between operands (numbers) and skivvy.operators.
          */
 
         var expIndex = 0
         var totalOps = 0
         while (expIndex < expression.length) {
             opIndex = 0
-            while (opIndex < operators.size) {
-                if (expression[expIndex] == operators[opIndex]) {
+            while (opIndex < operatorBool.size) {
+                if (expression[expIndex] == skivvy.operators[opIndex]) {
                     ++totalOps              //counting total
                 }
                 ++opIndex
@@ -822,8 +823,8 @@ class MainActivity : AppCompatActivity() {
         var expOpIndex = 0
         while (expIndex < expression.length) {
             opIndex = 0
-            while (opIndex < operators.size) {
-                if (expression[expIndex] == operators[opIndex]) {
+            while (opIndex < operatorBool.size) {
+                if (expression[expIndex] == skivvy.operators[opIndex]) {
                     expOperatorPos[expOpIndex] = expIndex         //saving operator positions
                     ++expOpIndex
                 }
@@ -835,7 +836,7 @@ class MainActivity : AppCompatActivity() {
         /**
          * The following block extracts values from given expression, char by char, and stores them
          * in an array of Strings, by grouping digits in form of numbers at the same index as string,
-         * and operators in the expression at a separate index if array of Strings.
+         * and skivvy.operators in the expression at a separate index if array of Strings.
          *  For ex - Let the given expression be :   1234/556*89+4-23
          *  Starting from index = 0, the following block will store digits till '/'  at index =0 of empty array of Strings, then
          *  will store '/' itself at index =  1 of empty array of Strings. Then proceeds to store 5, 5  and 6
@@ -879,14 +880,25 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
         //if operator comes first, place zero at null index
         if (arrayOfExpression[0] == null) {
             arrayOfExpression[0] = "0"
         }
         if (arrayOfExpression[arrayOfExpression.size - 1] == null) return false
 
-        //TODO: Decimal inputs to trigonometric functions
+        var l = 0
+        var k = 0
+        while(l<arrayOfExpression.size&&k<arrayOfExpression.size){
+            if(arrayOfExpression[l]!=null&&arrayOfExpression[k]!=null) {
+                if (arrayOfExpression[k]!!.contains(skivvy.nonNumeralPattern)
+                    && !functionBool.contains(true)) {
+                    return false
+                }
+            } else return false
+            ++l
+            k+=2
+        }
+
         //Solves predefined mathematical functions.
         if (functionBool.contains(true)) {
             var fin = 0
@@ -900,11 +912,15 @@ class MainActivity : AppCompatActivity() {
                 ++fin
             }
         }
-
         //validating final expression
         var finalCheckIndex = 0
         while (finalCheckIndex < arrayOfExpression.size) {
-            if (arrayOfExpression[finalCheckIndex]!!.contains(skivvy.textPattern) && arrayOfExpression[finalCheckIndex]!!.length > 1) {
+            if (arrayOfExpression[finalCheckIndex] != null) {
+                if (arrayOfExpression[finalCheckIndex]!!.contains(skivvy.textPattern) &&
+                    arrayOfExpression[finalCheckIndex]!!.length > 1){
+                    return false
+                }
+            } else{
                 return false
             }
             ++finalCheckIndex
@@ -912,16 +928,16 @@ class MainActivity : AppCompatActivity() {
 
         /**
          * Now, as we have the new array of strings, having the proper
-         * expression, with operators at every even position of the array (at odd indices),
+         * expression, with skivvy.operators at every even position of the array (at odd indices),
          * the following block of code will evaluate the expression according to the BODMAS rule.
          */
 
         var nullPosCount = 0
         opIndex = 0
-        while (opIndex < operators.size) {
+        while (opIndex < operatorBool.size) {
             var opPos = 1
             while (opPos < arrayOfExpression.size - nullPosCount) {
-                if (arrayOfExpression[opPos] == operators[opIndex].toString()) {
+                if (arrayOfExpression[opPos] == skivvy.operators[opIndex].toString()) {
                     if (arrayOfExpression[opPos] == "-") {
                         arrayOfExpression[opPos + 1] =
                             (0 - arrayOfExpression[opPos + 1]!!.toFloat()).toString()
@@ -939,7 +955,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     nullPosCount += 2
                     if (arrayOfExpression.size > 3 &&
-                        arrayOfExpression[opPos] == operators[opIndex].toString()
+                        arrayOfExpression[opPos] == skivvy.operators[opIndex].toString()
                     ) {    //if replacing operator is same as the replaced one
                         opPos -= 2            //index two indices back so that it returns at same position again
                     }
@@ -1424,13 +1440,25 @@ class MainActivity : AppCompatActivity() {
 
     //intent voice recognition, code according to action command, serving activity result
     private fun startVoiceRecIntent(code: Int) {
+/*
+        val speech:SpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        speech.setRecognitionListener(this)
+        val intentd = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        intentd.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en")
+        intentd.putExtra(
+            RecognizerIntent.EXTRA_CALLING_PACKAGE,
+            this.packageName
+        )
+        speech.startListening(intentd)
+*/
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .setFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT)
             .putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
             )
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
-            .putExtra(RecognizerIntent.EXTRA_PROMPT, "I'm listening");
+            .putExtra(RecognizerIntent.EXTRA_PROMPT, "I'm listening")
         if (intent.resolveActivity(packageManager) != null)
             startActivityForResult(intent, code)
         else {
@@ -1576,17 +1604,17 @@ class MainActivity : AppCompatActivity() {
                 ) {
                     super.onAuthenticationSucceeded(result)
                     skivvy.setBiometricsStatus(false)
-                    speakOut("Biometric authentication disabled")
+                    speakOut(getString(biometric_is_off))
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    speakOut("I could not disable biometric.")
+                    speakOut(getString(biometric_off_error))
                 }
 
                 override fun onAuthenticationFailed() {
                     super.onAuthenticationFailed()
-                    speakOut("I could not verify you.")
+                    speakOut(getString(verification_unsuccessfull))
                 }
             })
         promptInfo = BiometricPrompt.PromptInfo.Builder()
@@ -1600,5 +1628,41 @@ class MainActivity : AppCompatActivity() {
     private fun getTrainingStatus(): Boolean {
         return getSharedPreferences(skivvy.PREF_HEAD_APP_MODE, MODE_PRIVATE)
             .getBoolean(skivvy.PREF_KEY_TRAINING, false)
+    }
+
+    override fun onReadyForSpeech(p0: Bundle?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onRmsChanged(p0: Float) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onBufferReceived(p0: ByteArray?) {
+        speakOut(p0.toString())
+    }
+
+    override fun onPartialResults(p0: Bundle?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onEvent(p0: Int, p1: Bundle?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onBeginningOfSpeech() {
+        TODO("Not yet implemented")
+    }
+
+    override fun onEndOfSpeech() {
+        TODO("Not yet implemented")
+    }
+
+    override fun onError(p0: Int) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onResults(p0: Bundle?) {
+        TODO("Not yet implemented")
     }
 }

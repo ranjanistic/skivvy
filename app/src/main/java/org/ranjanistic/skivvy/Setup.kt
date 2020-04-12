@@ -24,6 +24,11 @@ class Setup : AppCompatActivity() {
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
+    override fun onBackPressed() {
+        super.onBackPressed()
+        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         skivvy = this.application as Skivvy
@@ -38,6 +43,7 @@ class Setup : AppCompatActivity() {
 
         settingIcon.setOnClickListener{
             finish()
+            overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
             //startFinishAnimation()
         }
         /*
@@ -63,7 +69,7 @@ class Setup : AppCompatActivity() {
                 setBiometricsStatus(!skivvy.getBiometricStatus())
             }
         }
-
+        findViewById<TextView>(R.id.version).text = BuildConfig.VERSION_NAME
     }
 
     override fun onStart() {
@@ -122,7 +128,7 @@ class Setup : AppCompatActivity() {
             .putBoolean(skivvy.PREF_KEY_MUTE_UNMUTE,isMuted ).apply()
         if(isMuted) {
             mute.text = getString(R.string.unmute_text)
-            mute.setBackgroundResource(R.drawable.red_square_round_button)
+            mute.setBackgroundResource(R.drawable.green_square_round_button)
         }
         else{
             mute.text = getString(R.string.mute_text)

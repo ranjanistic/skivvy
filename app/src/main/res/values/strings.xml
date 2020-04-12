@@ -136,4 +136,7 @@
     <string name="biometric_already_off">Biometric is already disabled</string>
     <string name="physical_auth_request">I need your physical authentication</string>
     <string name="have_all_permits">I have all the permissions that I need from you.</string>
+    <string name="biometric_is_off">Biometric authentication disabled</string>
+    <string name="biometric_off_error">I could not disable biometric.</string>
+    <string name="verification_unsuccessfull">I could not verify you.</string>
 </resources>

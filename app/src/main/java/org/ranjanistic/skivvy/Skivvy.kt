@@ -74,6 +74,10 @@ class Skivvy:Application() {
     var packagesTotal:Int = 0
     var tts: TextToSpeech? = null
 
+
+    val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln")
+    val operators: Array<Char> = arrayOf('^', 'p', '/', '*', 'm', '-', '+')
+
     override fun onCreate() {
         super.onCreate()
         GlobalScope.launch {    //Long running task, getting all packages
