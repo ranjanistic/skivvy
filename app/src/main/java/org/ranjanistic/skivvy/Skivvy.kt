@@ -79,18 +79,6 @@ class Skivvy:Application() {
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalPackages()
         }
-        this.tts = TextToSpeech(applicationContext, TextToSpeech.OnInitListener {
-            when (it) {
-                TextToSpeech.SUCCESS -> {
-                    when (this.tts!!.setLanguage(this.locale)) {
-                        TextToSpeech.LANG_MISSING_DATA,
-                        TextToSpeech.LANG_NOT_SUPPORTED -> Toast.makeText(this,
-                            getString(R.string.language_not_supported),Toast.LENGTH_LONG).show()
-                    }
-                }
-                else -> Toast.makeText(this, getString(R.string.output_error),Toast.LENGTH_SHORT).show()
-            }
-        })
     }
     //gets all packages and respective details available on device
     private fun getLocalPackages(){

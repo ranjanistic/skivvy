@@ -129,4 +129,11 @@
     <string name="via_sms">&#160;via SMS?</string>
     <string name="sending_sms_at">Sending SMS at&#160;</string>
     <string name="discard">Discard</string>
+    <string name="voice_output_on">Already speaking</string>
+    <string name="biometric_already_on">Biometric is already enabled</string>
+    <string name="biometric_on">Biometric authentication enabled</string>
+    <string name="biometric_enable_error">I couldn\'t enable biometric.</string>
+    <string name="biometric_already_off">Biometric is already disabled</string>
+    <string name="physical_auth_request">I need your physical authentication</string>
+    <string name="have_all_permits">I have all the permissions that I need from you.</string>
 </resources>
