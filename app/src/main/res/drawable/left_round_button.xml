@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="@color/dead_blue">
+    android:color="@color/pitch_black">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#3041dd"/>
+            <solid android:color="#304199"/>
             <corners android:radius="28dp"
                 android:topRightRadius="0dp"
                 android:bottomRightRadius="0dp"/>
+            <gradient
+                android:startColor="#304199"
+                android:endColor="@color/dark_blue"
+                android:type="linear"
+                android:angle="0.3"/>
         </shape>
     </item>
 </ripple>

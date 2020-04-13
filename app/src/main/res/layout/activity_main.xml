@@ -2,56 +2,75 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="?attr/base_background_color"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/base_background_color"
     tools:context=".MainActivity">
-<ImageView
-    android:id="@+id/backdrop"
-    android:layout_width="0dp"
-    android:layout_height="0dp"
-    app:srcCompat="@drawable/bottom_round_view"
-    android:elevation="16dp"
-    android:layout_marginBottom="12dp"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintBottom_toTopOf="@id/textInput"/>
+
+    <ImageView
+        android:id="@+id/backdrop"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="18dp"
+        android:contentDescription="@string/back_drop"
+        android:elevation="16dp"
+        app:layout_constraintBottom_toTopOf="@id/textInput"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/bottom_round_view" />
+
     <TextView
         android:id="@+id/greeting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/base_separation"
+        android:layout_marginStart="@dimen/secondary_separation"
+        android:layout_marginTop="@dimen/base_separation"
         android:elevation="16dp"
         android:fontFamily="@font/montserrat_alternates"
         android:text="@string/app_name"
         android:textColor="?attr/base_text_color"
         android:textSize="@dimen/largest_text_size"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/textOutput"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0" />
-<ImageButton
-    android:id="@+id/setting"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/base_separation"
-    android:elevation="22dp"
-    android:paddingEnd="@dimen/base_separation"
-    android:paddingStart="18dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp"
-    app:srcCompat="@drawable/ic_setttings_icon"
-    android:background="@drawable/left_round_button"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintHorizontal_bias="1"
-    app:layout_constraintVertical_bias="0"/>
+
+    <ImageButton
+        android:id="@+id/setting"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:backgroundTint="@android:color/transparent"
+        android:contentDescription="@string/setting_icon"
+        android:elevation="22dp"
+        android:scaleType="fitCenter"
+        app:layout_constraintBottom_toBottomOf="@id/setting_icon_back"
+        app:layout_constraintEnd_toEndOf="@id/setting_icon_back"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@id/setting_icon_back"
+        app:layout_constraintTop_toTopOf="@id/setting_icon_back"
+        app:layout_constraintVertical_bias="0.5"
+        app:srcCompat="@drawable/ic_settings_icon" />
+
+    <ImageView
+        android:id="@+id/setting_icon_back"
+        android:layout_width="70dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="@dimen/base_separation"
+        android:contentDescription="@string/back_of_setting_icon"
+        android:elevation="18dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toTopOf="@id/textOutput"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0"
+        app:srcCompat="@drawable/left_round_button" />
 
     <TextView
         android:id="@+id/textOutput"
@@ -66,24 +85,26 @@
         app:layout_constraintEnd_toEndOf="@id/loader"
         app:layout_constraintStart_toStartOf="@id/loader"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.4"
-        />
+        app:layout_constraintVertical_bias="0.55" />
+
     <ImageView
         android:id="@+id/actionIcon"
         android:layout_width="150dp"
         android:layout_height="150dp"
+        android:contentDescription="@string/current_process_image"
+        android:elevation="18dp"
         android:scaleType="fitCenter"
-        android:elevation="16dp"
-        app:layout_constraintStart_toStartOf="@id/loader"
+        app:layout_constraintBottom_toBottomOf="@id/loader"
         app:layout_constraintEnd_toEndOf="@id/loader"
-        app:layout_constraintTop_toTopOf="@id/loader"
-        app:layout_constraintBottom_toBottomOf="@id/loader"/>
+        app:layout_constraintStart_toStartOf="@id/loader"
+        app:layout_constraintTop_toTopOf="@id/loader" />
 
     <ImageView
         android:id="@+id/loader"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="8dp"
+        android:contentDescription="@string/breathing_skivvy"
         android:elevation="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -91,49 +112,52 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0"
         app:srcCompat="@drawable/ic_dotsincircle" />
+
     <TextView
         android:id="@+id/textInput"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/normal_text_size"
-        android:textColor="?attr/base_text_color"
-        android:padding="@dimen/secondary_separation"
-        app:layout_constraintVertical_bias="0.5"
-        android:gravity="center"
         android:layout_margin="8dp"
+        android:elevation="22dp"
+        android:gravity="start"
+        android:padding="@dimen/secondary_separation"
+        android:textColor="?attr/base_text_color"
+        android:textSize="@dimen/normal_text_size"
+        app:layout_constraintBottom_toBottomOf="@id/receiverBtn"
         app:layout_constraintEnd_toStartOf="@id/receiverBtn"
-        app:layout_constraintTop_toTopOf="@id/receiverBtn"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/receiverBtn"/>
-    <TextView
+        app:layout_constraintTop_toTopOf="@id/receiverBtn"
+        app:layout_constraintVertical_bias="0.5" />
+
+    <ImageButton
         android:id="@+id/receiverBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/square_round_button"
-        android:fontFamily="@font/montserrat_alternates"
-        android:backgroundTint="?attr/secondary_background_color"
-        android:elevation="@dimen/minimum_separation"
-        android:gravity="center"
-        android:padding="@dimen/minimum_separation"
-        android:text="@string/mic_open_caption"
-        android:textColor="?attr/secondary_text_color"
-        android:textSize="@dimen/secondary_text_size"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
         android:layout_margin="12dp"
-        app:layout_constraintTop_toBottomOf="@id/backdrop"
+        android:background="@drawable/circle_button"
+        android:contentDescription="@string/command_button"
+        android:elevation="22dp"
+        android:paddingTop="12dp"
+        android:scaleType="fitCenter"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintHorizontal_bias="1"
-        app:layout_constraintVertical_bias="0.5"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/backdrop"
+        app:layout_constraintVertical_bias="0.5"
+        app:srcCompat="@drawable/ic_skivvycommandicon" />
+
     <ImageView
         android:id="@+id/outputStatusView"
-        android:visibility="gone"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        app:layout_constraintTop_toBottomOf="@id/backdrop"
+        android:layout_margin="@dimen/minimum_separation"
+        android:contentDescription="@string/speaking_indicator"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/backdrop"
         app:layout_constraintVertical_bias="1"
-        android:layout_margin="@dimen/minimum_separation"
-        app:srcCompat="@drawable/ic_speakericon"/>
+        app:srcCompat="@drawable/ic_speakericon" />
 </androidx.constraintlayout.widget.ConstraintLayout>

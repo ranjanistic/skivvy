@@ -1,15 +1,10 @@
 package org.ranjanistic.skivvy
 
 import android.content.Intent
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import java.util.concurrent.Executor
 
 @ExperimentalStdlibApi
@@ -21,8 +16,8 @@ class Splash : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         skivvy = this.application as Skivvy
-        val intent= Intent(this, MainActivity::class.java)
-        if(getBiometricStatus()) {
+        val intent = Intent(this, MainActivity::class.java)
+        if (getBiometricStatus()) {
             executor = ContextCompat.getMainExecutor(this)
             biometricPrompt = BiometricPrompt(this, executor,
                 object : BiometricPrompt.AuthenticationCallback() {
@@ -30,6 +25,7 @@ class Splash : AppCompatActivity() {
                         super.onAuthenticationError(errorCode, errString)
                         finish()
                     }
+
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                         super.onAuthenticationSucceeded(result)
                         startActivity(intent)
@@ -42,12 +38,13 @@ class Splash : AppCompatActivity() {
                 .setNegativeButtonText(getString(R.string.other_auth_ops))
                 .build()
             biometricPrompt.authenticate(promptInfo)
-        } else{
+        } else {
             startActivity(intent)
             finish()
         }
     }
-    private fun getBiometricStatus():Boolean{
+
+    private fun getBiometricStatus(): Boolean {
         return getSharedPreferences(skivvy.PREF_HEAD_SECURITY, MODE_PRIVATE)
             .getBoolean(skivvy.PREF_KEY_BIOMETRIC, false)
     }

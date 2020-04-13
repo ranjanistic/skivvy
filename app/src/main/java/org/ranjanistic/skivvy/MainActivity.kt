@@ -17,6 +17,7 @@ import android.location.LocationManager
 import android.media.AudioManager
 import android.net.Uri
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.ContactsContract
@@ -24,7 +25,6 @@ import android.provider.MediaStore
 import android.provider.Settings
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
-import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.telephony.SmsManager
@@ -65,10 +65,14 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private var fallAnimation: Animation? = null
     private var riseAnimation: Animation? = null
     private var extendAnimation: Animation? = null
+    private var pillExitAnim: Animation? = null
+    private var pillEnterAnim: Animation? = null
     private var fadeOffAnimation: Animation? = null
+    private var fadeOnAnimation: Animation? = null
     private var translateAnimation: Animation? = null
-    private var receiver: TextView? = null
+    private var receiver: ImageButton? = null
     private lateinit var setting: ImageButton
+    private lateinit var settingBack: ImageView
     private var greet: TextView? = null
     private var tempPackageIndex: Int? = null
     private var tempPhoneNumberIndex: Int? = 0
@@ -98,10 +102,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         loadDefaultAnimations()
         normalView()
         setListeners()
+        outPut?.text = getString(im_ready)
+        input?.text = getString(tap_the_button)
     }
 
     private fun setViewAndDefaults() {
         setting = findViewById(R.id.setting)
+        settingBack = findViewById(R.id.setting_icon_back)
         outPut = findViewById(R.id.textOutput)
         input = findViewById(R.id.textInput)
         loading = findViewById(R.id.loader)
@@ -115,48 +122,64 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     private fun loadDefaultAnimations() {
         fallAnimation = AnimationUtils.loadAnimation(context, R.anim.fall_back)
+        backfall.startAnimation(fallAnimation)
         riseAnimation = AnimationUtils.loadAnimation(context, R.anim.rise_back)
         bubbleAnimation = AnimationUtils.loadAnimation(context, R.anim.bubble_wave)
+        receiver!!.startAnimation(bubbleAnimation)
+        greet!!.startAnimation(bubbleAnimation)
         normalRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_emerge_demerge)
         focusRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_focus)
         rotateSlow = AnimationUtils.loadAnimation(context, R.anim.rotate_slow)
         fadeAnimation = AnimationUtils.loadAnimation(context, R.anim.fade)
         exitAnimation = AnimationUtils.loadAnimation(context, R.anim.rotate_exit)
-        /*fadeOffAnimation = AnimationUtils.loadAnimation(context, R.anim.fade_off)
-        translateAnimation = AnimationUtils.loadAnimation(context, R.anim.scale_translate_setting)
+        fadeOffAnimation = AnimationUtils.loadAnimation(context, R.anim.fade_off)
+        fadeOnAnimation = AnimationUtils.loadAnimation(context, R.anim.fade_on)
+        pillEnterAnim = AnimationUtils.loadAnimation(context, R.anim.pill_slide_left)
+        setting.startAnimation(pillEnterAnim)
+        pillExitAnim = AnimationUtils.loadAnimation(context, R.anim.pill_slide_right)
         extendAnimation = AnimationUtils.loadAnimation(context, R.anim.extend_back)
-         */
-        backfall.startAnimation(fallAnimation)
-        setting.startAnimation(bubbleAnimation)
-        receiver!!.startAnimation(bubbleAnimation)
-        greet!!.startAnimation(bubbleAnimation)
+
     }
 
     private fun startSettingAnimate() {
-        setting.startAnimation(translateAnimation)
+        setting.startAnimation(pillExitAnim)
         backfall.startAnimation(extendAnimation)
-        loading!!.startAnimation(exitAnimation)
+        greet!!.startAnimation(fadeOffAnimation)
+        outPut!!.startAnimation(fadeOffAnimation)
+        receiver!!.startAnimation(fadeOffAnimation)
+        input!!.startAnimation(fadeOffAnimation)
+        settingBack.startAnimation(fadeOffAnimation)
+    }
+
+    private fun startResumeAnimate() {
+        setting.startAnimation(pillEnterAnim)
+        backfall.startAnimation(riseAnimation)
+        greet!!.startAnimation(fadeOnAnimation)
+        outPut!!.startAnimation(fadeOnAnimation)
+        receiver!!.startAnimation(fadeOnAnimation)
+        input!!.startAnimation(fadeOnAnimation)
+        settingBack.startAnimation(fadeOnAnimation)
     }
 
     private fun setListeners() {
         setting.setOnClickListener {
             setButtonsClickable(false)
-            startActivity(Intent(context, Setup::class.java))
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+            startSettingAnimate()
         }
         receiver?.setOnClickListener {
-            setButtonsClickable(false)
+            speakOut("")
             normalView()
             startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
         }
-        /*        translateAnimation!!.setAnimationListener(object : Animation.AnimationListener {
+        pillExitAnim!!.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationEnd(p0: Animation?) {
+                startActivity(Intent(context, Setup::class.java))
+                overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
             }
+
             override fun onAnimationRepeat(p0: Animation?) {}
             override fun onAnimationStart(p0: Animation?) {}
         })
-
- */
     }
 
     override fun onStart() {
@@ -175,6 +198,11 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 else -> outPut!!.text = getString(output_error)
             }
         })
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        startResumeAnimate()
     }
 
     override fun onRequestPermissionsResult(
@@ -211,6 +239,33 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     speakOut(getString(call_permit_denied))
                 }
             }
+
+            skivvy.CODE_SMS_REQUEST -> {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    when {
+                        contact.phoneList != null -> {
+                            speakOut(
+                                getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex!!]}?",
+                                skivvy.CODE_SMS_CONF
+                            )
+                        }
+                        tempPhone != null -> {
+                            speakOut(
+                                getString(should_i_text) + "$tempPhone?",
+                                skivvy.CODE_SMS_CONF
+                            )
+                        }
+                        else -> {
+                            speakOut(getString(null_variable_error))
+                        }
+                    }
+                } else {
+                    tempPhone = null
+                    errorView()
+                    speakOut(getString(sms_permit_denied))
+                }
+            }
+
             skivvy.CODE_STORAGE_REQUEST -> {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     takeScreenshot()
@@ -236,11 +291,17 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_HEADSETHOOK) {
-            if (outputStat!!.visibility != View.VISIBLE) {
-                setButtonsClickable(false)
-                normalView()
-                startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
-            }
+            setButtonsClickable(false)
+            speakOut("")
+            normalView()
+            startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
+        } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            val audio =
+                applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            speakOut(
+                "Volume at ${(audio.getStreamVolume(AudioManager.STREAM_MUSIC) * 100)
+                        / audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}%"
+            )
         }
         return super.onKeyDown(keyCode, event)
     }
@@ -253,8 +314,24 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         when (requestCode) {
             skivvy.CODE_SPEECH_RECORD -> {
                 if (resultCode == Activity.RESULT_OK && data != null) {
-                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
-                        .toLowerCase(skivvy.locale)
+                    val temp =
+                        data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                            .toLowerCase(skivvy.locale)
+                    if (txt == null || txt == "") {
+                        txt = temp
+                    } else {
+                        if (resources.getStringArray(R.array.disruptions).contains(temp)) {
+                            txt = null
+                            normalView()
+                            speakOut(getString(okay))
+                        } else {
+                            if (temp.contains(txt!!)) {
+                                txt = temp
+                            } else {
+                                txt += temp
+                            }
+                        }
+                    }
                     if (txt != null) {
                         input?.text = txt
                         if (!respondToCommand(txt!!)) {
@@ -269,6 +346,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                         }
                     }
                 } else {
+                    normalView()
                     speakOut(getString(no_input))
                 }
             }
@@ -417,7 +495,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                                         )
                                     } else {
                                         speakOut(
-                                            getString(body_added) + "I've got ${contact.emailList!!.size} addresses of\n${contact.displayName}.\n" +
+                                            getString(body_added) + "I've got ${contact.emailList!!.size} addresses of ${contact.displayName}.\n" +
                                                     getString(should_i_email) + "them at\n${contact.emailList!![tempEmailIndex!!]}?",
                                             skivvy.CODE_EMAIL_CONF
                                         )
@@ -553,9 +631,34 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                         .toLowerCase(skivvy.locale)
                     when {
                         resources.getStringArray(R.array.acceptances).contains(txt) -> {
-                            successView(null)
-                            speakOut(getString(sending_sms_at) + "$tempPhone")
-                            textMessageOps(tempPhone!!, tempTextBody!!, skivvy.CODE_SMS_CONF)
+                            if (ActivityCompat.checkSelfPermission(
+                                    this,
+                                    Manifest.permission.SEND_SMS
+                                ) != PackageManager.PERMISSION_GRANTED
+                            ) {
+                                speakOut(getString(require_physical_permission))
+                                ActivityCompat.requestPermissions(
+                                    this,
+                                    arrayOf(Manifest.permission.SEND_SMS),
+                                    skivvy.CODE_SMS_REQUEST
+                                )
+                            } else {
+                                if (contact.phoneList != null) {
+                                    speakOut(getString(sending_sms_at) + "${contact.phoneList!![tempPhoneNumberIndex!!]}")
+                                    textMessageOps(
+                                        contact.phoneList!![tempPhoneNumberIndex!!]!!,
+                                        tempTextBody!!,
+                                        skivvy.CODE_SMS_CONF
+                                    )
+                                } else if (tempPhone != null) {
+                                    speakOut(getString(sending_sms_at) + "$tempPhone")
+                                    textMessageOps(
+                                        tempPhone!!,
+                                        tempTextBody!!,
+                                        skivvy.CODE_SMS_CONF
+                                    )
+                                }
+                            }
                         }
                         resources.getStringArray(R.array.denials)
                             .contains(txt) || resources.getStringArray(R.array.disruptions)
@@ -625,9 +728,17 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 locationOps()
             }
             text.contains("lock") -> {
-                deviceLockOps()
+                if (text.contains("screen") || text.contains("device") || text.contains("phone")) {
+                    deviceLockOps()
+                } else {
+                    if (text.replace("lock", "").trim() == "") {
+                        txt = "lock"
+                        speakOut("Lock what?", skivvy.CODE_SPEECH_RECORD)
+                    } else return false
+                }
             }
-            resources.getStringArray(array[5]).contains(text) -> {
+            text.contains("screenshot") || text.contains("snapshot") || text.replace(" ", "")
+                .contains("takess") -> {
                 if (ActivityCompat.checkSelfPermission(
                         context,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -644,22 +755,27 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 }
             }
             text.contains("search") -> {
-                if (text.replace("search", "").trim() != "") {
-                    speakOut("Searching via Google")
+                var query = text.replace("search for", "").trim()
+                query = query.replace("search", "").trim()
+                if (query != "") {
+                    speakOut("Searching for $query via Google")
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
-                            Uri.parse("https://google.com/#q=${text.replace("search", "").trim()}")
+                            Uri.parse("https://google.com/#q=$query")
                         )
                     )
-                } else return false
+                } else {
+                    if (text.replace("search for", "").trim() == "" || text.replace("search", "")
+                            .trim() == ""
+                    ) {
+                        txt = "search for "
+                        speakOut("Search for what?", skivvy.CODE_SPEECH_RECORD)
+                    } else return false
+                }
             }
             text.contains("volume") -> {
-                when {
-                    text.contains("up") || text.contains("raise") -> volumeOps(true)
-                    text.contains("down") -> volumeOps(false)
-                    else -> volumeOps(null)
-                }
+                volumeOps(text.replace("volume", "").trim())
             }
             text == "mute" -> {
                 skivvy.saveMuteStatus(true)
@@ -698,7 +814,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                         }
                         true
                     }
-                    else -> false
+                    else -> {
+                        if (text.replace("biometric", "").trim() == "") {
+                            txt = "biometric"
+                            speakOut("Biometric what?", skivvy.CODE_SPEECH_RECORD)
+                            true
+                        } else false
+                    }
                 }
             }
             text == "get permission" -> {
@@ -729,7 +851,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         val toBeModded = arrayOf("%", "mod")
         val toBeLogged = arrayOf("naturallogof", "naturallog")
         val toBeLog = arrayOf("logof")
-        val toBeMultiplied = arrayOf("x", "multipliedby", "into", "and", "of")
+        val toBeMultiplied = arrayOf("x", "multipliedby", "into", "and")
         val toBeDivided = arrayOf("dividedby", "by", "upon", "over")
         val toBeAdded = arrayOf("plus", "or")
         val toBeSubtracted = arrayOf("minus", "negative")
@@ -833,6 +955,22 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             ++expIndex
         }
 
+        var localExp = expression
+        var kk = 0
+        while (kk < skivvy.operators.size) {
+            localExp = localExp.replace(skivvy.operators[kk].toString(), "")
+            ++kk
+        }
+        kk = 0
+        while (kk < skivvy.mathFunctions.size) {
+            localExp = localExp.replace(skivvy.mathFunctions[kk], "")
+            ++kk
+        }
+        localExp = localExp.replace(skivvy.numberPattern, "")
+        localExp = localExp.replace(".", "")
+        if (localExp != "") {
+            return false
+        }
         /**
          * The following block extracts values from given expression, char by char, and stores them
          * in an array of Strings, by grouping digits in form of numbers at the same index as string,
@@ -886,17 +1024,20 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         }
         if (arrayOfExpression[arrayOfExpression.size - 1] == null) return false
 
+        //operator in place validity check
         var l = 0
         var k = 0
-        while(l<arrayOfExpression.size&&k<arrayOfExpression.size){
-            if(arrayOfExpression[l]!=null&&arrayOfExpression[k]!=null) {
+        while (l < arrayOfExpression.size && k < arrayOfExpression.size) {
+            if (arrayOfExpression[l] != null && arrayOfExpression[k] != null) {
                 if (arrayOfExpression[k]!!.contains(skivvy.nonNumeralPattern)
-                    && !functionBool.contains(true)) {
+                    && !arrayOfExpression[k]!!.contains(".")
+                    && !functionBool.contains(true)
+                ) {
                     return false
                 }
             } else return false
             ++l
-            k+=2
+            k += 2
         }
 
         //Solves predefined mathematical functions.
@@ -904,6 +1045,9 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             var fin = 0
             while (fin < arrayOfExpression.size) {
                 if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {
+                    if (!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)) {
+                        return false
+                    }
                     arrayOfExpression[fin] = functionOperate(arrayOfExpression[fin]!!)
                     if (!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)) {
                         return false
@@ -917,10 +1061,11 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         while (finalCheckIndex < arrayOfExpression.size) {
             if (arrayOfExpression[finalCheckIndex] != null) {
                 if (arrayOfExpression[finalCheckIndex]!!.contains(skivvy.textPattern) &&
-                    arrayOfExpression[finalCheckIndex]!!.length > 1){
+                    arrayOfExpression[finalCheckIndex]!!.length > 1
+                ) {
                     return false
                 }
-            } else{
+            } else {
                 return false
             }
             ++finalCheckIndex
@@ -1047,7 +1192,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun wifiOps(text: String) {
-        val wifiManager: WifiManager = getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val wifiManager: WifiManager =
+            applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         if (text.contains("on") || text.contains("enable")) {
             if (!wifiManager.isWifiEnabled) {
                 wifiManager.isWifiEnabled = true
@@ -1078,7 +1224,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun deviceLockOps() {
-        deviceManger = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        deviceManger =
+            applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         compName = ComponentName(context, Administrator::class.java)
         if (deviceManger!!.isAdminActive(compName!!)) {
             successView(getDrawable(ic_glossylock))
@@ -1098,49 +1245,126 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
-    //TODO: More volume customizations
-    private fun volumeOps(action: Boolean?) {
+    private fun volumeOps(action: String) {
         val audioManager: AudioManager =
             applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        when (action) {
-            true -> audioManager.adjustStreamVolume(
-                AudioManager.STREAM_MUSIC,
-                AudioManager.ADJUST_RAISE,
-                AudioManager.FLAG_SHOW_UI
-            )
-            false -> audioManager.adjustStreamVolume(
-                AudioManager.STREAM_MUSIC,
-                AudioManager.ADJUST_LOWER,
-                AudioManager.FLAG_SHOW_UI
-            )
-            else -> audioManager.adjustStreamVolume(
-                AudioManager.STREAM_MUSIC,
-                AudioManager.ADJUST_SAME,
-                AudioManager.FLAG_SHOW_UI
-            )
+        when {
+            action.contains(skivvy.numberPattern) -> {
+                val percent = action.replace(skivvy.nonNumeralPattern, "").toFloat() / 100
+                val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                val volumeLevel = (maxVolume * percent).toInt()
+                audioManager.setStreamVolume(
+                    AudioManager.STREAM_MUSIC,
+                    volumeLevel,
+                    AudioManager.FLAG_SHOW_UI
+                )
+                speakOut("Volume at ${(percent * 100).toInt()}%")
+            }
+            action.contains("up") || action.contains("increase") ||
+                    action.contains("raise") -> {
+                if (audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) ==
+                    audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                ) {
+                    speakOut("Maximum volume achieved")
+                } else {
+                    audioManager.adjustStreamVolume(
+                        AudioManager.STREAM_MUSIC,
+                        AudioManager.ADJUST_RAISE,
+                        AudioManager.FLAG_SHOW_UI
+                    )
+                    speakOut("Volume increased")
+                }
+            }
+            action.contains("down") || action.contains("decrease") -> {
+                if (
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) ==
+                                audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
+                    } else {
+                        audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) == 0
+                    }
+                ) {
+                    speakOut("Minimum volume achieved")
+                } else {
+                    audioManager.adjustStreamVolume(
+                        AudioManager.STREAM_MUSIC,
+                        AudioManager.ADJUST_LOWER,
+                        AudioManager.FLAG_SHOW_UI
+                    )
+                    speakOut("Volume decreased")
+                }
+            }
+            action.contains("max") ||
+                    action.contains("full") || action.contains("highest") -> {
+                audioManager.setStreamVolume(
+                    AudioManager.STREAM_MUSIC,
+                    audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC),
+                    AudioManager.FLAG_SHOW_UI
+                )
+                speakOut("Maximum volume achieved")
+            }
+            action.contains("min") || action.contains("lowest") -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    audioManager.setStreamVolume(
+                        AudioManager.STREAM_MUSIC,
+                        audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC),
+                        AudioManager.FLAG_SHOW_UI
+                    )
+                    audioManager.adjustStreamVolume(
+                        AudioManager.STREAM_MUSIC,
+                        AudioManager.ADJUST_RAISE,
+                        AudioManager.FLAG_SHOW_UI
+                    )
+                    speakOut("Minimum audible volume achieved")
+                } else {
+                    volumeOps("10%")
+                }
+            }
+            action.contains("silence") || action.contains("zero") -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    audioManager.setStreamVolume(
+                        AudioManager.STREAM_MUSIC,
+                        audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC),
+                        AudioManager.FLAG_SHOW_UI
+                    )
+                    speakOut("Volume silenced")
+                } else {
+                    volumeOps("0%")
+                }
+            }
+            else -> {
+                audioManager.adjustStreamVolume(
+                    AudioManager.STREAM_MUSIC,
+                    AudioManager.ADJUST_SAME,
+                    AudioManager.FLAG_SHOW_UI
+                )
+                speakOut("I'm showing you the volume controls.")
+            }
         }
     }
 
     //TODO: specific app actions
-
     //actions invoking other applications
     private fun appOptions(text: String?): Boolean {
+        var localText: String
         if (text != null) {
+            localText = text.replace("open", "").trim()
+            localText = localText.replace("start", "").trim()
             if (skivvy.packagesTotal > 0) {
                 var i = 0
                 while (i < skivvy.packagesTotal) {
                     when {
-                        text == getString(app_name).toLowerCase(skivvy.locale) -> {
+                        localText == getString(app_name).toLowerCase(skivvy.locale) -> {
                             speakOut(getString(i_am) + getString(app_name))
                             return true
                         }
-                        text == skivvy.packagesAppName[i] -> {
+                        localText == skivvy.packagesAppName[i] -> {
                             successView(skivvy.packagesIcon[i])
                             speakOut(getString(opening) + skivvy.packagesAppName[i])
                             startActivity(Intent(skivvy.packagesMain[i]))
                             return true
                         }
-                        skivvy.packagesName[i]!!.contains(text) -> {
+                        skivvy.packagesName[i]!!.contains(localText) -> {
                             tempPackageIndex = i
                             waitingView(skivvy.packagesIcon[i])
                             speakOut(
@@ -1162,7 +1386,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         var localTxt: String
         if (text.contains(getString(call))) {
             waitingView(getDrawable(ic_glossyphone))
-            localTxt = text.replace(getString(call), "", true)
+            localTxt = text.replace(getString(call), "", true).trim()
             tempPhone = text.replace(skivvy.nonNumeralPattern, "")
             if (tempPhone != null) {
                 when {
@@ -1189,33 +1413,36 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                         if (localTxt.length > 1) {
                             contactOps(localTxt, skivvy.CODE_CALL_CONF)
                         } else {
-                            errorView()
-                            speakOut(getString(invalid_call_request))
+                            txt = "call "
+                            speakOut("Call who?", skivvy.CODE_SPEECH_RECORD)
                         }
                     }
                 }
-            } else return false
+            } else {
+                txt = "call "
+                speakOut("Call who?", skivvy.CODE_SPEECH_RECORD)
+            }
             return true
         } else if (text.contains(getString(email))) {
             waitingView(getDrawable(ic_email_envelope))
-            localTxt = text.replace(getString(email), "", true)
-            tempMail = localTxt.replace(" ", "")
-            tempMail = tempMail!!.trim()
+            localTxt = text.replace(getString(email), "", true).trim()
+            tempMail = localTxt.replace(" ", "").trim()
             when {
                 tempMail!!.matches(skivvy.emailPattern) -> {
+                    input!!.text = tempMail
                     speakOut(getString(what_is_subject), skivvy.CODE_EMAIL_CONTENT)
                 }
                 localTxt.length > 1 -> {
                     contactOps(localTxt, skivvy.CODE_EMAIL_CONF)
                 }
                 else -> {
-                    errorView()
-                    speakOut(getString(invalid_email_request))
+                    txt = "email "
+                    speakOut("Email who?", skivvy.CODE_SPEECH_RECORD)
                 }
             }
             return true
         } else if (text.contains("text")) {
-            waitingView(null)
+            waitingView(getDrawable(ic_messageicon))
             localTxt = text.replace("text", "", false)
             localTxt = localTxt.trim()
             tempPhone = localTxt.replace(skivvy.nonNumeralPattern, "")
@@ -1227,8 +1454,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     contactOps(localTxt, skivvy.CODE_SMS_CONF)
                 }
                 else -> {
-                    errorView()
-                    speakOut("Invalid SMS request")
+                    txt = "text "
+                    speakOut("Text who?", skivvy.CODE_SPEECH_RECORD)
                 }
             }
             return true
@@ -1238,9 +1465,14 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     private fun textMessageOps(target: String, payLoad: String, code: Int) {
         if (code == skivvy.CODE_SMS_CONF) {
-            successView(null)
-            val sms: SmsManager = SmsManager.getDefault()
-            sms.sendTextMessage(target, null, payLoad, null, null)
+            try {
+                successView(null)
+                val sms: SmsManager = SmsManager.getDefault()
+                sms.sendTextMessage(target, null, payLoad, null, null)
+            } catch (e: Exception) {
+                Log.d("BITCH", e.toString())
+                speakOut("Failed to send SMS")
+            }
         } else {
             speakOut("Not yet supported")
         }
@@ -1250,9 +1482,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private fun callingOps(number: String?) {
         if (number != null) {
             speakOut(getString(calling) + "$number")
-            val intent = Intent(Intent.ACTION_CALL)
-            intent.data = Uri.parse("tel:$number")
-            startActivity(intent)
+            startActivity(Intent(Intent.ACTION_CALL, Uri.parse("tel:$number")))
         } else {
             errorView()
             speakOut(getString(null_variable_error))
@@ -1402,7 +1632,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                                 } else {
                                     if (tempContactCode == skivvy.CODE_CALL_CONF) {
                                         speakOut(
-                                            "I've got $size phone numbers of \n${contact.displayName}.\nShould I call them at " +
+                                            "I've got $size phone numbers of ${contact.displayName}.\nShould I call them at " +
                                                     "${contact.phoneList!![tempPhoneNumberIndex!!]}?",
                                             skivvy.CODE_CALL_CONF
                                         )
@@ -1551,7 +1781,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun setButtonsClickable(state: Boolean) {
-        receiver?.isClickable = state
+        setting.isClickable = state
     }
 
     private fun speakOut(text: String) {

@@ -1,32 +1,29 @@
 package org.ranjanistic.skivvy
 
-import android.media.Image
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.speech.tts.TextToSpeech
 import android.view.View
 import android.view.animation.Animation
-import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import java.util.concurrent.Executor
 
 class Setup : AppCompatActivity() {
-    lateinit var skivvy:Skivvy
+    lateinit var skivvy: Skivvy
     private var scaleAnimation: Animation? = null
     private lateinit var settingIcon: ImageView
-    private lateinit var training:TextView
-    private lateinit var mute:TextView
-    private lateinit var biometrics:TextView
+    private lateinit var training: TextView
+    private lateinit var mute: TextView
+    private lateinit var biometrics: TextView
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     override fun onBackPressed() {
         super.onBackPressed()
-        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+        overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,9 +38,9 @@ class Setup : AppCompatActivity() {
         setTrainingMode(getTrainingStatus())
         saveMuteStatus(skivvy.getMuteStatus())
 
-        settingIcon.setOnClickListener{
+        settingIcon.setOnClickListener {
             finish()
-            overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+            overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
             //startFinishAnimation()
         }
         /*
@@ -56,14 +53,14 @@ class Setup : AppCompatActivity() {
             override fun onAnimationRepeat(p0: Animation?) {}
         })
          */
-        training.setOnClickListener{
+        training.setOnClickListener {
             setTrainingMode(!getTrainingStatus())
         }
         mute.setOnClickListener {
             saveMuteStatus(!skivvy.getMuteStatus())
         }
-        biometrics.setOnClickListener{
-            if(skivvy.getBiometricStatus()){
+        biometrics.setOnClickListener {
+            if (skivvy.getBiometricStatus()) {
                 biometricPrompt.authenticate(promptInfo)
             } else {
                 setBiometricsStatus(!skivvy.getBiometricStatus())
@@ -73,7 +70,7 @@ class Setup : AppCompatActivity() {
     }
 
     override fun onStart() {
-        if(checkBioMetrics()) {
+        if (checkBioMetrics()) {
             biometrics.visibility = View.VISIBLE
             setBiometricsStatus(skivvy.getBiometricStatus())
             authSetup()
@@ -84,22 +81,25 @@ class Setup : AppCompatActivity() {
         super.onStart()
     }
 
-    private fun checkBioMetrics():Boolean{
+    private fun checkBioMetrics(): Boolean {
         val biometricManager = BiometricManager.from(this)
         return when (biometricManager.canAuthenticate()) {
             BiometricManager.BIOMETRIC_SUCCESS -> true
             else -> false
         }
     }
-    private fun startFinishAnimation(){
+
+    private fun startFinishAnimation() {
         settingIcon.startAnimation(scaleAnimation)
     }
-    private fun authSetup(){
+
+    private fun authSetup() {
         executor = ContextCompat.getMainExecutor(this)
         biometricPrompt = BiometricPrompt(this, executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(
-                    result: BiometricPrompt.AuthenticationResult) {
+                    result: BiometricPrompt.AuthenticationResult
+                ) {
                     super.onAuthenticationSucceeded(result)
                     setBiometricsStatus(!skivvy.getBiometricStatus())
                 }
@@ -111,41 +111,43 @@ class Setup : AppCompatActivity() {
             .setNegativeButtonText("Discard")
             .build()
     }
-    private fun setBiometricsStatus(isEnabled:Boolean){
+
+    private fun setBiometricsStatus(isEnabled: Boolean) {
         getSharedPreferences(skivvy.PREF_HEAD_SECURITY, MODE_PRIVATE).edit()
-            .putBoolean(skivvy.PREF_KEY_BIOMETRIC,isEnabled).apply()
-        if(isEnabled) {
+            .putBoolean(skivvy.PREF_KEY_BIOMETRIC, isEnabled).apply()
+        if (isEnabled) {
             biometrics.text = getString(R.string.disable_fingerprint)
             biometrics.setBackgroundResource(R.drawable.red_square_round_button)
-        }
-        else{
+        } else {
             biometrics.text = getString(R.string.enable_fingerprint)
             biometrics.setBackgroundResource(R.drawable.spruce_square_round_button)
         }
     }
-    private fun saveMuteStatus(isMuted:Boolean){
+
+    private fun saveMuteStatus(isMuted: Boolean) {
         getSharedPreferences(skivvy.PREF_HEAD_VOICE, MODE_PRIVATE).edit()
-            .putBoolean(skivvy.PREF_KEY_MUTE_UNMUTE,isMuted ).apply()
-        if(isMuted) {
+            .putBoolean(skivvy.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
+        if (isMuted) {
             mute.text = getString(R.string.unmute_text)
             mute.setBackgroundResource(R.drawable.green_square_round_button)
-        }
-        else{
+        } else {
             mute.text = getString(R.string.mute_text)
             mute.setBackgroundResource(R.drawable.spruce_square_round_button)
         }
 
     }
-    private fun setTrainingMode(isTraining:Boolean){
+
+    private fun setTrainingMode(isTraining: Boolean) {
         getSharedPreferences(skivvy.PREF_HEAD_APP_MODE, MODE_PRIVATE).edit()
-            .putBoolean(skivvy.PREF_KEY_TRAINING,isTraining ).apply()
-        if(isTraining){
+            .putBoolean(skivvy.PREF_KEY_TRAINING, isTraining).apply()
+        if (isTraining) {
             training.text = getString(R.string.deactivate_training_text)
-        } else{
+        } else {
             training.text = getString(R.string.activate_training_text)
         }
     }
-    private fun getTrainingStatus():Boolean{
+
+    private fun getTrainingStatus(): Boolean {
         return getSharedPreferences(skivvy.PREF_HEAD_APP_MODE, MODE_PRIVATE)
             .getBoolean(skivvy.PREF_KEY_TRAINING, false)
     }

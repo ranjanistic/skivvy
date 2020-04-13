@@ -1,6 +1,7 @@
 <resources>
 
     <style name="Splash" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">true</item>
         <item name="android:navigationBarColor">@color/dead_blue</item>
         <item name="android:statusBarColor">@color/dead_blue</item>
         <item name="android:background">@drawable/splash</item>
@@ -25,7 +26,9 @@
         <item name="warning_button_color_text">@color/pitch_white</item>
         <item name="action_button_color_text">@color/pitch_white</item>
     </style>
+
     <style name="DarkTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="fontFamily">@font/varela_round_regular</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:statusBarColor">@color/dead_blue</item>
         <item name="android:navigationBarColor">@color/charcoal</item>

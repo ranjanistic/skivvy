@@ -10,7 +10,6 @@ import java.util.*
 class CommandService : Service(){
     private var tts: TextToSpeech? = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        speakOut("Service started and is still running even if the activity is closed and now destroyed therefore it is something to ponder")
         return super.onStartCommand(intent, flags, startId)
     }
     override fun onCreate() {
@@ -23,7 +22,6 @@ class CommandService : Service(){
         })
     }
     override fun onBind(p0: Intent?): IBinder? {
-        speakOut("Service onBind")
         TODO("Not yet implemented")
     }
     private fun speakOut(text:String) {

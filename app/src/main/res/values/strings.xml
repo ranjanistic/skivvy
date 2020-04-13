@@ -27,6 +27,7 @@
         <item>cancel</item>
         <item>discard</item>
         <item>stop</item>
+        <item>nothing</item>
     </string-array>
 
     <string-array name="setup_list">
@@ -139,4 +140,15 @@
     <string name="biometric_is_off">Biometric authentication disabled</string>
     <string name="biometric_off_error">I could not disable biometric.</string>
     <string name="verification_unsuccessfull">I could not verify you.</string>
+    <string name="back_drop">Back drop</string>
+    <string name="setting_icon">Setting Icon</string>
+    <string name="back_of_setting_icon">Back of setting icon</string>
+    <string name="current_process_image">Current process image</string>
+    <string name="breathing_skivvy">Breathing skivvy</string>
+    <string name="command_button">Command button</string>
+    <string name="speaking_indicator">Speaking indicator</string>
+    <string name="say_something">What\'s on your mind?</string>
+    <string name="tap_the_button">Tap the button</string>
+    <string name="im_ready">I\'m ready.</string>
+    <string name="sms_permit_denied">You didn\'t allow me to send SMS.</string>
 </resources>

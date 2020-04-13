@@ -1,4 +1,5 @@
-@file:Suppress( "PropertyName")
+@file:Suppress("PropertyName")
+
 package org.ranjanistic.skivvy
 
 import android.Manifest
@@ -8,24 +9,18 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.speech.tts.TextToSpeech
-import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.biometric.BiometricPrompt
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
-import java.util.concurrent.Executor
 
-class Skivvy:Application() {
+class Skivvy : Application() {
     //permission codes
     val CODE_ALL_PERMISSIONS = 999
     val CODE_CALL_REQUEST = 1000
     val CODE_STORAGE_REQUEST = 1001
     val CODE_CONTACTS_REQUEST = 1002
+    val CODE_SMS_REQUEST = 1003
     val permissions = arrayOf(
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
         Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -38,6 +33,7 @@ class Skivvy:Application() {
         Manifest.permission.READ_SMS,
         Manifest.permission.BODY_SENSORS
     )
+
     //defaults
     val locale: Locale = Locale.US
     val numberPattern = "[0-9]".toRegex()
@@ -67,11 +63,11 @@ class Skivvy:Application() {
     val PREF_KEY_TRAINING = "training"
 
     //package list variables
-    lateinit var packagesAppName:Array<String?>
-    lateinit var packagesName:Array<String?>
-    lateinit var packagesMain:Array<Intent?>
-    lateinit var packagesIcon:Array<Drawable?>
-    var packagesTotal:Int = 0
+    lateinit var packagesAppName: Array<String?>
+    lateinit var packagesName: Array<String?>
+    lateinit var packagesMain: Array<Intent?>
+    lateinit var packagesIcon: Array<Drawable?>
+    var packagesTotal: Int = 0
     var tts: TextToSpeech? = null
 
 
@@ -84,19 +80,22 @@ class Skivvy:Application() {
             getLocalPackages()
         }
     }
+
     //gets all packages and respective details available on device
-    private fun getLocalPackages(){
+    private fun getLocalPackages() {
         var counter = 0
         val pm: PackageManager = packageManager
-        val packages: List<ApplicationInfo> = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+        val packages: List<ApplicationInfo> =
+            pm.getInstalledApplications(PackageManager.GET_META_DATA)
         this.packagesTotal = packages.size
         this.packagesAppName = arrayOfNulls(this.packagesTotal)
         this.packagesName = arrayOfNulls(this.packagesTotal)
         this.packagesIcon = arrayOfNulls(this.packagesTotal)
         this.packagesMain = arrayOfNulls(this.packagesTotal)
         for (packageInfo in packages) {
-            if(pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
-                this.packagesAppName[counter] = pm.getApplicationLabel(packageInfo).toString().toLowerCase(this.locale)
+            if (pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
+                this.packagesAppName[counter] =
+                    pm.getApplicationLabel(packageInfo).toString().toLowerCase(this.locale)
                 this.packagesName[counter] = packageInfo.packageName.toLowerCase(this.locale)
                 this.packagesIcon[counter] = pm.getApplicationIcon(packageInfo)
                 this.packagesMain[counter] = pm.getLaunchIntentForPackage(packageInfo.packageName)
@@ -107,18 +106,21 @@ class Skivvy:Application() {
         }
     }
 
-    fun getBiometricStatus():Boolean{
+    fun getBiometricStatus(): Boolean {
         return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_BIOMETRIC, false)
     }
-    fun setBiometricsStatus(isEnabled:Boolean) {
+
+    fun setBiometricsStatus(isEnabled: Boolean) {
         getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_BIOMETRIC, isEnabled).apply()
     }
-    fun getMuteStatus():Boolean{
+
+    fun getMuteStatus(): Boolean {
         return getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_MUTE_UNMUTE, false)
     }
+
     fun saveMuteStatus(isMuted: Boolean) {
         getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
