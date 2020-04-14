@@ -34,25 +34,14 @@ class Setup : AppCompatActivity() {
         training = findViewById(R.id.trainingModeBtn)
         mute = findViewById(R.id.muteUnmuteBtn)
         biometrics = findViewById(R.id.biometricsBtn)
-        //scaleAnimation = AnimationUtils.loadAnimation(this,R.anim.scale_translate_setting_reverse)
+
         setTrainingMode(getTrainingStatus())
         saveMuteStatus(skivvy.getMuteStatus())
 
         settingIcon.setOnClickListener {
             finish()
             overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
-            //startFinishAnimation()
         }
-        /*
-        scaleAnimation!!.setAnimationListener(object : Animation.AnimationListener{
-            override fun onAnimationEnd(p0: Animation?) {
-                finish()
-                overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
-            }
-            override fun onAnimationStart(p0: Animation?) {}
-            override fun onAnimationRepeat(p0: Animation?) {}
-        })
-         */
         training.setOnClickListener {
             setTrainingMode(!getTrainingStatus())
         }

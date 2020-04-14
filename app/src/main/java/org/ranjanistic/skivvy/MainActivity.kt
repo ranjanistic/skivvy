@@ -3,6 +3,7 @@ package org.ranjanistic.skivvy
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.PendingIntent
 import android.app.admin.DevicePolicyManager
 import android.bluetooth.BluetoothAdapter
 import android.content.ComponentName
@@ -38,6 +39,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -138,7 +140,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         setting.startAnimation(pillEnterAnim)
         pillExitAnim = AnimationUtils.loadAnimation(context, R.anim.pill_slide_right)
         extendAnimation = AnimationUtils.loadAnimation(context, R.anim.extend_back)
-
     }
 
     private fun startSettingAnimate() {
@@ -219,7 +220,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     when {
                         contact.phoneList != null -> {
                             speakOut(
-                                getString(should_i_call) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex!!]}?",
+                                getString(should_i_call) + "${contact.displayName}?",
                                 skivvy.CODE_CALL_CONF
                             )
                         }
@@ -245,7 +246,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     when {
                         contact.phoneList != null -> {
                             speakOut(
-                                getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex!!]}?",
+                                getString(should_i_text) + "${contact.displayName}?",
                                 skivvy.CODE_SMS_CONF
                             )
                         }
@@ -357,9 +358,9 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     if (txt != null) {
                         if (resources.getStringArray(R.array.acceptances).contains(txt)) {
                             if (tempPackageIndex != null) {
-                                successView(skivvy.packagesIcon[tempPackageIndex!!])
-                                speakOut(getString(opening) + skivvy.packagesAppName[tempPackageIndex!!])
-                                startActivity(Intent(skivvy.packagesMain[tempPackageIndex!!]))
+                                successView(skivvy.packageData.getPackageIcons()[tempPackageIndex!!])
+                                speakOut(getString(opening) + skivvy.packageData.getPackageAppNames()[tempPackageIndex!!])
+                                startActivity(Intent(skivvy.packageData.getPackageIntents()[tempPackageIndex!!]))
                                 tempPackageIndex = null
                             } else {
                                 errorView()
@@ -372,7 +373,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                             speakOut(getString(okay))
                         } else {
                             speakOut(
-                                getString(recognize_error) + "\n" + getString(do_u_want_open) + skivvy.packagesAppName[tempPackageIndex!!] + "?",
+                                getString(recognize_error) + "\n" + getString(do_u_want_open) + "${skivvy.packageData.getPackageAppNames()[tempPackageIndex!!]}?",
                                 skivvy.CODE_APP_CONF
                             )
                         }
@@ -793,33 +794,37 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 finish()
             }
             text.contains("biometric") -> {
-                return when {
-                    text.contains("enable") -> {
-                        if (skivvy.getBiometricStatus()) {
-                            speakOut(getString(biometric_already_on))
-                        } else {
-                            skivvy.setBiometricsStatus(true)
-                            if (skivvy.getBiometricStatus()) speakOut(getString(biometric_on))
-                            else speakOut(getString(biometric_enable_error))
-                        }
-                        true
-                    }
-                    text.contains("disable") -> {
-                        if (!skivvy.getBiometricStatus()) {
-                            speakOut(getString(biometric_already_off))
-                        } else {
-                            speakOut(getString(physical_auth_request))
-                            authStateAction()
-                            biometricPrompt.authenticate(promptInfo)
-                        }
-                        true
-                    }
-                    else -> {
-                        if (text.replace("biometric", "").trim() == "") {
-                            txt = "biometric"
-                            speakOut("Biometric what?", skivvy.CODE_SPEECH_RECORD)
+                if (!checkBioMetrics()) {
+                    return false
+                } else {
+                    return when {
+                        text.contains("enable") -> {
+                            if (skivvy.getBiometricStatus()) {
+                                speakOut(getString(biometric_already_on))
+                            } else {
+                                skivvy.setBiometricsStatus(true)
+                                if (skivvy.getBiometricStatus()) speakOut(getString(biometric_on))
+                                else speakOut(getString(biometric_enable_error))
+                            }
                             true
-                        } else false
+                        }
+                        text.contains("disable") -> {
+                            if (!skivvy.getBiometricStatus()) {
+                                speakOut(getString(biometric_already_off))
+                            } else {
+                                speakOut(getString(physical_auth_request))
+                                authStateAction()
+                                biometricPrompt.authenticate(promptInfo)
+                            }
+                            true
+                        }
+                        else -> {
+                            if (text.replace("biometric", "").trim() == "") {
+                                txt = "biometric"
+                                speakOut("Biometric what?", skivvy.CODE_SPEECH_RECORD)
+                                true
+                            } else false
+                        }
                     }
                 }
             }
@@ -1349,26 +1354,49 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         var localText: String
         if (text != null) {
             localText = text.replace("open", "").trim()
+            if(localText==""){
+                speakOut("Open what?",skivvy.CODE_SPEECH_RECORD)
+                return true
+            }
             localText = localText.replace("start", "").trim()
-            if (skivvy.packagesTotal > 0) {
+            if(localText==""){
+                speakOut("Start what?",skivvy.CODE_SPEECH_RECORD)
+                return true
+            }
+            if (skivvy.packageData.getTotalPackages() > 0) {
                 var i = 0
-                while (i < skivvy.packagesTotal) {
+                //TODO: uninstall package
+                if(localText.contains("Uninstall")){
+                    speakOut("Can't do that")
+                    return true
+                    /*
+                    val intentSender = PendingIntent.getBroadcast(this,
+                        90,
+                        Intent("ACTION_UNINSTALL_RESULT"),
+                        0).intentSender
+                    packageManager.packageInstaller.uninstall("packagename.to.uninstall", intentSender)
+
+                     */
+                }
+                while (i < skivvy.packageData.getTotalPackages()) {
                     when {
                         localText == getString(app_name).toLowerCase(skivvy.locale) -> {
+                            normalView()
                             speakOut(getString(i_am) + getString(app_name))
                             return true
                         }
-                        localText == skivvy.packagesAppName[i] -> {
-                            successView(skivvy.packagesIcon[i])
-                            speakOut(getString(opening) + skivvy.packagesAppName[i])
-                            startActivity(Intent(skivvy.packagesMain[i]))
+                        localText == skivvy.packageData.getPackageAppNames()[i] -> {
+                            tempPackageIndex = i
+                            successView(skivvy.packageData.getPackageIcons()[i])
+                            speakOut(getString(opening) + skivvy.packageData.getPackageAppNames()[i])
+                            startActivity(Intent(skivvy.packageData.getPackageIntents()[i]))
                             return true
                         }
-                        skivvy.packagesName[i]!!.contains(localText) -> {
+                        skivvy.packageData.getPackageNames()[i]!!.contains(localText) -> {
                             tempPackageIndex = i
-                            waitingView(skivvy.packagesIcon[i])
+                            waitingView(skivvy.packageData.getPackageIcons()[i])
                             speakOut(
-                                getString(do_u_want_open) + skivvy.packagesAppName[i] + "?",
+                                getString(do_u_want_open) + "${skivvy.packageData.getPackageAppNames()[i]}?",
                                 skivvy.CODE_APP_CONF
                             )
                             return true
@@ -1509,6 +1537,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         )
     }
 
+    //TODO: create contact Data class and use that here.
     private fun contactOps(name: String, code: Int) {
         var isContactPresent = false
         tempContactCode = code
@@ -1682,7 +1711,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         speech.startListening(intentd)
 */
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            .setFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT)
             .putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
@@ -1855,44 +1883,52 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             .build()
     }
 
+    private fun checkBioMetrics(): Boolean {
+        val biometricManager = BiometricManager.from(this)
+        return when (biometricManager.canAuthenticate()) {
+            BiometricManager.BIOMETRIC_SUCCESS -> true
+            else -> false
+        }
+    }
     private fun getTrainingStatus(): Boolean {
         return getSharedPreferences(skivvy.PREF_HEAD_APP_MODE, MODE_PRIVATE)
             .getBoolean(skivvy.PREF_KEY_TRAINING, false)
     }
 
     override fun onReadyForSpeech(p0: Bundle?) {
-        TODO("Not yet implemented")
+        Log.d("ctts","ready")
     }
 
     override fun onRmsChanged(p0: Float) {
-        TODO("Not yet implemented")
+        Log.d("ctts","rmschange")
     }
 
     override fun onBufferReceived(p0: ByteArray?) {
+        Log.d("ctts","received")
         speakOut(p0.toString())
     }
 
     override fun onPartialResults(p0: Bundle?) {
-        TODO("Not yet implemented")
+        Log.d("ctts","partialres")
     }
 
     override fun onEvent(p0: Int, p1: Bundle?) {
-        TODO("Not yet implemented")
+        Log.d("ctts","event")
     }
 
     override fun onBeginningOfSpeech() {
-        TODO("Not yet implemented")
+        Log.d("ctts","begin")
     }
 
     override fun onEndOfSpeech() {
-        TODO("Not yet implemented")
+        Log.d("ctts","end")
     }
 
     override fun onError(p0: Int) {
-        TODO("Not yet implemented")
+        Log.d("ctts","error")
     }
 
     override fun onResults(p0: Bundle?) {
-        TODO("Not yet implemented")
+        Log.d("ctts","results")
     }
 }

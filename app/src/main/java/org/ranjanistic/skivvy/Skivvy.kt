@@ -4,10 +4,13 @@ package org.ranjanistic.skivvy
 
 import android.Manifest
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.speech.tts.TextToSpeech
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.GlobalScope
@@ -54,28 +57,24 @@ class Skivvy : Application() {
     val CODE_LOCATION_SERVICE = 100
     val CODE_LOCK_SCREEN = 101
 
-    //preference keys
+    //default strings and arrays
     val PREF_HEAD_SECURITY = "security"
     val PREF_KEY_BIOMETRIC = "fingerprint"
     val PREF_HEAD_VOICE = "voice"
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
     val PREF_HEAD_APP_MODE = "appMode"
     val PREF_KEY_TRAINING = "training"
-
-    //package list variables
-    lateinit var packagesAppName: Array<String?>
-    lateinit var packagesName: Array<String?>
-    lateinit var packagesMain: Array<Intent?>
-    lateinit var packagesIcon: Array<Drawable?>
-    var packagesTotal: Int = 0
-    var tts: TextToSpeech? = null
-
-
+    val FINISH_ACTION = "finish"
     val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln")
     val operators: Array<Char> = arrayOf('^', 'p', '/', '*', 'm', '-', '+')
 
+    var tts: TextToSpeech? = null
+    var packageData:PackageData = PackageData()
+
+
     override fun onCreate() {
         super.onCreate()
+        createNotificationChannel()
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalPackages()
         }
@@ -87,21 +86,21 @@ class Skivvy : Application() {
         val pm: PackageManager = packageManager
         val packages: List<ApplicationInfo> =
             pm.getInstalledApplications(PackageManager.GET_META_DATA)
-        this.packagesTotal = packages.size
-        this.packagesAppName = arrayOfNulls(this.packagesTotal)
-        this.packagesName = arrayOfNulls(this.packagesTotal)
-        this.packagesIcon = arrayOfNulls(this.packagesTotal)
-        this.packagesMain = arrayOfNulls(this.packagesTotal)
+        packageData.setTotalPackages(packages.size)
+        packageData.setPackageInitials(arrayOfNulls(packageData.getTotalPackages()),
+            arrayOfNulls(packageData.getTotalPackages()),arrayOfNulls(packageData.getTotalPackages()),
+            arrayOfNulls(packageData.getTotalPackages())
+        )
         for (packageInfo in packages) {
             if (pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
-                this.packagesAppName[counter] =
-                    pm.getApplicationLabel(packageInfo).toString().toLowerCase(this.locale)
-                this.packagesName[counter] = packageInfo.packageName.toLowerCase(this.locale)
-                this.packagesIcon[counter] = pm.getApplicationIcon(packageInfo)
-                this.packagesMain[counter] = pm.getLaunchIntentForPackage(packageInfo.packageName)
+                packageData.setPackageDetails(counter,pm.getApplicationLabel(packageInfo).toString().toLowerCase(this.locale),
+                    packageInfo.packageName.toLowerCase(this.locale),
+                    pm.getLaunchIntentForPackage(packageInfo.packageName)!!,
+                    pm.getApplicationIcon(packageInfo)
+                )
                 ++counter
             } else {
-                --this.packagesTotal    //removing un-launchable packages
+                packageData.setTotalPackages(packageData.getTotalPackages()-1)                    //removing un-launchable packages
             }
         }
     }
@@ -124,5 +123,17 @@ class Skivvy : Application() {
     fun saveMuteStatus(isMuted: Boolean) {
         getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
+    }
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelID = resources.getStringArray(R.array.notification_channel)[0]
+            val name = resources.getStringArray(R.array.notification_channel)[1]
+            val descriptionText = resources.getStringArray(R.array.notification_channel)[2]
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val mChannel = NotificationChannel(channelID, name, importance)
+            mChannel.description = descriptionText
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(mChannel)
+        }
     }
 }

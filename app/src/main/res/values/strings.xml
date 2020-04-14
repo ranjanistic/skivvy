@@ -81,7 +81,7 @@
     <string name="wifi_on">Wi-Fi is looking for available hot spots</string>
     <string name="screen_locked">Locked</string>
     <string name="internal_error">Internal error</string>
-    <string name="snap_success">screen shot taken</string>
+    <string name="snap_success">Screenshot taken</string>
     <string name="snap_failed">Can\'t take screenshot</string>
     <string name="exit_msg">Bye!</string>
     <string name="okay">Okay</string>
@@ -151,4 +151,9 @@
     <string name="tap_the_button">Tap the button</string>
     <string name="im_ready">I\'m ready.</string>
     <string name="sms_permit_denied">You didn\'t allow me to send SMS.</string>
+    <string-array name="notification_channel">
+        <item>SKIVVY_MAIN_NOTIFICATION</item>
+        <item>Skivvy is active</item>
+        <item>To notify you that Skivvy is active in background.</item>
+    </string-array>
 </resources>
