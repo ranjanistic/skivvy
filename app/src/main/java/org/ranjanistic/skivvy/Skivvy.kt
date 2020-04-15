@@ -6,11 +6,14 @@ import android.Manifest
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ContentResolver
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.provider.ContactsContract
 import android.speech.tts.TextToSpeech
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.GlobalScope
@@ -70,14 +73,17 @@ class Skivvy : Application() {
 
     var tts: TextToSpeech? = null
     var packageData:PackageData = PackageData()
-
+    var contactData:ContactData = ContactData()
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalPackages()
         }
+        GlobalScope.launch {    //Long running task, getting all packages
+            getLocalContacts()
+        }
+        createNotificationChannel()
     }
 
     //gets all packages and respective details available on device
@@ -103,6 +109,99 @@ class Skivvy : Application() {
                 packageData.setTotalPackages(packageData.getTotalPackages()-1)                    //removing un-launchable packages
             }
         }
+    }
+
+    private fun getLocalContacts(){
+        var contactCount = 0
+        val cr: ContentResolver = contentResolver
+        val cur: Cursor? = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
+        if (cur!!.count > 0) {
+            this.contactData.setTotalContacts(cur.count)
+            this.contactData.setContactDataInitials(
+                arrayOfNulls(this.contactData.getTotalContacts()),
+                arrayOfNulls(this.contactData.getTotalContacts()),
+                arrayOfNulls(this.contactData.getTotalContacts()),
+                arrayOfNulls(this.contactData.getTotalContacts()),
+                arrayOfNulls(this.contactData.getTotalContacts()),
+                arrayOfNulls(this.contactData.getTotalContacts())
+            )
+            while (cur.moveToNext()) {
+                this.contactData.setContactSoloData(contactCount,
+                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID)),
+                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI)),
+                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
+                )
+
+                //for nicknames
+                val nickname:Cursor? = cr.query(ContactsContract.Data.CONTENT_URI,
+                    null,
+                    ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
+                    arrayOf(contactData.getContactIDs()[contactCount], ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE),
+                    null
+                )
+                //for phone numbers
+                val pCur: Cursor? = cr.query(
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    null,
+                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                    arrayOf(contactData.getContactIDs()[contactCount]),
+                    null
+                )
+                //for email IDs
+                val eCur: Cursor? = cr.query(
+                    ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                    null,
+                    ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
+                    arrayOf(contactData.getContactIDs()[contactCount]),
+                    null
+                )
+                if(nickname!!.count>0) {
+                    this.contactData.setContactNicknameInitials(contactCount, arrayOfNulls(nickname.count))
+                    var nickCount = 0
+                    while (nickname.moveToNext()) {
+                        val nicknameName = nickname.getString(nickname.getColumnIndex(ContactsContract.CommonDataKinds.Nickname.NAME))?.toLowerCase(this.locale)
+                        this.contactData.setContactNicknameData(contactCount,nickCount,nicknameName)
+                        ++nickCount
+                    }
+                }
+
+                if(pCur!!.count>0) {
+                    var size = 0
+                    while(pCur.moveToNext()){
+                        ++size
+                    }
+                    this.contactData.setContactPhonesInitials(contactCount, arrayOfNulls(size))
+                    var pCount = 0
+                    pCur.moveToFirst()
+                    while (pCount<size) {
+                        this.contactData.setContactPhoneData(
+                            contactCount, pCount,
+                            pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                        )
+                        pCur.moveToNext()
+                        ++pCount
+                    }
+                }
+
+                if(eCur!!.count>0) {
+                    this.contactData.setContactEmailsInitials(contactCount, arrayOfNulls(eCur.count))
+                    var eCount = 0
+                    while(eCur.moveToNext()) {
+                        this.contactData.setContactEmailData(
+                            contactCount,eCount,
+                            eCur.getString(eCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA))
+                        )
+                        ++eCount
+                    }
+                }
+
+                nickname.close()
+                pCur.close()
+                eCur.close()
+                ++contactCount
+            }
+        }
+        cur.close()
     }
 
     fun getBiometricStatus(): Boolean {
