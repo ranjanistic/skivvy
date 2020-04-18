@@ -7,14 +7,13 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.ContentResolver
-import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.database.Cursor
-import android.graphics.drawable.Drawable
 import android.os.Build
 import android.provider.ContactsContract
 import android.speech.tts.TextToSpeech
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -55,7 +54,9 @@ class Skivvy : Application() {
     val CODE_EMAIL_CONTENT = 14
     val CODE_SMS_CONF = 15
     val CODE_TEXT_MESSAGE_BODY = 16
-
+    val CODE_VOICE_AUTH_INIT = 17
+    val CODE_VOICE_AUTH_CONFIRM = 18
+    val CODE_BIOMETRIC_CONFIRM = 19
     //command codes
     val CODE_LOCATION_SERVICE = 100
     val CODE_LOCK_SCREEN = 101
@@ -63,9 +64,10 @@ class Skivvy : Application() {
     //default strings and arrays
     val PREF_HEAD_SECURITY = "security"
     val PREF_KEY_BIOMETRIC = "fingerprint"
+    val PREF_KEY_VOCAL_AUTH = "voiceAuth"
+    val PREF_HEAD_APP_MODE = "appMode"
     val PREF_HEAD_VOICE = "voice"
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
-    val PREF_HEAD_APP_MODE = "appMode"
     val PREF_KEY_TRAINING = "training"
     val FINISH_ACTION = "finish"
     val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln")
@@ -77,6 +79,12 @@ class Skivvy : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        this.tts = TextToSpeech(this, TextToSpeech.OnInitListener {
+            if (it == TextToSpeech.SUCCESS) {
+                this.tts!!.language = this.locale
+            } else
+                Toast.makeText(this, "Error in speaking", Toast.LENGTH_SHORT).show()
+        })
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalPackages()
         }
@@ -133,71 +141,68 @@ class Skivvy : Application() {
                 )
 
                 //for nicknames
-                val nickname:Cursor? = cr.query(ContactsContract.Data.CONTENT_URI,
+                var deepCur:Cursor? = cr.query(ContactsContract.Data.CONTENT_URI,
                     null,
                     ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
                     arrayOf(contactData.getContactIDs()[contactCount], ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE),
                     null
                 )
+                if(deepCur!!.count>0) {
+                    this.contactData.setContactNicknameInitials(contactCount, arrayOfNulls(deepCur.count))
+                    var nickCount = 0
+                    while (deepCur.moveToNext()) {
+                        val nicknameName = deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Nickname.NAME))?.toLowerCase(this.locale)
+                        this.contactData.setContactNicknameData(contactCount,nickCount,nicknameName)
+                        ++nickCount
+                    }
+                }
+
                 //for phone numbers
-                val pCur: Cursor? = cr.query(
+                deepCur = cr.query(
                     ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                     null,
                     ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
                     arrayOf(contactData.getContactIDs()[contactCount]),
                     null
                 )
+                if(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)).toInt()>0&&deepCur!!.count>0) {
+                    var size = 0
+                    while(deepCur.moveToNext()){
+                        ++size
+                    }
+                    this.contactData.setContactPhonesInitials(contactCount, arrayOfNulls(size))
+                    var pCount = 0
+                    deepCur.moveToFirst()
+                    while (pCount<size) {
+                        this.contactData.setContactPhoneData(
+                            contactCount, pCount,
+                            deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                        )
+                        deepCur.moveToNext()
+                        ++pCount
+                    }
+                }
+
                 //for email IDs
-                val eCur: Cursor? = cr.query(
+                deepCur = cr.query(
                     ContactsContract.CommonDataKinds.Email.CONTENT_URI,
                     null,
                     ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
                     arrayOf(contactData.getContactIDs()[contactCount]),
                     null
                 )
-                if(nickname!!.count>0) {
-                    this.contactData.setContactNicknameInitials(contactCount, arrayOfNulls(nickname.count))
-                    var nickCount = 0
-                    while (nickname.moveToNext()) {
-                        val nicknameName = nickname.getString(nickname.getColumnIndex(ContactsContract.CommonDataKinds.Nickname.NAME))?.toLowerCase(this.locale)
-                        this.contactData.setContactNicknameData(contactCount,nickCount,nicknameName)
-                        ++nickCount
-                    }
-                }
-
-                if(pCur!!.count>0) {
-                    var size = 0
-                    while(pCur.moveToNext()){
-                        ++size
-                    }
-                    this.contactData.setContactPhonesInitials(contactCount, arrayOfNulls(size))
-                    var pCount = 0
-                    pCur.moveToFirst()
-                    while (pCount<size) {
-                        this.contactData.setContactPhoneData(
-                            contactCount, pCount,
-                            pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                        )
-                        pCur.moveToNext()
-                        ++pCount
-                    }
-                }
-
-                if(eCur!!.count>0) {
-                    this.contactData.setContactEmailsInitials(contactCount, arrayOfNulls(eCur.count))
+                if(deepCur!!.count>0) {
+                    this.contactData.setContactEmailsInitials(contactCount, arrayOfNulls(deepCur.count))
                     var eCount = 0
-                    while(eCur.moveToNext()) {
+                    while(deepCur.moveToNext()) {
                         this.contactData.setContactEmailData(
                             contactCount,eCount,
-                            eCur.getString(eCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA))
+                            deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA))
                         )
                         ++eCount
                     }
                 }
-
-                nickname.close()
-                pCur.close()
-                eCur.close()
+                deepCur.close()
                 ++contactCount
             }
         }
@@ -222,6 +227,22 @@ class Skivvy : Application() {
     fun saveMuteStatus(isMuted: Boolean) {
         getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
+    }
+    fun getPhraseKeyStatus():Boolean{
+        return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_VOCAL_AUTH, false)
+    }
+    fun setPhraseKeyStatus(voiceAuthStatus:Boolean){
+        getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
+            .putBoolean(this.PREF_KEY_VOCAL_AUTH, voiceAuthStatus).apply()
+    }
+    fun setVoiceKeyPhrase(phrase: String?){
+        getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
+            .putString(this.PREF_KEY_TRAINING, phrase).apply()
+    }
+    fun getVoiceKeyPhrase():String?{
+        return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
+            .getString(this.PREF_KEY_TRAINING,null)
     }
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
+    android:id="@+id/setup_layout"
     android:background="@color/dead_blue"
     tools:context=".Setup">
 
@@ -31,52 +31,109 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <TextView
+            <Switch
                 android:id="@+id/trainingModeBtn"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/base_separation"
-                android:background="@drawable/spruce_square_round_button"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center"
-                android:padding="@dimen/minimum_separation"
-                android:textColor="?attr/base_text_color"
-                android:textSize="@dimen/normal_text_size"
+                android:hapticFeedbackEnabled="true"
+                android:fontFamily="@font/varela_round_regular"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"
                 android:visibility="gone"
+                android:textColor="?attr/base_text_color"
+                android:layout_margin="@dimen/base_separation"
+                android:paddingVertical="@dimen/secondary_separation"
+                android:paddingHorizontal="@dimen/base_separation"
+                android:background="@drawable/spruce_square_round_button"
+                android:textSize="@dimen/normal_text_size"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <TextView
+            <Switch
                 android:id="@+id/muteUnmuteBtn"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/base_separation"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center"
-                android:padding="@dimen/minimum_separation"
+                android:hapticFeedbackEnabled="true"
+                android:fontFamily="@font/varela_round_regular"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"
                 android:textColor="?attr/base_text_color"
+                android:layout_margin="@dimen/base_separation"
+                android:paddingVertical="@dimen/secondary_separation"
+                android:paddingHorizontal="@dimen/base_separation"
+                android:background="@drawable/spruce_square_round_button"
                 android:textSize="@dimen/normal_text_size"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/trainingModeBtn" />
 
-            <TextView
+            <Switch
                 android:id="@+id/biometricsBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:hapticFeedbackEnabled="true"
+                android:fontFamily="@font/varela_round_regular"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"
+                android:textColor="?attr/base_text_color"
+                android:layout_margin="@dimen/base_separation"
+                android:paddingVertical="@dimen/secondary_separation"
+                android:paddingHorizontal="@dimen/base_separation"
+                android:background="@drawable/spruce_square_round_button"
+                android:textSize="@dimen/normal_text_size"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/muteUnmuteBtn" />
+            <LinearLayout
+                android:id="@+id/voice_setup"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/base_separation"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center"
-                android:padding="@dimen/minimum_separation"
-                android:textColor="?attr/base_text_color"
-                android:textSize="@dimen/normal_text_size"
+                android:background="@drawable/spruce_square_round_button"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/muteUnmuteBtn" />
+                app:layout_constraintTop_toBottomOf="@id/biometricsBtn"
+                android:orientation="vertical">
+                <Switch
+                    android:id="@+id/voice_auth_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:fontFamily="@font/varela_round_regular"
+                    android:layout_gravity="center_vertical"
+                    android:gravity="center_vertical"
+                    android:textColor="?attr/base_text_color"
+                    android:background="@drawable/spruce_square_round_button"
+                    android:paddingVertical="@dimen/secondary_separation"
+                    android:paddingHorizontal="@dimen/base_separation"
+                    android:checked="false"
+                    android:textSize="@dimen/normal_text_size" />
+                <TextView
+                    android:id="@+id/delete_voice_key"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:textSize="@dimen/normal_text_size"
+                    android:elevation="@dimen/base_separation"
+                    android:background="@drawable/red_square_round_button"
+                    android:textColor="?attr/base_text_color"
+                    android:paddingVertical="@dimen/minimum_separation"
+                    android:layout_marginBottom="@dimen/minimum_separation"
+                    android:layout_marginHorizontal="@dimen/minimum_separation"
+                    android:text="@string/reset_secret_phrase"/>
+            </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 

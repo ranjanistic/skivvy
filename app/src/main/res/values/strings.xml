@@ -151,6 +151,11 @@
     <string name="tap_the_button">Tap the button</string>
     <string name="im_ready">I\'m ready.</string>
     <string name="sms_permit_denied">You didn\'t allow me to send SMS.</string>
+    <string name="enable_vocal_authentication">Enable vocal authentication</string>
+    <string name="disable_vocal_authentication">Disable vocal authentication</string>
+    <string name="set_new_secret_phrase">Set new secret phrase</string>
+    <string name="reset_secret_phrase">Reset your secret phrase</string>
+    <string name="tell_new_secret_phrase">Tell me your secret phrase or word</string>
     <string-array name="notification_channel">
         <item>SKIVVY_MAIN_NOTIFICATION</item>
         <item>Skivvy is active</item>

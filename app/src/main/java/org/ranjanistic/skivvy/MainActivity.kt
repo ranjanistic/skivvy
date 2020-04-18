@@ -308,7 +308,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         setButtonsClickable(true)
-        skivvy.tts!!.language = skivvy.locale
         when (requestCode) {
             skivvy.CODE_SPEECH_RECORD -> {
                 if (resultCode == Activity.RESULT_OK && data != null) {
