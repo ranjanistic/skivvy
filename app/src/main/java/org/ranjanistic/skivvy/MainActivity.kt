@@ -48,6 +48,7 @@ import org.ranjanistic.skivvy.R.drawable.*
 import org.ranjanistic.skivvy.R.string.*
 import java.io.File
 import java.io.FileOutputStream
+import java.lang.Math.pow
 import java.util.*
 import java.util.concurrent.Executor
 import kotlin.math.*
@@ -164,7 +165,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     private fun setListeners() {
         setting.setOnClickListener {
-            setButtonsClickable(false)
             startSettingAnimate()
         }
         receiver?.setOnClickListener {
@@ -185,7 +185,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     override fun onStart() {
         super.onStart()
-        setButtonsClickable(true)
         skivvy.tts = TextToSpeech(applicationContext, TextToSpeech.OnInitListener {
             when (it) {
                 TextToSpeech.SUCCESS -> {
@@ -291,14 +290,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        val audio =
+            applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         if (keyCode == KeyEvent.KEYCODE_HEADSETHOOK) {
-            setButtonsClickable(false)
             speakOut("")
             normalView()
             startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
         } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            val audio =
-                applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
             speakOut(
                 "Volume at ${(audio.getStreamVolume(AudioManager.STREAM_MUSIC) * 100)
                         / audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}%"
@@ -310,7 +308,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        setButtonsClickable(true)
         when (requestCode) {
             skivvy.CODE_SPEECH_RECORD -> {
                 if (resultCode == Activity.RESULT_OK && data != null) {
@@ -739,7 +736,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     deviceLockOps()
                 } else {
                     if (text.replace("lock", "").trim() == "") {
-                        txt = "lock"
+                        txt = "lock "
                         speakOut("Lock what?", skivvy.CODE_SPEECH_RECORD)
                     } else return false
                 }
@@ -801,7 +798,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             }
             text.contains("biometric") -> {
                 if (!checkBioMetrics()) {
-                    return false
+                    speakOut("Your device doesn't support biometric authentication.")
                 } else {
                     return when {
                         text.contains("enable") -> {
@@ -871,13 +868,14 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             "raisedtothepowerof", "raisetothepowerof", "raisedtothepower", "raisetothepower",
             "tothepowerof", "tothepower", "raisedto", "raiseto", "raised", "raise", "kipower"
         )
-
+        val toBeSqured = arrayOf("square")
+        val toBeCubed = arrayOf("cube")
         val formatArrays = arrayOf(
             toBeRemoved, toBePercented, toBeModded, toBeLogged, toBeLog,
             toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBeNumerized
-            , toBePowered
+            , toBePowered, toBeSqured, toBeCubed
         )
-        val replacingArray = arrayOf("", "p", "m", "ln", "log", "*", "/", "+", "-", "100", "^")
+        val replacingArray = arrayOf("", "p", "m", "ln", "log", "*", "/", "+", "-", "100", "^","^2","^3")
         var formatIndex = 0
         while (formatIndex < formatArrays.size) {
             var formatArrayIndex = 0
@@ -1050,6 +1048,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             ++l
             k += 2
         }
+        var midOutput = String()
+        var bb = 0
+        while(bb<arrayOfExpression.size) {
+           midOutput += arrayOfExpression[bb]
+            ++bb
+        }
+        input!!.text = midOutput
 
         //Solves predefined mathematical functions.
         if (functionBool.contains(true)) {
@@ -1156,6 +1161,15 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             }
             func.contains("ln") -> {
                 ln1p(func.replace(skivvy.textPattern, "").toFloat()).toString()
+            }
+            func.contains("root") -> {
+                (func.replace(skivvy.textPattern, "").toFloat().pow(0.5F)).toString()
+            }
+            func.contains("cuberoot") -> {
+                (func.replace(skivvy.textPattern, "").toFloat().pow((1/3).toFloat())).toString()
+            }
+            func.contains("exponential") -> {
+                (exp(func.replace(skivvy.textPattern, "").toFloat())).toString()
             }
             else -> getString(invalid_expression)
         }
@@ -1897,10 +1911,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         return true
     }
 
-    private fun setButtonsClickable(state: Boolean) {
-        setting.isClickable = state
-    }
-
     private fun speakOut(text: String) {
         outPut?.text = text
         skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
@@ -1929,12 +1939,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 if (taskCode != null) {
                     startVoiceRecIntent(taskCode)
                 }
-                setButtonsClickable(true)
             }
 
             override fun onError(utteranceId: String) {}
             override fun onStart(utteranceId: String) {
-                setButtonsClickable(false)
 //                outputStat!!.visibility = View.VISIBLE
             }
         })

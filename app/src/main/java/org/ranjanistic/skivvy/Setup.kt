@@ -75,8 +75,21 @@ class Setup : AppCompatActivity() {
             }
         }
         deleteVoiceSetup.setOnClickListener{
-            authSetup(skivvy.CODE_VOICE_AUTH_CONFIRM)
-            biometricPrompt.authenticate(promptInfo)
+            if(checkBioMetrics()) {
+                authSetup(skivvy.CODE_VOICE_AUTH_CONFIRM)
+                biometricPrompt.authenticate(promptInfo)
+            } else {
+                Snackbar.make(findViewById(R.id.setup_layout),"Confirm to reset and disable vocal authentication?",5000)
+                    .setTextColor(resources.getColor(R.color.dull_white))
+                    .setBackgroundTint(resources.getColor(R.color.dark_red))
+                    .setAction("Reset") {
+                        skivvy.setVoiceKeyPhrase(null)
+                        defaultState()
+                    }
+                    .setActionTextColor(resources.getColor(R.color.colorPrimary))
+                    .show()
+
+            }
         }
         setListeners()
     }
@@ -154,8 +167,10 @@ class Setup : AppCompatActivity() {
                 setBiometricsStatus(true)
             } else {
                 if (skivvy.getBiometricStatus()) {
-                    authSetup(skivvy.CODE_BIOMETRIC_CONFIRM)
-                    biometricPrompt.authenticate(promptInfo)
+                    if(checkBioMetrics()) {
+                        authSetup(skivvy.CODE_BIOMETRIC_CONFIRM)
+                        biometricPrompt.authenticate(promptInfo)
+                    }
                 }
             }
         }

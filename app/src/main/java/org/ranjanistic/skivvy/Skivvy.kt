@@ -70,7 +70,7 @@ class Skivvy : Application() {
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
     val PREF_KEY_TRAINING = "training"
     val FINISH_ACTION = "finish"
-    val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln")
+    val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","root","cuberoot","exponential")
     val operators: Array<Char> = arrayOf('^', 'p', '/', '*', 'm', '-', '+')
 
     var tts: TextToSpeech? = null
