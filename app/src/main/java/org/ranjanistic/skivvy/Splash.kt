@@ -24,6 +24,12 @@ class Splash : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         skivvy = this.application as Skivvy
         mainIntent = Intent(this, MainActivity::class.java)
+        skivvy.tts = TextToSpeech(skivvy, TextToSpeech.OnInitListener {
+            if (it == TextToSpeech.SUCCESS) {
+                skivvy.tts!!.language = skivvy.locale
+            } else
+                Toast.makeText(skivvy, "Error in speaking", Toast.LENGTH_SHORT).show()
+        })
         initializeBiometric()
         if(!skivvy.getBiometricStatus()&&!skivvy.getPhraseKeyStatus()) {
             startActivity(mainIntent)
@@ -72,8 +78,9 @@ class Splash : AppCompatActivity() {
                 .toLowerCase(skivvy.locale)
             when(requestCode){
                 skivvy.CODE_VOICE_AUTH_CONFIRM-> {
-                    if(text == "fingerprint"){
+                    if(text == "fingerprint"||text == "biometric"){
                         if(skivvy.getBiometricStatus()) {
+                            authAttemptCount=3
                             biometricPrompt.authenticate(promptInfo)
                         } else {
                             if(authAttemptCount>0) {
@@ -89,6 +96,7 @@ class Splash : AppCompatActivity() {
                         }
                     }
                     if (text == skivvy.getVoiceKeyPhrase()) {
+                        speakOut("Welcome!")
                         startActivity(mainIntent)
                         finish()
                     } else {

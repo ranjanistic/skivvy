@@ -88,9 +88,11 @@ class Skivvy : Application() {
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalPackages()
         }
+        /*
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalContacts()
         }
+         */
         createNotificationChannel()
     }
 
@@ -165,23 +167,56 @@ class Skivvy : Application() {
                     arrayOf(contactData.getContactIDs()[contactCount]),
                     null
                 )
-                if(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)).toInt()>0&&deepCur!!.count>0) {
                     var size = 0
-                    while(deepCur.moveToNext()){
+                    while(deepCur!!.moveToNext()){
                         ++size
                     }
-                    this.contactData.setContactPhonesInitials(contactCount, arrayOfNulls(size))
+                val localPhone = arrayOfNulls<String>(size)
                     var pCount = 0
                     deepCur.moveToFirst()
                     while (pCount<size) {
-                        this.contactData.setContactPhoneData(
-                            contactCount, pCount,
-                            deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                        )
+                        localPhone[pCount] = deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                        var tempPhone = ""
+                        if(localPhone[pCount]!=null) {
+                            localPhone[pCount] = localPhone[pCount]!!.replace("+", "")
+                            if (!(localPhone[pCount]!!.toCharArray()[0] == '0' && localPhone[pCount]!!.toCharArray()[1] == '1'
+                                        && localPhone[pCount]!!.toCharArray()[2] == '2' && localPhone[pCount]!!.toCharArray()[3] =='0') ){
+                                localPhone[pCount]!!.replace(" ", "")
+                                if (localPhone[pCount]!!.toCharArray()[0] == '0') {
+                                    var k = 1
+                                    while (k < localPhone[pCount]!!.length) {
+                                        localPhone[pCount]!!.toCharArray()[k-1] =
+                                            localPhone[pCount]!!.toCharArray()[k]
+                                        ++k
+                                    }
+                                }
+                                if(localPhone[pCount].toString().length==10){
+                                    var x = 0
+                                    while(x<5) {
+                                        if(tempPhone == ""){
+                                            tempPhone = localPhone[pCount]!!.toCharArray()[x].toString()
+                                        } else {
+                                            tempPhone += localPhone[pCount]!!.toCharArray()[x].toString()
+                                        }
+                                        ++x
+                                    }
+                                    tempPhone+=" "
+                                    while(x<10) {
+                                        tempPhone+= localPhone[pCount]!!.toCharArray()[x].toString()
+                                        ++x
+                                    }
+                                }
+                            }
+                            this.contactData.setContactPhoneData(
+                                contactCount, pCount,
+                                tempPhone
+                            )
+                        }
                         deepCur.moveToNext()
-                        ++pCount
+                        if(tempPhone!=" ") {
+                            ++pCount
+                        }
                     }
-                }
 
                 //for email IDs
                 deepCur = cr.query(

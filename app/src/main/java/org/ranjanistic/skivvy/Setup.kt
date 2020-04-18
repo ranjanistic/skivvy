@@ -106,6 +106,16 @@ class Setup : AppCompatActivity() {
                         deleteVoiceSetup.alpha = 1F
                         deleteVoiceSetup.isClickable = true
                         speakOut("'$text' is the phrase.")
+                        if(!skivvy.getBiometricStatus()){
+                            Snackbar.make(findViewById(R.id.setup_layout),"I recommend enabling biometric too, in case you forget the passphrase.",18000)
+                                .setTextColor(resources.getColor(R.color.pitch_white))
+                                .setBackgroundTint(resources.getColor(R.color.charcoal))
+                                .setAction("Enable") {
+                                    setBiometricsStatus(true)
+                                }
+                                .setActionTextColor(resources.getColor(R.color.colorPrimaryDark))
+                                .show()
+                        }
                     } else {
                         skivvy.setVoiceKeyPhrase(null)
                         defaultState()
