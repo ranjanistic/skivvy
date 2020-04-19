@@ -9,6 +9,7 @@ import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.view.View
+import android.view.View.inflate
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.*
@@ -24,7 +25,7 @@ class Setup : AppCompatActivity() {
     private var scaleAnimation: Animation? = null
     private lateinit var vocalLayout:LinearLayout
     private lateinit var settingIcon: ImageView
-    private lateinit var training: TextView
+    private lateinit var training: Switch
     private lateinit var mute: Switch
     private lateinit var biometrics: Switch
     private lateinit var voiceAuthSwitch: Switch
@@ -49,7 +50,7 @@ class Setup : AppCompatActivity() {
         voiceAuthSwitch = findViewById(R.id.voice_auth_switch)
         deleteVoiceSetup = findViewById(R.id.delete_voice_key)
         findViewById<TextView>(R.id.version).text = BuildConfig.VERSION_NAME
-        setTrainingMode(getTrainingStatus())
+        setTrainingMode(skivvy.getTrainingStatus())
         setMuteStatus(skivvy.getMuteStatus())
         if (skivvy.getPhraseKeyStatus()){
             voiceAuthSwitch.isChecked = true
@@ -57,8 +58,34 @@ class Setup : AppCompatActivity() {
             deleteVoiceSetup.visibility = View.VISIBLE
             deleteVoiceSetup.isClickable = true
             deleteVoiceSetup.alpha = 1F
-        } else defaultState()
+        } else defaultVoiceAuthUIState()
+        setListeners()
+    }
 
+    private fun setListeners() {
+        settingIcon.setOnClickListener {
+            finish()
+            overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
+        }
+        training.setOnCheckedChangeListener { _, isChecked ->
+            setTrainingMode(isChecked)
+        }
+        mute.setOnCheckedChangeListener { _, isChecked ->
+            setMuteStatus(isChecked)
+        }
+        biometrics.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                biometrics.text = getString(R.string.disable_fingerprint)
+                setBiometricsStatus(true)
+            } else {
+                if (skivvy.getBiometricStatus()) {
+                    if(skivvy.checkBioMetrics()) {
+                        authSetup(skivvy.CODE_BIOMETRIC_CONFIRM)
+                        biometricPrompt.authenticate(promptInfo)
+                    }
+                }
+            }
+        }
         voiceAuthSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 voiceAuthSwitch.text= getString(R.string.disable_vocal_authentication)
@@ -71,11 +98,11 @@ class Setup : AppCompatActivity() {
                     deleteVoiceSetup.isClickable = true
                 }
             } else {
-                defaultState()
+                defaultVoiceAuthUIState()
             }
         }
         deleteVoiceSetup.setOnClickListener{
-            if(checkBioMetrics()) {
+            if(skivvy.checkBioMetrics()) {
                 authSetup(skivvy.CODE_VOICE_AUTH_CONFIRM)
                 biometricPrompt.authenticate(promptInfo)
             } else {
@@ -84,14 +111,12 @@ class Setup : AppCompatActivity() {
                     .setBackgroundTint(resources.getColor(R.color.dark_red))
                     .setAction("Reset") {
                         skivvy.setVoiceKeyPhrase(null)
-                        defaultState()
+                        defaultVoiceAuthUIState()
                     }
                     .setActionTextColor(resources.getColor(R.color.colorPrimary))
                     .show()
-
             }
         }
-        setListeners()
     }
 
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -102,7 +127,7 @@ class Setup : AppCompatActivity() {
                 .toLowerCase(skivvy.locale)
             when (requestCode) {
                 skivvy.CODE_VOICE_AUTH_INIT -> {
-                    defaultState()
+                    defaultVoiceAuthUIState()
                     if (text.length < 5) {
                         speakOut("Try something longer", skivvy.CODE_VOICE_AUTH_INIT)
                     } else {
@@ -119,8 +144,8 @@ class Setup : AppCompatActivity() {
                         deleteVoiceSetup.alpha = 1F
                         deleteVoiceSetup.isClickable = true
                         speakOut("'$text' is the phrase.")
-                        if(!skivvy.getBiometricStatus()){
-                            Snackbar.make(findViewById(R.id.setup_layout),"I recommend enabling biometric too, in case you forget the passphrase.",18000)
+                        if(!skivvy.getBiometricStatus() && skivvy.checkBioMetrics()){
+                            Snackbar.make(findViewById(R.id.setup_layout),getString(R.string.biometric_recommendation_passphrase_enabling),25000)
                                 .setTextColor(resources.getColor(R.color.pitch_white))
                                 .setBackgroundTint(resources.getColor(R.color.charcoal))
                                 .setAction("Enable") {
@@ -131,8 +156,9 @@ class Setup : AppCompatActivity() {
                         }
                     } else {
                         skivvy.setVoiceKeyPhrase(null)
-                        defaultState()
-                        Snackbar.make(findViewById(R.id.setup_layout),"Confirmation phrase didn't match the phrase you've set.",10000)
+                        defaultVoiceAuthUIState()
+                        speakOut(getString(R.string.confirmation_phrase_didnt_match))
+                        Snackbar.make(findViewById(R.id.setup_layout),getString(R.string.confirmation_phrase_didnt_match),10000)
                             .setTextColor(resources.getColor(R.color.dull_white))
                             .setBackgroundTint(resources.getColor(R.color.dark_red))
                             .setAction("Try again") {
@@ -146,38 +172,12 @@ class Setup : AppCompatActivity() {
         } else {
             skivvy.setVoiceKeyPhrase(null)
             speakOut(getString(R.string.no_input))
-            defaultState()
-        }
-    }
-
-    private fun setListeners() {
-        settingIcon.setOnClickListener {
-            finish()
-            overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
-        }
-        training.setOnClickListener {
-            setTrainingMode(!getTrainingStatus())
-        }
-        mute.setOnCheckedChangeListener { _, isChecked ->
-            setMuteStatus(isChecked)
-        }
-        biometrics.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                biometrics.text = getString(R.string.disable_fingerprint)
-                setBiometricsStatus(true)
-            } else {
-                if (skivvy.getBiometricStatus()) {
-                    if(checkBioMetrics()) {
-                        authSetup(skivvy.CODE_BIOMETRIC_CONFIRM)
-                        biometricPrompt.authenticate(promptInfo)
-                    }
-                }
-            }
+            defaultVoiceAuthUIState()
         }
     }
 
     override fun onStart() {
-        if (checkBioMetrics()) {
+        if (skivvy.checkBioMetrics()) {
             biometrics.visibility = View.VISIBLE
             setBiometricsStatus(skivvy.getBiometricStatus())
         } else {
@@ -185,14 +185,6 @@ class Setup : AppCompatActivity() {
             setBiometricsStatus(false)
         }
         super.onStart()
-    }
-
-    private fun checkBioMetrics(): Boolean {
-        val biometricManager = BiometricManager.from(this)
-        return when (biometricManager.canAuthenticate()) {
-            BiometricManager.BIOMETRIC_SUCCESS -> true
-            else -> false
-        }
     }
 
     private fun startFinishAnimation() {
@@ -215,7 +207,7 @@ class Setup : AppCompatActivity() {
                     super.onAuthenticationSucceeded(result)
                     when(code){
                         skivvy.CODE_VOICE_AUTH_CONFIRM->{
-                            defaultState()
+                            defaultVoiceAuthUIState()
                             skivvy.setVoiceKeyPhrase(null)
                         }
                         skivvy.CODE_BIOMETRIC_CONFIRM ->{
@@ -265,16 +257,12 @@ class Setup : AppCompatActivity() {
     private fun setTrainingMode(isTraining: Boolean) {
         getSharedPreferences(skivvy.PREF_HEAD_APP_MODE, MODE_PRIVATE).edit()
             .putBoolean(skivvy.PREF_KEY_TRAINING, isTraining).apply()
+        training.isChecked = isTraining
         if (isTraining) {
             training.text = getString(R.string.deactivate_training_text)
         } else {
             training.text = getString(R.string.activate_training_text)
         }
-    }
-
-    private fun getTrainingStatus(): Boolean {
-        return getSharedPreferences(skivvy.PREF_HEAD_APP_MODE, MODE_PRIVATE)
-            .getBoolean(skivvy.PREF_KEY_TRAINING, false)
     }
 
     private fun speakOut(text: String, code: Int) {
@@ -299,7 +287,7 @@ class Setup : AppCompatActivity() {
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
     }
 
-    private fun defaultState() {
+    private fun defaultVoiceAuthUIState() {
         voiceAuthSwitch.isChecked = false
         voiceAuthSwitch.text= getString(R.string.enable_vocal_authentication)
         skivvy.setPhraseKeyStatus(false)

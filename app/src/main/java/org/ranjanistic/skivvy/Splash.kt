@@ -43,6 +43,11 @@ class Splash : AppCompatActivity() {
     }
     private fun initializeBiometric(){
         executor = ContextCompat.getMainExecutor(this)
+        promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(getString(R.string.auth_demand_title))
+            .setSubtitle(getString(R.string.auth_demand_subtitle))
+            .setNegativeButtonText(getString(R.string.other_auth_ops))
+            .build()
         biometricPrompt = BiometricPrompt(this, executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -62,12 +67,6 @@ class Splash : AppCompatActivity() {
                     finish()
                 }
             })
-        promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(getString(R.string.auth_demand_title))
-            .setSubtitle(getString(R.string.auth_demand_subtitle))
-            .setNegativeButtonText(getString(R.string.other_auth_ops))
-            .build()
-
     }
     var authAttemptCount = 3
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -149,9 +148,27 @@ class Splash : AppCompatActivity() {
 
     private fun speakOut(text: String, code: Int) {
         skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onDone(utteranceId: String) {
+            override fun onDone(utteranceId: String) {}
+            override fun onError(utteranceId: String) {}
+            override fun onStart(utteranceId: String) {
                 startVoiceRecIntent(code,text)
             }
+        })
+        if(!skivvy.getMuteStatus()) {
+            skivvy.tts!!.speak(
+                text,
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                ""
+            )
+        } else {
+            Toast.makeText(this, text, Toast.LENGTH_LONG).show()
+            startVoiceRecIntent(code,text)
+        }
+    }
+    private fun speakOut(text: String) {
+        skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onDone(utteranceId: String) {}
             override fun onError(utteranceId: String) {}
             override fun onStart(utteranceId: String) {}
         })
@@ -162,23 +179,7 @@ class Splash : AppCompatActivity() {
                 null,
                 ""
             )
-        } else {
-            startVoiceRecIntent(code,text)
         }
-        Toast.makeText(this, text, Toast.LENGTH_LONG).show()
-    }
-    private fun speakOut(text: String) {
-        skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onDone(utteranceId: String) {}
-            override fun onError(utteranceId: String) {}
-            override fun onStart(utteranceId: String) {}
-        })
-        skivvy.tts!!.speak(
-            text,
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            ""
-        )
     }
 }
 

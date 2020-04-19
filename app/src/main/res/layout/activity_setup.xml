@@ -41,7 +41,6 @@
                 android:fontFamily="@font/varela_round_regular"
                 android:layout_gravity="center_vertical"
                 android:gravity="center_vertical"
-                android:visibility="gone"
                 android:textColor="?attr/base_text_color"
                 android:layout_margin="@dimen/base_separation"
                 android:paddingVertical="@dimen/secondary_separation"

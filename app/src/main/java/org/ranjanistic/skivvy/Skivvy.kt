@@ -15,6 +15,7 @@ import android.provider.ContactsContract
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.biometric.BiometricManager
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
@@ -77,6 +78,7 @@ class Skivvy : Application() {
     var tts: TextToSpeech? = null
     var packageData:PackageData = PackageData()
     var contactData:ContactData = ContactData()
+    //var callReceiver:CallReceiver = CallReceiver()
 
     override fun onCreate() {
         super.onCreate()
@@ -90,7 +92,7 @@ class Skivvy : Application() {
             getLocalPackages()
         }
         /*
-        GlobalScope.launch {    //Long running task, getting all packages
+        GlobalScope.launch {    //Long running task, getting all contacts
             getLocalContacts()
         }
          */
@@ -280,6 +282,20 @@ class Skivvy : Application() {
         return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
             .getString(this.PREF_KEY_TRAINING,null)
     }
+
+    fun getTrainingStatus(): Boolean {
+        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_TRAINING, false)
+    }
+
+    fun checkBioMetrics(): Boolean {
+        val biometricManager = BiometricManager.from(this)
+        return when (biometricManager.canAuthenticate()) {
+            BiometricManager.BIOMETRIC_SUCCESS -> true
+            else -> false
+        }
+    }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelID = resources.getStringArray(R.array.notification_channel)[0]

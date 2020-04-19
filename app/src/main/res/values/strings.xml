@@ -156,6 +156,8 @@
     <string name="set_new_secret_phrase">Set new secret phrase</string>
     <string name="reset_secret_phrase">Reset your secret phrase</string>
     <string name="tell_new_secret_phrase">Tell me your secret phrase or word</string>
+    <string name="confirmation_phrase_didnt_match">Confirmation phrase didn\'t match the phrase you\'ve set.</string>
+    <string name="biometric_recommendation_passphrase_enabling">I recommend enabling biometric too, in case you forget the passphrase.</string>
     <string-array name="notification_channel">
         <item>SKIVVY_MAIN_NOTIFICATION</item>
         <item>Skivvy is active</item>

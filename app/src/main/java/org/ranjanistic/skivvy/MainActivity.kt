@@ -13,6 +13,10 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.hardware.Sensor
+import android.hardware.SensorManager
+import android.hardware.TriggerEvent
+import android.hardware.TriggerEventListener
 import android.location.LocationManager
 import android.media.AudioManager
 import android.net.Uri
@@ -27,6 +31,7 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.telephony.PhoneStateListener
 import android.telephony.SmsManager
 import android.text.format.DateFormat
 import android.util.Log
@@ -38,7 +43,6 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -57,7 +61,15 @@ import kotlin.math.*
 class MainActivity : AppCompatActivity(), RecognitionListener {
     lateinit var skivvy: Skivvy
     private var outPut: TextView? = null
+    fun setOutput(text: String) {
+        this.outPut!!.text = text
+    }
+
     private var input: TextView? = null
+    fun setInput(text: String) {
+        this.input!!.text = text
+    }
+
     private var focusRotate: Animation? = null
     private var normalRotate: Animation? = null
     private var rotateSlow: Animation? = null
@@ -96,9 +108,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private var deviceManger: DevicePolicyManager? = null
     private var compName: ComponentName? = null
     private var contact: ContactModel = ContactModel()
+    private lateinit var audioManager: AudioManager
+    private val phoneStateListener: PhoneStateListener = PhoneStateListener()
+    var isCreated = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        isCreated = true
         context = this
         skivvy = this.application as Skivvy
         setViewAndDefaults()
@@ -107,6 +123,16 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         setListeners()
         outPut?.text = getString(im_ready)
         input?.text = getString(tap_the_button)
+        val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        val mSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ALL)
+        val triggerEventListener = object : TriggerEventListener() {
+            override fun onTrigger(event: TriggerEvent?) {
+                input!!.text = event.toString()
+            }
+        }
+        mSensor?.also { sensor ->
+            sensorManager.requestTriggerSensor(triggerEventListener, sensor)
+        }
     }
 
     private fun setViewAndDefaults() {
@@ -121,6 +147,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         backfall = findViewById(R.id.backdrop)
         outputStat = findViewById(R.id.outputStatusView)
         outputStat!!.visibility = View.INVISIBLE
+        audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
 
     private fun loadDefaultAnimations() {
@@ -290,17 +317,36 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        val audio =
-            applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        if (keyCode == KeyEvent.KEYCODE_HEADSETHOOK) {
-            speakOut("")
-            normalView()
-            startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
-        } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            speakOut(
-                "Volume at ${(audio.getStreamVolume(AudioManager.STREAM_MUSIC) * 100)
-                        / audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}%"
-            )
+        when (keyCode) {
+            KeyEvent.KEYCODE_HEADSETHOOK -> {
+                speakOut("")
+                normalView()
+                startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
+            }
+            KeyEvent.KEYCODE_VOLUME_UP -> {
+                speakOut(
+                    "Volume raised to ${(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) * 100)
+                            / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}%"
+                )
+            }
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                speakOut(
+                    "Volume lowered to ${(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) * 100)
+                            / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}%"
+                )
+            }
+            KeyEvent.KEYCODE_CAPS_LOCK -> {
+                speakOut("Caps lock toggled")
+            }
+            KeyEvent.KEYCODE_HOME -> {
+                speakOut("I'm still working")
+            }
+            KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                speakOut("Your music must be playing now")
+            }
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                speakOut("Music paused")
+            }
         }
         return super.onKeyDown(keyCode, event)
     }
@@ -308,6 +354,14 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            if(data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                    .toLowerCase(skivvy.locale)==""){
+                normalView()
+                speakOut(getString(no_input))
+                return
+            }
+        }
         when (requestCode) {
             skivvy.CODE_SPEECH_RECORD -> {
                 if (resultCode == Activity.RESULT_OK && data != null) {
@@ -345,6 +399,41 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 } else {
                     normalView()
                     speakOut(getString(no_input))
+                }
+            }
+            skivvy.CODE_VOICE_AUTH_CONFIRM -> {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                        .toLowerCase(skivvy.locale)
+                    if (txt != skivvy.getVoiceKeyPhrase()) {
+                        if (skivvy.getBiometricStatus()) {
+                            speakOut("Vocal authentication failed. I need your physical verification")
+                            authStateAction(skivvy.CODE_VOICE_AUTH_CONFIRM)
+                        } else {
+                            speakOut("Vocal authentication failed")
+                        }
+                    } else {
+                        skivvy.setPhraseKeyStatus(false)
+                        speakOut("Vocal authentication disabled")
+                    }
+                }
+            }
+            skivvy.CODE_BIOMETRIC_CONFIRM -> {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                        .toLowerCase(skivvy.locale)
+                    if (txt != skivvy.getVoiceKeyPhrase()) {
+                        if (skivvy.getBiometricStatus()) {
+                            speakOut("Vocal authentication failed. I need your physical verification")
+                            authStateAction(skivvy.CODE_BIOMETRIC_CONFIRM)
+                            biometricPrompt.authenticate(promptInfo)
+                        } else {
+                            speakOut("Vocal authentication failed")
+                        }
+                    } else {
+                        skivvy.setBiometricsStatus(false)
+                        speakOut(getString(biometric_is_off))
+                    }
                 }
             }
             skivvy.CODE_APP_CONF -> {
@@ -394,7 +483,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 }
             }
             skivvy.CODE_CALL_CONF -> {
-                val cdata = skivvy.contactData
+//                val cdata = skivvy.contactData
                 if (resultCode == Activity.RESULT_OK && data != null) {
                     txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
                         .toLowerCase(skivvy.locale)
@@ -463,7 +552,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             }
 
             skivvy.CODE_EMAIL_CONTENT -> {
-                val cdata = skivvy.contactData
+//                val cdata = skivvy.contactData
                 if (resultCode == Activity.RESULT_OK && data != null) {
                     txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
                         .toLowerCase(skivvy.locale)
@@ -528,7 +617,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             }
 
             skivvy.CODE_EMAIL_CONF -> {
-                val cdata = skivvy.contactData
+//                val cdata = skivvy.contactData
                 if (resultCode == Activity.RESULT_OK && data != null) {
                     txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
                         .toLowerCase(skivvy.locale)
@@ -587,7 +676,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             }
 
             skivvy.CODE_TEXT_MESSAGE_BODY -> {
-                val cdata = skivvy.contactData
+//                val cdata = skivvy.contactData
                 if (resultCode == Activity.RESULT_OK && data != null) {
                     txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
                         .toLowerCase(skivvy.locale)
@@ -629,7 +718,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             }
 
             skivvy.CODE_SMS_CONF -> {
-                val cdata = skivvy.contactData
+//                val cdata = skivvy.contactData
                 if (resultCode == Activity.RESULT_OK && data != null) {
                     txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
                         .toLowerCase(skivvy.locale)
@@ -686,7 +775,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                         else -> {
                             if (this.isContactPresent) {
                                 speakOut(
-                                    getString(should_i_text) + "${cdata.getContactNames()[tempContactIndex]} at ${cdata.getContactPhones()[tempContactIndex]!![tempPhoneNumberIndex]}" + getString(
+//                                getString(should_i_text) + "${cdata.getContactNames()[tempContactIndex]} at ${cdata.getContactPhones()[tempContactIndex]!![tempPhoneNumberIndex]}" + getString( via_sms),
+                                    getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex]}" + getString(
                                         via_sms
                                     ),
                                     skivvy.CODE_SMS_CONF
@@ -829,8 +919,43 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             text == getString(exit) -> {
                 finish()
             }
+            text.contains("vocal authentication") -> {
+                return when {
+                    text.contains("enable") -> {
+                        if (!skivvy.getPhraseKeyStatus()) {
+                            if (skivvy.getVoiceKeyPhrase() != null) {
+                                skivvy.setPhraseKeyStatus(true)
+                                speakOut("Vocal authentication enabled")
+                            } else {
+                                speakOut("You need to physically set up vocal authentication")
+                                startActivity(Intent(context, Setup::class.java))
+                            }
+                        } else {
+                            speakOut("Vocal authentication already enabled")
+                        }
+                        true
+                    }
+                    text.contains("disable") -> {
+                        if (!skivvy.getPhraseKeyStatus()) {
+                            speakOut("Vocal authentication already disabled")
+                        } else {
+                            speakOut(
+                                "Tell me your secret passphrase",
+                                skivvy.CODE_VOICE_AUTH_CONFIRM
+                            )
+                        }
+                        true
+                    } else-> {
+                        if (text.replace("vocal authentication", "").trim() == "") {
+                            txt = "vocal authentication "
+                            speakOut("Vocal authentication what?", skivvy.CODE_SPEECH_RECORD)
+                            true
+                        } else false
+                    }
+                }
+            }
             text.contains("biometric") -> {
-                if (!checkBioMetrics()) {
+                if (!skivvy.checkBioMetrics()) {
                     speakOut("Your device doesn't support biometric authentication.")
                 } else {
                     return when {
@@ -848,15 +973,22 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                             if (!skivvy.getBiometricStatus()) {
                                 speakOut(getString(biometric_already_off))
                             } else {
-                                speakOut(getString(physical_auth_request))
-                                authStateAction()
-                                biometricPrompt.authenticate(promptInfo)
+                                if (skivvy.getPhraseKeyStatus()) {
+                                    speakOut(
+                                        "Tell me your secret passphrase",
+                                        skivvy.CODE_BIOMETRIC_CONFIRM
+                                    )
+                                } else {
+                                    speakOut(getString(physical_auth_request))
+                                    authStateAction(skivvy.CODE_BIOMETRIC_CONFIRM)
+                                    biometricPrompt.authenticate(promptInfo)
+                                }
                             }
                             true
                         }
                         else -> {
                             if (text.replace("biometric", "").trim() == "") {
-                                txt = "biometric"
+                                txt = "biometric "
                                 speakOut("Biometric what?", skivvy.CODE_SPEECH_RECORD)
                                 true
                             } else false
@@ -886,7 +1018,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         var finalExpression = expression
         val toBeRemoved = arrayOf(
             " ", "calculate", "compute", "solve", "whatis",
-            "what's", "thevalueof", "valueof","of"
+            "what's", "thevalueof", "valueof", "of"
         )
         val toBePercented = arrayOf("%of", "percentof")
         val toBeModded = arrayOf("%", "mod")
@@ -908,10 +1040,26 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         val formatArrays = arrayOf(
             toBeRemoved, toBePercented, toBeModded, toBeLogged, toBeLog,
             toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBeNumerized
-            , toBePowered,toBeRooted,toBeCuberooted,toBeSquared, toBeCubed
+            , toBePowered, toBeRooted, toBeCuberooted, toBeSquared, toBeCubed
         )
         val replacingArray =
-            arrayOf("", "p", "m", "ln", "log", "*", "/", "+", "-", "100", "^","sqrt","cbrt","^2", "^3")
+            arrayOf(
+                "",
+                "p",
+                "m",
+                "ln",
+                "log",
+                "*",
+                "/",
+                "+",
+                "-",
+                "100",
+                "^",
+                "sqrt",
+                "cbrt",
+                "^2",
+                "^3"
+            )
         var formatIndex = 0
         while (formatIndex < formatArrays.size) {
             var formatArrayIndex = 0
@@ -1099,33 +1247,34 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             while (fin < arrayOfExpression.size) {
                 if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {
                     if (!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)) {
-                        if(arrayOfExpression[fin+1]!! == "+"){
-                            arrayOfExpression[fin+1] = ""
-                            var lk = fin+2
-                            while(lk<arrayOfExpression.size) {
-                                if(lk == fin+2) {
+                        if (arrayOfExpression[fin + 1]!! == "+") {
+                            arrayOfExpression[fin + 1] = ""
+                            var lk = fin + 2
+                            while (lk < arrayOfExpression.size) {
+                                if (lk == fin + 2) {
                                     arrayOfExpression[lk - 2] += arrayOfExpression[lk]
                                 } else {
                                     arrayOfExpression[lk - 2] = arrayOfExpression[lk]
                                 }
                                 ++lk
                             }
-                            arrayOfExpression[arrayOfExpression.size-1] = ""
-                            arrayOfExpression[arrayOfExpression.size-2] = ""
-                        } else if(arrayOfExpression[fin+1]!! == "-"){
-                            if(arrayOfExpression[fin+2]!!.contains(skivvy.numberPattern)){
-                                arrayOfExpression[fin+2] = (0-arrayOfExpression[fin+2]!!.toFloat()).toString()
-                                var lk = fin+2
-                                while(lk<arrayOfExpression.size){
-                                    if(lk == fin+2){
-                                        arrayOfExpression[lk-2] += arrayOfExpression[lk]
+                            arrayOfExpression[arrayOfExpression.size - 1] = ""
+                            arrayOfExpression[arrayOfExpression.size - 2] = ""
+                        } else if (arrayOfExpression[fin + 1]!! == "-") {
+                            if (arrayOfExpression[fin + 2]!!.contains(skivvy.numberPattern)) {
+                                arrayOfExpression[fin + 2] =
+                                    (0 - arrayOfExpression[fin + 2]!!.toFloat()).toString()
+                                var lk = fin + 2
+                                while (lk < arrayOfExpression.size) {
+                                    if (lk == fin + 2) {
+                                        arrayOfExpression[lk - 2] += arrayOfExpression[lk]
                                     } else {
-                                        arrayOfExpression[lk-2] = arrayOfExpression[lk]
+                                        arrayOfExpression[lk - 2] = arrayOfExpression[lk]
                                     }
                                     ++lk
                                 }
-                                arrayOfExpression[arrayOfExpression.size-1] = ""
-                                arrayOfExpression[arrayOfExpression.size-2] = ""
+                                arrayOfExpression[arrayOfExpression.size - 1] = ""
+                                arrayOfExpression[arrayOfExpression.size - 2] = ""
                             } else return false
                         } else return false
                     }
@@ -1336,8 +1485,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun volumeOps(action: String) {
-        val audioManager: AudioManager =
-            applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         when {
             action.contains(skivvy.numberPattern) -> {
                 val percent = action.replace(skivvy.nonNumeralPattern, "").toFloat() / 100
@@ -1975,7 +2122,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         isContactPresent = false
     }
 
-    private fun waitingView(image: Drawable?) {
+    fun waitingView(image: Drawable?) {
         loading?.startAnimation(rotateSlow)
         loading?.setImageDrawable(getDrawable(ic_yellow_dotsincircle))
         if (image != null) {
@@ -1983,13 +2130,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
-    private fun errorView(): Boolean {
+    fun errorView(): Boolean {
         loading?.startAnimation(fadeAnimation)
         loading?.setImageDrawable(getDrawable(ic_red_dotsincircle))
         return false
     }
 
-    private fun successView(image: Drawable?): Boolean {
+    fun successView(image: Drawable?): Boolean {
         loading?.startAnimation(focusRotate)
         loading?.setImageDrawable(getDrawable(ic_green_dotsincircle))
         if (image != null) {
@@ -2047,16 +2194,30 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
-    private fun authStateAction() {
+    private fun authStateAction(code: Int) {
         executor = ContextCompat.getMainExecutor(context)
+        promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(getString(auth_demand_title))
+            .setSubtitle(getString(auth_demand_subtitle))
+            .setDescription(getString(biometric_auth_explanation))
+            .setNegativeButtonText(getString(discard))
+            .build()
         biometricPrompt = BiometricPrompt(this, executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(
                     result: BiometricPrompt.AuthenticationResult
                 ) {
                     super.onAuthenticationSucceeded(result)
-                    skivvy.setBiometricsStatus(false)
-                    speakOut(getString(biometric_is_off))
+                    when (code) {
+                        skivvy.CODE_BIOMETRIC_CONFIRM -> {
+                            skivvy.setBiometricsStatus(false)
+                            speakOut(getString(biometric_is_off))
+                        }
+                        skivvy.CODE_VOICE_AUTH_CONFIRM -> {
+                            skivvy.setPhraseKeyStatus(false)
+                            speakOut("Vocal authentication disabled")
+                        }
+                    }
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -2069,25 +2230,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     speakOut(getString(verification_unsuccessfull))
                 }
             })
-        promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(getString(auth_demand_title))
-            .setSubtitle(getString(auth_demand_subtitle))
-            .setDescription(getString(biometric_auth_explanation))
-            .setNegativeButtonText(getString(discard))
-            .build()
-    }
-
-    private fun checkBioMetrics(): Boolean {
-        val biometricManager = BiometricManager.from(this)
-        return when (biometricManager.canAuthenticate()) {
-            BiometricManager.BIOMETRIC_SUCCESS -> true
-            else -> false
-        }
-    }
-
-    private fun getTrainingStatus(): Boolean {
-        return getSharedPreferences(skivvy.PREF_HEAD_APP_MODE, MODE_PRIVATE)
-            .getBoolean(skivvy.PREF_KEY_TRAINING, false)
     }
 
     override fun onReadyForSpeech(p0: Bundle?) {
