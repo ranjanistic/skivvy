@@ -53,6 +53,7 @@ class Skivvy : Application() {
     val CODE_EMAIL_CONF = 13
     val CODE_EMAIL_CONTENT = 14
     val CODE_SMS_CONF = 15
+    val CODE_WHATSAPP_ACTION = 151
     val CODE_TEXT_MESSAGE_BODY = 16
     val CODE_VOICE_AUTH_INIT = 17
     val CODE_VOICE_AUTH_CONFIRM = 18
@@ -70,7 +71,7 @@ class Skivvy : Application() {
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
     val PREF_KEY_TRAINING = "training"
     val FINISH_ACTION = "finish"
-    val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","root","cuberoot","exponential")
+    val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","sqrt","cbrt","exp")
     val operators: Array<Char> = arrayOf('^', 'p', '/', '*', 'm', '-', '+')
 
     var tts: TextToSpeech? = null

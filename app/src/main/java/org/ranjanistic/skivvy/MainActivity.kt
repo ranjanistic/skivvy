@@ -48,7 +48,7 @@ import org.ranjanistic.skivvy.R.drawable.*
 import org.ranjanistic.skivvy.R.string.*
 import java.io.File
 import java.io.FileOutputStream
-import java.lang.Math.pow
+import java.net.URLEncoder
 import java.util.*
 import java.util.concurrent.Executor
 import kotlin.math.*
@@ -428,7 +428,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                         }
                         resources.getStringArray(R.array.denials).contains(txt) ||
                                 resources.getStringArray(R.array.disruptions).contains(txt) -> {
-                            tempPhoneNumberIndex  += 1
+                            tempPhoneNumberIndex += 1
                             if (this.isContactPresent && tempPhoneNumberIndex < contact.phoneList!!.size && !resources.getStringArray(
                                     R.array.disruptions
                                 ).contains(txt)
@@ -549,7 +549,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                         }
                         resources.getStringArray(R.array.denials).contains(txt) ||
                                 resources.getStringArray(R.array.disruptions).contains(txt) -> {
-                            tempEmailIndex+= 1
+                            tempEmailIndex += 1
                             if (this.isContactPresent && tempEmailIndex < contact.emailList!!.size && !resources.getStringArray(
                                     R.array.disruptions
                                 ).contains(txt)
@@ -602,8 +602,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                             tempTextBody = txt
                             if (this.isContactPresent) {
                                 speakOut(
-  //                                  getString(should_i_text) + "${cdata.getContactNames()[tempContactIndex]} at ${cdata.getContactPhones()[tempContactIndex]!![tempPhoneNumberIndex]}" + getString( via_sms),
-                                getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex]}" + getString(via_sms),
+                                    //                                  getString(should_i_text) + "${cdata.getContactNames()[tempContactIndex]} at ${cdata.getContactPhones()[tempContactIndex]!![tempPhoneNumberIndex]}" + getString( via_sms),
+                                    getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex]}" + getString(
+                                        via_sms
+                                    ),
                                     skivvy.CODE_SMS_CONF
                                 )
                             } else {
@@ -666,13 +668,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                             .contains(txt) || resources.getStringArray(R.array.disruptions)
                             .contains(txt) -> {
                             tempPhoneNumberIndex += 1
-                           // if (this.isContactPresent && tempPhoneNumberIndex < cdata.getContactPhones()[tempContactIndex]!!.size && !resources.getStringArray(
+                            // if (this.isContactPresent && tempPhoneNumberIndex < cdata.getContactPhones()[tempContactIndex]!!.size && !resources.getStringArray(
                             if (this.isContactPresent && tempPhoneNumberIndex < contact.phoneList!!.size && !resources.getStringArray(
                                     R.array.disruptions
                                 ).contains(txt)
                             ) {
                                 speakOut(
-   //                                 "At ${cdata.getContactPhones()[tempContactIndex]!![tempPhoneNumberIndex]}?",
+                                    //                                 "At ${cdata.getContactPhones()[tempContactIndex]!![tempPhoneNumberIndex]}?",
                                     "At ${contact.phoneList!![tempPhoneNumberIndex]}?",
                                     skivvy.CODE_SMS_CONF
                                 )
@@ -700,6 +702,37 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 } else {
                     normalView()
                     speakOut(getString(no_input))
+                }
+            }
+            skivvy.CODE_WHATSAPP_ACTION -> {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    txt = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                        .toLowerCase(skivvy.locale)
+                    if (txt != "") {
+                        try {
+                            if (Intent(Intent.ACTION_VIEW).setPackage("com.whatsapp")
+                                    .resolveActivity(context.packageManager) != null
+                            ) {
+                                speakOut("Sending '$txt' on whatsapp to ${contact.displayName}")
+                                context.startActivity(
+                                    Intent(
+                                        Intent.ACTION_VIEW, Uri.parse(
+                                            "https://api.whatsapp.com/send?phone="
+                                                    + contact.phoneList!![tempPhoneNumberIndex] + "&text=" + URLEncoder.encode(
+                                                txt,
+                                                "UTF-8"
+                                            )
+                                        )
+                                    )
+                                )
+                            }
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
+                        }
+                    } else {
+                        normalView()
+                        speakOut(getString(no_input))
+                    }
                 }
             }
         }
@@ -853,7 +886,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         var finalExpression = expression
         val toBeRemoved = arrayOf(
             " ", "calculate", "compute", "solve", "whatis",
-            "what's", "thevalueof", "valueof"
+            "what's", "thevalueof", "valueof","of"
         )
         val toBePercented = arrayOf("%of", "percentof")
         val toBeModded = arrayOf("%", "mod")
@@ -868,14 +901,17 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             "raisedtothepowerof", "raisetothepowerof", "raisedtothepower", "raisetothepower",
             "tothepowerof", "tothepower", "raisedto", "raiseto", "raised", "raise", "kipower"
         )
-        val toBeSqured = arrayOf("square")
+        val toBeRooted = arrayOf("squareroot")
+        val toBeCuberooted = arrayOf("cuberoot")
+        val toBeSquared = arrayOf("square")
         val toBeCubed = arrayOf("cube")
         val formatArrays = arrayOf(
             toBeRemoved, toBePercented, toBeModded, toBeLogged, toBeLog,
             toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBeNumerized
-            , toBePowered, toBeSqured, toBeCubed
+            , toBePowered,toBeRooted,toBeCuberooted,toBeSquared, toBeCubed
         )
-        val replacingArray = arrayOf("", "p", "m", "ln", "log", "*", "/", "+", "-", "100", "^","^2","^3")
+        val replacingArray =
+            arrayOf("", "p", "m", "ln", "log", "*", "/", "+", "-", "100", "^","sqrt","cbrt","^2", "^3")
         var formatIndex = 0
         while (formatIndex < formatArrays.size) {
             var formatArrayIndex = 0
@@ -1039,7 +1075,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         while (l < arrayOfExpression.size && k < arrayOfExpression.size) {
             if (arrayOfExpression[l] != null && arrayOfExpression[k] != null) {
                 if (arrayOfExpression[k]!!.contains(skivvy.nonNumeralPattern)
-                    && !arrayOfExpression[k]!!.contains(".")
+                    && !arrayOfExpression[k]!!.contains(".")        //if decimal
                     && !functionBool.contains(true)
                 ) {
                     return false
@@ -1048,10 +1084,11 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             ++l
             k += 2
         }
+
         var midOutput = String()
         var bb = 0
-        while(bb<arrayOfExpression.size) {
-           midOutput += arrayOfExpression[bb]
+        while (bb < arrayOfExpression.size) {
+            midOutput += arrayOfExpression[bb]
             ++bb
         }
         input!!.text = midOutput
@@ -1062,7 +1099,35 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             while (fin < arrayOfExpression.size) {
                 if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {
                     if (!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)) {
-                        return false
+                        if(arrayOfExpression[fin+1]!! == "+"){
+                            arrayOfExpression[fin+1] = ""
+                            var lk = fin+2
+                            while(lk<arrayOfExpression.size) {
+                                if(lk == fin+2) {
+                                    arrayOfExpression[lk - 2] += arrayOfExpression[lk]
+                                } else {
+                                    arrayOfExpression[lk - 2] = arrayOfExpression[lk]
+                                }
+                                ++lk
+                            }
+                            arrayOfExpression[arrayOfExpression.size-1] = ""
+                            arrayOfExpression[arrayOfExpression.size-2] = ""
+                        } else if(arrayOfExpression[fin+1]!! == "-"){
+                            if(arrayOfExpression[fin+2]!!.contains(skivvy.numberPattern)){
+                                arrayOfExpression[fin+2] = (0-arrayOfExpression[fin+2]!!.toFloat()).toString()
+                                var lk = fin+2
+                                while(lk<arrayOfExpression.size){
+                                    if(lk == fin+2){
+                                        arrayOfExpression[lk-2] += arrayOfExpression[lk]
+                                    } else {
+                                        arrayOfExpression[lk-2] = arrayOfExpression[lk]
+                                    }
+                                    ++lk
+                                }
+                                arrayOfExpression[arrayOfExpression.size-1] = ""
+                                arrayOfExpression[arrayOfExpression.size-2] = ""
+                            } else return false
+                        } else return false
                     }
                     arrayOfExpression[fin] = functionOperate(arrayOfExpression[fin]!!)
                     if (!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)) {
@@ -1162,13 +1227,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             func.contains("ln") -> {
                 ln1p(func.replace(skivvy.textPattern, "").toFloat()).toString()
             }
-            func.contains("root") -> {
+            func.contains("sqrt") -> {
                 (func.replace(skivvy.textPattern, "").toFloat().pow(0.5F)).toString()
             }
-            func.contains("cuberoot") -> {
-                (func.replace(skivvy.textPattern, "").toFloat().pow((1/3).toFloat())).toString()
+            func.contains("cbrt") -> {
+                (func.replace(skivvy.textPattern, "").toFloat().pow((1 / 3).toFloat())).toString()
             }
-            func.contains("exponential") -> {
+            func.contains("exp") -> {
                 (exp(func.replace(skivvy.textPattern, "").toFloat())).toString()
             }
             else -> getString(invalid_expression)
@@ -1498,6 +1563,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 tempPhone!!.contains(skivvy.numberPattern) -> {
                     speakOut(getString(what_is_message), skivvy.CODE_TEXT_MESSAGE_BODY)
                 }
+                localTxt.contains("whatsapp") -> {
+                    localTxt = localTxt.replace("whatsapp", "")
+                    localTxt = localTxt.replace("via", "")
+                    localTxt = localTxt.replace("on", "")
+                    localTxt.replace(" ", "")
+                    contactOps(localTxt, skivvy.CODE_WHATSAPP_ACTION)
+                }
                 localTxt.length > 1 -> {
                     contactOps(localTxt, skivvy.CODE_SMS_CONF)
                 }
@@ -1730,7 +1802,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                                 )
                             }
                         }
-                        if (tempContactCode == skivvy.CODE_CALL_CONF || tempContactCode == skivvy.CODE_SMS_CONF) {
+                        if (tempContactCode == skivvy.CODE_CALL_CONF || tempContactCode == skivvy.CODE_SMS_CONF || tempContactCode == skivvy.CODE_WHATSAPP_ACTION) {
                             if (cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))
                                     .toInt() > 0
                             ) {
@@ -1749,16 +1821,25 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                                     ++k
                                 }
                                 if (size == 1) {
-                                    if (tempContactCode == skivvy.CODE_CALL_CONF) {
-                                        speakOut(
-                                            getString(should_i_call) + "${contact.displayName}?",
-                                            skivvy.CODE_CALL_CONF
-                                        )
-                                    } else if (tempContactCode == skivvy.CODE_SMS_CONF) {
-                                        speakOut(
-                                            getString(what_is_message),
-                                            skivvy.CODE_TEXT_MESSAGE_BODY
-                                        )
+                                    when (tempContactCode) {
+                                        skivvy.CODE_CALL_CONF -> {
+                                            speakOut(
+                                                getString(should_i_call) + "${contact.displayName}?",
+                                                skivvy.CODE_CALL_CONF
+                                            )
+                                        }
+                                        skivvy.CODE_SMS_CONF -> {
+                                            speakOut(
+                                                getString(what_is_message),
+                                                skivvy.CODE_TEXT_MESSAGE_BODY
+                                            )
+                                        }
+                                        skivvy.CODE_WHATSAPP_ACTION -> {
+                                            speakOut(
+                                                "What is your message to ${contact.displayName} via whatsapp?",
+                                                skivvy.CODE_WHATSAPP_ACTION
+                                            )
+                                        }
                                     }
                                 } else {
                                     if (tempContactCode == skivvy.CODE_CALL_CONF) {
@@ -1771,6 +1852,11 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                                         speakOut(
                                             getString(what_is_message),
                                             skivvy.CODE_TEXT_MESSAGE_BODY
+                                        )
+                                    } else if (tempContactCode == skivvy.CODE_WHATSAPP_ACTION) {
+                                        speakOut(
+                                            "What is your message to ${contact.displayName} via whatsapp?",
+                                            skivvy.CODE_WHATSAPP_ACTION
                                         )
                                     }
                                 }
@@ -1798,6 +1884,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             }
         }
     }
+
     //intent voice recognition, code according to action command, serving activity result
     private fun startVoiceRecIntent(code: Int) {
 /*
