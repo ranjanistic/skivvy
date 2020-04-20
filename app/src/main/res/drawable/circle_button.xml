@@ -4,9 +4,9 @@
     <item>
         <shape android:shape="oval">
             <solid android:color="@android:color/holo_blue_dark" />
-            <gradient android:centerColor="@color/spruce" android:centerX="0"
-                android:centerY="22" android:angle="0.8" android:startColor="@color/spruce"
-                android:endColor="@color/dead_blue" />
+            <gradient android:centerColor="?attr/tertiary_background_color" android:centerX="0"
+                android:centerY="22" android:angle="0.8" android:startColor="?attr/tertiary_background_color"
+                android:endColor="?attr/secondary_background_color" />
         </shape>
     </item>
 </ripple>

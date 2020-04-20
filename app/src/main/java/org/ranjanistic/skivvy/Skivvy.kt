@@ -79,7 +79,6 @@ open class Skivvy : Application() {
     var tts: TextToSpeech? = null
     var packageData:PackageData = PackageData()
     var contactData:ContactData = ContactData()
-    //var callReceiver:CallReceiver = CallReceiver()
 
     override fun onCreate() {
         super.onCreate()

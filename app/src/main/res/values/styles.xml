@@ -39,11 +39,21 @@
         <item name="secondary_text_color">@color/dull_white</item>
         <item name="action_text_color">@color/dark_blue</item>
         <item name="base_background_color">@color/charcoal</item>
-        <item name="secondary_background_color">@color/spruce</item>
+        <item name="secondary_background_color">@color/dead_blue</item>
+        <item name="tertiary_background_color">@color/spruce</item>
         <item name="action_button_color">@color/light_green</item>
         <item name="text_button_color">@color/dead_blue</item>
         <item name="warning_button_color">@color/light_red</item>
         <item name="warning_button_color_text">@color/pitch_black</item>
         <item name="action_button_color_text">@color/dull_white</item>
+    </style>
+
+    <style name="TrainingTheme" parent="DarkTheme">
+        <item name="android:statusBarColor">@color/charcoal</item>
+        <item name="android:navigationBarColor">@color/dead_blue</item>
+        <item name="base_background_color">@color/dead_blue</item>
+        <item name="secondary_background_color">@color/charcoal</item>
+        <item name="tertiary_background_color">@color/spruce</item>
+
     </style>
 </resources>

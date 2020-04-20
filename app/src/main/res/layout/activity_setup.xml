@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/setup_layout"
-    android:background="@color/dead_blue"
+    android:background="?attr/secondary_background_color"
     tools:context=".Setup">
 
     <ImageView

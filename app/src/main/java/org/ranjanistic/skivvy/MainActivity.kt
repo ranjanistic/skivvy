@@ -192,7 +192,6 @@ open class MainActivity : AppCompatActivity() {
                 startActivity(Intent(context, Setup::class.java))
                 overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
             }
-
             override fun onAnimationRepeat(p0: Animation?) {}
             override fun onAnimationStart(p0: Animation?) {}
         })
@@ -227,8 +226,7 @@ open class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
-            skivvy.CODE_ALL_PERMISSIONS -> {
-            }
+            skivvy.CODE_ALL_PERMISSIONS -> {}
             skivvy.CODE_CALL_REQUEST -> {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     when {
@@ -381,7 +379,7 @@ open class MainActivity : AppCompatActivity() {
                         if (!respondToCommand(txt!!)) {
                             if (!directActions(txt!!)) {
                                 if (!appOptions(txt)) {
-                                    if (!computerOps(txt!!)) {
+                                    if (!computerOps(txt!!)) {                      //TODO: save the last calculation result to follow up later
                                         errorView()
                                         speakOut(getString(recognize_error))
                                     }
@@ -913,7 +911,7 @@ open class MainActivity : AppCompatActivity() {
             text == getString(exit) -> {
                 finish()
             }
-            text.contains("vocal authentication") -> {
+            text.contains("voice authentication") -> {
                 return when {
                     text.contains("enable") -> {
                         if (!skivvy.getPhraseKeyStatus()) {
@@ -1010,26 +1008,30 @@ open class MainActivity : AppCompatActivity() {
 
     private fun computerOps(rawExpression: String): Boolean {
         val expression = calculator.expressionize(rawExpression)
+
         /**
          * Storing availability of all operators and functions in given expression,
          * to arrays of booleans as true.
          */
-        val operatorsAndFunctionsArray = arrayOf(skivvy.operators,skivvy.mathFunctions)
-        val operatorsAndFunctionsBoolean = arrayOf(arrayOfNulls<Boolean>(operatorsAndFunctionsArray[0].size),
+        val operatorsAndFunctionsArray = arrayOf(skivvy.operators, skivvy.mathFunctions)
+        val operatorsAndFunctionsBoolean = arrayOf(
+            arrayOfNulls<Boolean>(operatorsAndFunctionsArray[0].size),
             arrayOfNulls(operatorsAndFunctionsArray[1].size)
         )
         var of = 0
-        while(of<operatorsAndFunctionsBoolean.size) {
+        while (of < operatorsAndFunctionsBoolean.size) {
             var f = 0
             while (f < operatorsAndFunctionsBoolean[of].size) {
-                operatorsAndFunctionsBoolean[of][f] = expression.contains(operatorsAndFunctionsArray[of][f])
+                operatorsAndFunctionsBoolean[of][f] =
+                    expression.contains(operatorsAndFunctionsArray[of][f])
                 ++f
             }
             ++of
         }
         if (!operatorsAndFunctionsBoolean[0].contains(true)) {     //if no operators
-            if(operatorsAndFunctionsBoolean[1].contains(true)) {       //has a mathematical function
-                if(expression.contains(skivvy.numberPattern)) {
+            if (operatorsAndFunctionsBoolean[1].contains(true)) {       //has a mathematical function
+                if (expression.contains(skivvy.numberPattern)) {
+                    setFeedback(expression)
                     speakOut(calculator.functionOperate(expression)!!)
                     return true
                 }
@@ -1038,10 +1040,14 @@ open class MainActivity : AppCompatActivity() {
         }
 
         val totalOps = calculator.totalOperatorsInExpression(expression)
-        if (totalOps == 0 || !calculator.isExpressionOperatable(expression) || calculator.segmentizeExpression(expression, 2 * totalOps + 1) == null)
+        if (totalOps == 0 || !calculator.isExpressionOperatable(expression) || calculator.segmentizeExpression(
+                expression,
+                2 * totalOps + 1
+            ) == null
+        )
             return false
 
-        var arrayOfExpression= calculator.segmentizeExpression(expression, 2 * totalOps + 1)!!
+        var arrayOfExpression = calculator.segmentizeExpression(expression, 2 * totalOps + 1)!!
 
         var l = 0
         var k = 0
@@ -1067,14 +1073,15 @@ open class MainActivity : AppCompatActivity() {
         setFeedback(midOutput)      //segmentized expression to user
 
         if (operatorsAndFunctionsBoolean[1].contains(true)) {      //If expression has mathematical functions
-            if(calculator.evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression) == null){
-               return false
+            if (calculator.evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression) == null) {
+                return false
             } else {
-                arrayOfExpression = calculator.evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression)!!
+                arrayOfExpression =
+                    calculator.evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression)!!
             }
         }
 
-        if(!calculator.isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression))     //if array contains invalid values
+        if (!calculator.isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression))     //if array contains invalid values
             return false
         else
             speakOut(calculator.expressionCalculation(arrayOfExpression))
@@ -1323,90 +1330,107 @@ open class MainActivity : AppCompatActivity() {
     //action invoking direct intents
     private fun directActions(text: String): Boolean {
         var localTxt: String
-        if (text.contains(getString(call))) {
-            waitingView(getDrawable(ic_glossyphone))
-            localTxt = text.replace(getString(call), "", true).trim()
-            tempPhone = text.replace(skivvy.nonNumeralPattern, "")
-            if (tempPhone != null) {
-                when {
-                    tempPhone!!.contains(skivvy.numberPattern) -> {
-                        if (ActivityCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.CALL_PHONE
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            speakOut(getString(require_physical_permission))
-                            ActivityCompat.requestPermissions(
-                                this,
-                                arrayOf(Manifest.permission.CALL_PHONE),
-                                skivvy.CODE_CALL_REQUEST
-                            )
-                        } else {
-                            speakOut(
-                                getString(should_i_call) + "$tempPhone?",
-                                skivvy.CODE_CALL_CONF
-                            )
+        when {
+            text.contains(getString(call)) -> {
+                waitingView(getDrawable(ic_glossyphone))
+                localTxt = text.replace(getString(call), "", true).trim()
+                tempPhone = text.replace(skivvy.nonNumeralPattern, "")
+                if (tempPhone != null) {
+                    when {
+                        tempPhone!!.contains(skivvy.numberPattern) -> {
+                            //TODO: break tempPhone with space in center.
+                            if(tempPhone!!.length == 10){
+                                val local = tempPhone
+                                tempPhone = ""
+                                var k = 0
+                                while(k <10){
+                                    tempPhone+=local!![k]
+                                    if(k == 4) {
+                                        tempPhone += " "
+                                    }
+                                    ++k
+                                }
+                            }
+                            if (ActivityCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.CALL_PHONE
+                                ) != PackageManager.PERMISSION_GRANTED
+                            ) {
+                                speakOut(getString(require_physical_permission))
+                                ActivityCompat.requestPermissions(
+                                    this,
+                                    arrayOf(Manifest.permission.CALL_PHONE),
+                                    skivvy.CODE_CALL_REQUEST
+                                )
+                            } else {
+                                speakOut(
+                                    getString(should_i_call) + "$tempPhone?",
+                                    skivvy.CODE_CALL_CONF
+                                )
+                            }
                         }
+                        else -> {
+                            if (localTxt.length > 1) {
+                                contactOps(localTxt, skivvy.CODE_CALL_CONF)
+                            } else {
+                                txt = "call "
+                                speakOut("Call who?", skivvy.CODE_SPEECH_RECORD)
+                            }
+                        }
+                    }
+                } else {
+                    txt = "call "
+                    speakOut("Call who?", skivvy.CODE_SPEECH_RECORD)
+                }
+                return true
+            }
+            text.contains(getString(email)) -> {
+                waitingView(getDrawable(ic_email_envelope))
+                localTxt = text.replace(getString(email), "", true).trim()
+                tempMail = localTxt.replace(" ", "").trim()
+                when {
+                    tempMail!!.matches(skivvy.emailPattern) -> {
+                        input!!.text = tempMail
+                        speakOut(getString(what_is_subject), skivvy.CODE_EMAIL_CONTENT)
+                    }
+                    localTxt.length > 1 -> {
+                        contactOps(localTxt, skivvy.CODE_EMAIL_CONF)
                     }
                     else -> {
-                        if (localTxt.length > 1) {
-                            contactOps(localTxt, skivvy.CODE_CALL_CONF)
-                        } else {
-                            txt = "call "
-                            speakOut("Call who?", skivvy.CODE_SPEECH_RECORD)
-                        }
+                        txt = "email "
+                        speakOut("Email who?", skivvy.CODE_SPEECH_RECORD)
                     }
                 }
-            } else {
-                txt = "call "
-                speakOut("Call who?", skivvy.CODE_SPEECH_RECORD)
+                return true
             }
-            return true
-        } else if (text.contains(getString(email))) {
-            waitingView(getDrawable(ic_email_envelope))
-            localTxt = text.replace(getString(email), "", true).trim()
-            tempMail = localTxt.replace(" ", "").trim()
-            when {
-                tempMail!!.matches(skivvy.emailPattern) -> {
-                    input!!.text = tempMail
-                    speakOut(getString(what_is_subject), skivvy.CODE_EMAIL_CONTENT)
+            text.contains("text") -> {
+                waitingView(getDrawable(ic_messageicon))
+                localTxt = text.replace("text", "", false)
+                localTxt = localTxt.trim()
+                tempPhone = localTxt.replace(skivvy.nonNumeralPattern, "")
+                when {
+                    tempPhone!!.contains(skivvy.numberPattern) -> {
+                        speakOut(getString(what_is_message), skivvy.CODE_TEXT_MESSAGE_BODY)
+                    }
+                    localTxt.contains("whatsapp") -> {
+                        localTxt = localTxt.replace("whatsapp", "")
+                        localTxt = localTxt.replace("via", "")
+                        localTxt = localTxt.replace("on", "")
+                        localTxt.replace(" ", "")
+                        contactOps(localTxt, skivvy.CODE_WHATSAPP_ACTION)
+                    }
+                    localTxt.length > 1 -> {
+                        contactOps(localTxt, skivvy.CODE_SMS_CONF)
+                    }
+                    else -> {
+                        txt = "text "
+                        speakOut("Text who?", skivvy.CODE_SPEECH_RECORD)
+                    }
                 }
-                localTxt.length > 1 -> {
-                    contactOps(localTxt, skivvy.CODE_EMAIL_CONF)
-                }
-                else -> {
-                    txt = "email "
-                    speakOut("Email who?", skivvy.CODE_SPEECH_RECORD)
-                }
+                return true
             }
-            return true
-        } else if (text.contains("text")) {
-            waitingView(getDrawable(ic_messageicon))
-            localTxt = text.replace("text", "", false)
-            localTxt = localTxt.trim()
-            tempPhone = localTxt.replace(skivvy.nonNumeralPattern, "")
-            when {
-                tempPhone!!.contains(skivvy.numberPattern) -> {
-                    speakOut(getString(what_is_message), skivvy.CODE_TEXT_MESSAGE_BODY)
-                }
-                localTxt.contains("whatsapp") -> {
-                    localTxt = localTxt.replace("whatsapp", "")
-                    localTxt = localTxt.replace("via", "")
-                    localTxt = localTxt.replace("on", "")
-                    localTxt.replace(" ", "")
-                    contactOps(localTxt, skivvy.CODE_WHATSAPP_ACTION)
-                }
-                localTxt.length > 1 -> {
-                    contactOps(localTxt, skivvy.CODE_SMS_CONF)
-                }
-                else -> {
-                    txt = "text "
-                    speakOut("Text who?", skivvy.CODE_SPEECH_RECORD)
-                }
-            }
-            return true
+            else -> return false
         }
-        return false
     }
 
     private fun textMessageOps(target: String, payLoad: String, code: Int) {
@@ -1456,7 +1480,7 @@ open class MainActivity : AppCompatActivity() {
         )
     }
 
-    //TODO: create contact Data class and use that here.
+    //TODO: Either create contact list data class and use that here, or do direct lookup faster in background.
     private var isContactPresent = false
     private fun contactOps(name: String, code: Int) {
         tempContactCode = code
@@ -1565,9 +1589,7 @@ open class MainActivity : AppCompatActivity() {
                         cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID))
                     contact.displayName =
                         cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-                    //TODO: Additional Nickname support
-                    //for nicknames
-                    val nickCur: Cursor? = cr.query(
+                    val nickCur: Cursor? = cr.query(        //for nicknames
                         ContactsContract.Data.CONTENT_URI,
                         null,
                         ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
@@ -1735,34 +1757,6 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    //intent voice recognition, code according to action command, serving activity result
-    private fun startVoiceRecIntent(code: Int) {
-/*
-        val speech:SpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        speech.setRecognitionListener(this)
-        val intentd = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        intentd.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en")
-        intentd.putExtra(
-            RecognizerIntent.EXTRA_CALLING_PACKAGE,
-            this.packageName
-        )
-        speech.startListening(intentd)
-*/
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            .putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
-            .putExtra(RecognizerIntent.EXTRA_PROMPT, "I'm listening")
-        if (intent.resolveActivity(packageManager) != null)
-            startActivityForResult(intent, code)
-        else {
-            errorView()
-            speakOut(getString(internal_error))
-        }
-    }
-
     private fun takeScreenshot() {
         val now = Date()
         DateFormat.format("yyyy-MM-dd_hh:mm:ss", now)
@@ -1787,7 +1781,52 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    public override fun onDestroy() {
+
+    //Handle incoming phone calls
+    private var phoneStateListener: PhoneStateListener? = null
+    private var telephonyManager: TelephonyManager? = null
+    private var lastState: Int? = null
+
+    private fun callStateListener() {
+        telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        phoneStateListener = object : PhoneStateListener() {
+            override fun onCallStateChanged(state: Int, number: String) {
+                when (state) {
+                    lastState -> return
+                    TelephonyManager.CALL_STATE_RINGING -> {
+                        speakOut("Incoming $number")
+                        successView(null)
+                    }
+                    TelephonyManager.CALL_STATE_OFFHOOK -> {
+                        waitingView(null)
+                        if (lastState == TelephonyManager.CALL_STATE_RINGING) {
+                            speakOut("Speaking to $number")
+                        } else {
+                            speakOut("Calling $number")
+                        }
+                    }
+                    TelephonyManager.CALL_STATE_IDLE -> {
+                        if (lastState == TelephonyManager.CALL_STATE_RINGING) {
+                            speakOut("You missed a call from $number")
+                            errorView()
+                        } else if (lastState == TelephonyManager.CALL_STATE_OFFHOOK) {
+                            speakOut("Call ended $number")
+                            successView(null)
+                        }
+                    }
+                }
+                lastState = state
+            }
+        }
+        // Register the listener with the telephony manager
+        // Listen for changes to the device call state.
+        telephonyManager!!.listen(
+            phoneStateListener,
+            PhoneStateListener.LISTEN_CALL_STATE
+        )
+    }
+
+    override fun onDestroy() {
         loading?.startAnimation(exitAnimation)
         speakOut(getString(exit_msg))
         if (skivvy.tts != null) {
@@ -1840,49 +1879,39 @@ open class MainActivity : AppCompatActivity() {
         return false
     }
 
-    fun successView(image: Drawable?): Boolean {
+    fun successView(image: Drawable?) {
         loading?.startAnimation(focusRotate)
         loading?.setImageDrawable(getDrawable(ic_green_dotsincircle))
         if (image != null) {
             icon?.setImageDrawable(image)
         }
-        return true
     }
 
     private fun speakOut(text: String) {
         outPut?.text = text
         skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onDone(utteranceId: String) {
-//                 outputStat!!.visibility = View.INVISIBLE
-            }
-
+            override fun onDone(utteranceId: String) {}
             override fun onError(utteranceId: String) {}
-            override fun onStart(utteranceId: String) {
-                //            outputStat!!.visibility = View.VISIBLE
-            }
+            override fun onStart(utteranceId: String) {}
         })
         if (!skivvy.getMuteStatus()) skivvy.tts!!.speak(
             text,
             TextToSpeech.QUEUE_FLUSH,
             null,
-            ""
+            text
         )
+        else
+            outPut?.text = text
     }
 
-    private fun speakOut(text: String, taskCode: Int?) {
+    private fun speakOut(text: String, taskCode: Int) {
         outPut?.text = text
         skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onDone(utteranceId: String) {
-                //      outputStat!!.visibility = View.INVISIBLE
-                if (taskCode != null) {
-                    startVoiceRecIntent(taskCode)
-                }
+                startVoiceRecIntent(taskCode)
             }
-
             override fun onError(utteranceId: String) {}
-            override fun onStart(utteranceId: String) {
-//                outputStat!!.visibility = View.VISIBLE
-            }
+            override fun onStart(utteranceId: String) {}
         })
         if (!skivvy.getMuteStatus()) skivvy.tts!!.speak(
             text,
@@ -1890,55 +1919,42 @@ open class MainActivity : AppCompatActivity() {
             null,
             ""
         )
+        else
+            startVoiceRecIntent(taskCode,text)
+    }
+
+    //intent voice recognition, code according to action command, serving activity result
+    private fun startVoiceRecIntent(code: Int) {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
+            .putExtra(RecognizerIntent.EXTRA_PROMPT, "I'm listening")
+        if (intent.resolveActivity(packageManager) != null)
+            startActivityForResult(intent, code)
         else {
-            if (taskCode != null) startVoiceRecIntent(taskCode)
+            errorView()
+            speakOut(getString(internal_error))
         }
     }
-
-    //Handle incoming phone calls
-    private var phoneStateListener: PhoneStateListener? = null
-    private var telephonyManager: TelephonyManager? = null
-    private var lastState: Int? = null
-
-    private fun callStateListener() {
-        telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        phoneStateListener = object : PhoneStateListener() {
-            override fun onCallStateChanged(state: Int, number: String) {
-                when (state) {
-                    lastState -> return
-                    TelephonyManager.CALL_STATE_RINGING -> {
-                        speakOut("Incoming $number")
-                        successView(null)
-                    }
-                    TelephonyManager.CALL_STATE_OFFHOOK -> {
-                        waitingView(null)
-                        if (lastState == TelephonyManager.CALL_STATE_RINGING) {
-                            speakOut("Speaking to $number")
-                        } else {
-                            speakOut("Connected with $number")
-                        }
-                    }
-                    TelephonyManager.CALL_STATE_IDLE -> {
-                        if (lastState == TelephonyManager.CALL_STATE_RINGING) {
-                            speakOut("You missed a call from $number")
-                            errorView()
-                        } else if (lastState == TelephonyManager.CALL_STATE_OFFHOOK) {
-                            speakOut("Call ended $number")
-                            successView(null)
-                        }
-                    }
-                }
-                lastState = state
-            }
+    //intent voice recognition, code according to action command, serving activity result
+    private fun startVoiceRecIntent(code: Int,message:String) {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
+            .putExtra(RecognizerIntent.EXTRA_PROMPT, message)
+        if (intent.resolveActivity(packageManager) != null)
+            startActivityForResult(intent, code)
+        else {
+            errorView()
+            speakOut(getString(internal_error))
         }
-        // Register the listener with the telephony manager
-        // Listen for changes to the device call state.
-        telephonyManager!!.listen(
-            phoneStateListener,
-            PhoneStateListener.LISTEN_CALL_STATE
-        )
     }
-
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo

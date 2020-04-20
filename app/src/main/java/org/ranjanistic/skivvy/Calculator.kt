@@ -6,7 +6,6 @@ import kotlin.math.*
 
 @ExperimentalStdlibApi
 class Calculator(var skivvy: Skivvy) {
-
     fun expressionize(expression: String): String {
         var finalExpression = expression
         val toBeRemoved = arrayOf(
@@ -18,27 +17,28 @@ class Calculator(var skivvy: Skivvy) {
         val toBeLogged = arrayOf("naturallogof", "naturallog")
         val toBeLog = arrayOf("logof")
         val toBeMultiplied = arrayOf("x", "multipliedby", "into", "and")
-        val toBeDivided = arrayOf("dividedby", "by", "upon", "over","÷")
-        val toBeAdded = arrayOf("plus", "or")
-        val toBeSubtracted = arrayOf("minus", "negative")
+        val toBeDivided = arrayOf("dividedby", "by", "upon", "over","÷","divideby","divide")
+        val toBeAdded = arrayOf("add","plus", "or")
+        val toBeSubtracted = arrayOf("minus", "negative","subtract")
         val toBeNumerized = arrayOf("hundred")
         val toBePowered = arrayOf(
             "raisedtothepowerof", "raisetothepowerof", "raisedtothepower", "raisetothepower",
             "tothepowerof", "tothepower", "raisedto", "raiseto", "raised", "raise", "kipower"
         )
-        val toBeRooted = arrayOf("squareroot","root")
-        val toBeCuberooted = arrayOf("cuberoot")
+        val toBeCuberooted = arrayOf("cuberoot","thirdroot")
+        val toBeRooted = arrayOf("squareroot","root","secondroot")
         val toBeSquared = arrayOf("square")
         val toBeCubed = arrayOf("cube")
+
         val formatArrays = arrayOf(
             toBeRemoved, toBePercented, toBeModded, toBeLogged, toBeLog,
             toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBeNumerized
-            , toBePowered, toBeRooted, toBeCuberooted, toBeSquared, toBeCubed
+            , toBePowered,  toBeCuberooted, toBeRooted,toBeSquared, toBeCubed
         )
         val replacingArray =
             arrayOf(
                 "", "p", "m", "ln", "log", "*", "/", "+",
-                "-", "100", "^", "sqrt", "cbrt", "^2", "^3"
+                "-", "100", "^", "cbrt", "sqrt", "^2", "^3"
             )
         var formatIndex = 0
         while (formatIndex < formatArrays.size) {
@@ -146,8 +146,8 @@ class Calculator(var skivvy: Skivvy) {
             }
         }
         //if operator comes first, place zero at null index
-        if (arrayOfExpression[arrayOfExpression.size - 1] == null) return null
-
+        if (arrayOfExpression[arrayOfExpression.size - 1] == null)
+            return null
         if (arrayOfExpression[0] == null) {
             arrayOfExpression[0] = "0"
         }
@@ -190,6 +190,7 @@ class Calculator(var skivvy: Skivvy) {
                         } else return null
                     } else return null
                 }
+                //TODO: numbers before functions at same index to be multiplied(like '12cos60' to '12*cos60')
                 arrayOfExpression[fin] = this.functionOperate(arrayOfExpression[fin]!!)
                 if (!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)) {
                     return null
@@ -217,7 +218,7 @@ class Calculator(var skivvy: Skivvy) {
         while(kkk<operatorsFunctionsNumbers.size) {
             var kk = 0
             while (kk < operatorsFunctionsNumbers[kkk].size) {
-                localExp = localExp.replace(operatorsFunctionsNumbers[kkk][kk].toString(), "")
+                localExp = localExp.replace(operatorsFunctionsNumbers[kkk][kk], "")
                 ++kk
             }
             ++kkk
@@ -247,7 +248,7 @@ class Calculator(var skivvy: Skivvy) {
      * @param arrayOfExpression
      * with operators at every even position of the array (at odd indices),
      * the following block of code will evaluate the expression according to the BODMAS rule.
-     * @return the final answer solved at index = 0 of the given array of expresssion.
+     * @return the final answer solved at index = 0 of the given array of expression.
      */
     fun expressionCalculation(arrayOfExpression: Array<String?>):String{
         var nullPosCount = 0
@@ -332,7 +333,7 @@ class Calculator(var skivvy: Skivvy) {
                 (func.replace(skivvy.textPattern, "").toFloat().pow(0.5F)).toString()
             }
             func.contains("cbrt") -> {
-                (func.replace(skivvy.textPattern, "").toFloat().pow((1 / 3).toFloat())).toString()
+                (func.replace(skivvy.textPattern, "").toFloat().pow(1/3)).toString()
             }
             func.contains("exp") -> {
                 (exp(func.replace(skivvy.textPattern, "").toFloat())).toString()
