@@ -114,6 +114,19 @@
         app:srcCompat="@drawable/ic_dotsincircle" />
 
     <TextView
+        android:id="@+id/feedbackOutput"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:elevation="22dp"
+        android:textSize="@dimen/smallest_text_size"
+        android:gravity="center"
+        android:textColor="?attr/base_text_color"
+        android:padding="@dimen/base_separation"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/backdrop"
+    />
+    <TextView
         android:id="@+id/textInput"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

@@ -13,10 +13,6 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
-import android.hardware.Sensor
-import android.hardware.SensorManager
-import android.hardware.TriggerEvent
-import android.hardware.TriggerEventListener
 import android.location.LocationManager
 import android.media.AudioManager
 import android.net.Uri
@@ -27,12 +23,12 @@ import android.os.Environment
 import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.provider.Settings
-import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.telephony.PhoneStateListener
 import android.telephony.SmsManager
+import android.telephony.TelephonyManager
 import android.text.format.DateFormat
 import android.util.Log
 import android.view.KeyEvent
@@ -55,10 +51,9 @@ import java.io.FileOutputStream
 import java.net.URLEncoder
 import java.util.*
 import java.util.concurrent.Executor
-import kotlin.math.*
 
 @ExperimentalStdlibApi
-class MainActivity : AppCompatActivity(), RecognitionListener {
+open class MainActivity : AppCompatActivity() {
     lateinit var skivvy: Skivvy
     private var outPut: TextView? = null
     fun setOutput(text: String) {
@@ -70,6 +65,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         this.input!!.text = text
     }
 
+    private var feedback: TextView? = null
     private var focusRotate: Animation? = null
     private var normalRotate: Animation? = null
     private var rotateSlow: Animation? = null
@@ -108,13 +104,12 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private var deviceManger: DevicePolicyManager? = null
     private var compName: ComponentName? = null
     private var contact: ContactModel = ContactModel()
+    private lateinit var calculator: Calculator
     private lateinit var audioManager: AudioManager
-    private val phoneStateListener: PhoneStateListener = PhoneStateListener()
-    var isCreated = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        isCreated = true
         context = this
         skivvy = this.application as Skivvy
         setViewAndDefaults()
@@ -123,16 +118,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         setListeners()
         outPut?.text = getString(im_ready)
         input?.text = getString(tap_the_button)
-        val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        val mSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ALL)
-        val triggerEventListener = object : TriggerEventListener() {
-            override fun onTrigger(event: TriggerEvent?) {
-                input!!.text = event.toString()
-            }
-        }
-        mSensor?.also { sensor ->
-            sensorManager.requestTriggerSensor(triggerEventListener, sensor)
-        }
     }
 
     private fun setViewAndDefaults() {
@@ -140,6 +125,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         settingBack = findViewById(R.id.setting_icon_back)
         outPut = findViewById(R.id.textOutput)
         input = findViewById(R.id.textInput)
+        feedback = findViewById(R.id.feedbackOutput)
         loading = findViewById(R.id.loader)
         icon = findViewById(R.id.actionIcon)
         receiver = findViewById(R.id.receiverBtn)
@@ -148,6 +134,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         outputStat = findViewById(R.id.outputStatusView)
         outputStat!!.visibility = View.INVISIBLE
         audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        calculator = Calculator(skivvy)
     }
 
     private fun loadDefaultAnimations() {
@@ -191,6 +178,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun setListeners() {
+        callStateListener()
         setting.setOnClickListener {
             startSettingAnimate()
         }
@@ -316,6 +304,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
+    private fun setFeedback(text: String?) {
+        feedback!!.text = text
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_HEADSETHOOK -> {
@@ -324,28 +316,28 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
             }
             KeyEvent.KEYCODE_VOLUME_UP -> {
-                speakOut(
+                setFeedback(
                     "Volume raised to ${(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) * 100)
                             / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}%"
                 )
             }
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                speakOut(
+                setFeedback(
                     "Volume lowered to ${(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) * 100)
                             / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}%"
                 )
             }
             KeyEvent.KEYCODE_CAPS_LOCK -> {
-                speakOut("Caps lock toggled")
+                setFeedback("Caps lock toggled")
             }
             KeyEvent.KEYCODE_HOME -> {
-                speakOut("I'm still working")
+                setFeedback("I'm still working")
             }
             KeyEvent.KEYCODE_MEDIA_PLAY -> {
-                speakOut("Your music must be playing now")
+                setFeedback("Your music must be playing now")
             }
             KeyEvent.KEYCODE_MEDIA_PAUSE -> {
-                speakOut("Music paused")
+                setFeedback("Music paused")
             }
         }
         return super.onKeyDown(keyCode, event)
@@ -355,8 +347,9 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK && data != null) {
-            if(data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
-                    .toLowerCase(skivvy.locale)==""){
+            if (data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                    .toLowerCase(skivvy.locale) == ""
+            ) {
                 normalView()
                 speakOut(getString(no_input))
                 return
@@ -409,6 +402,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                         if (skivvy.getBiometricStatus()) {
                             speakOut("Vocal authentication failed. I need your physical verification")
                             authStateAction(skivvy.CODE_VOICE_AUTH_CONFIRM)
+                            biometricPrompt.authenticate(promptInfo)
                         } else {
                             speakOut("Vocal authentication failed")
                         }
@@ -945,7 +939,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                             )
                         }
                         true
-                    } else-> {
+                    }
+                    else -> {
                         if (text.replace("vocal authentication", "").trim() == "") {
                             txt = "vocal authentication "
                             speakOut("Vocal authentication what?", skivvy.CODE_SPEECH_RECORD)
@@ -1013,218 +1008,48 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         return true
     }
 
-    //to format the received expression
-    private fun expressionize(expression: String): String {
-        var finalExpression = expression
-        val toBeRemoved = arrayOf(
-            " ", "calculate", "compute", "solve", "whatis",
-            "what's", "thevalueof", "valueof", "of"
+    private fun computerOps(rawExpression: String): Boolean {
+        val expression = calculator.expressionize(rawExpression)
+        /**
+         * Storing availability of all operators and functions in given expression,
+         * to arrays of booleans as true.
+         */
+        val operatorsAndFunctionsArray = arrayOf(skivvy.operators,skivvy.mathFunctions)
+        val operatorsAndFunctionsBoolean = arrayOf(arrayOfNulls<Boolean>(operatorsAndFunctionsArray[0].size),
+            arrayOfNulls(operatorsAndFunctionsArray[1].size)
         )
-        val toBePercented = arrayOf("%of", "percentof")
-        val toBeModded = arrayOf("%", "mod")
-        val toBeLogged = arrayOf("naturallogof", "naturallog")
-        val toBeLog = arrayOf("logof")
-        val toBeMultiplied = arrayOf("x", "multipliedby", "into", "and")
-        val toBeDivided = arrayOf("dividedby", "by", "upon", "over")
-        val toBeAdded = arrayOf("plus", "or")
-        val toBeSubtracted = arrayOf("minus", "negative")
-        val toBeNumerized = arrayOf("hundred")
-        val toBePowered = arrayOf(
-            "raisedtothepowerof", "raisetothepowerof", "raisedtothepower", "raisetothepower",
-            "tothepowerof", "tothepower", "raisedto", "raiseto", "raised", "raise", "kipower"
-        )
-        val toBeRooted = arrayOf("squareroot")
-        val toBeCuberooted = arrayOf("cuberoot")
-        val toBeSquared = arrayOf("square")
-        val toBeCubed = arrayOf("cube")
-        val formatArrays = arrayOf(
-            toBeRemoved, toBePercented, toBeModded, toBeLogged, toBeLog,
-            toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBeNumerized
-            , toBePowered, toBeRooted, toBeCuberooted, toBeSquared, toBeCubed
-        )
-        val replacingArray =
-            arrayOf(
-                "",
-                "p",
-                "m",
-                "ln",
-                "log",
-                "*",
-                "/",
-                "+",
-                "-",
-                "100",
-                "^",
-                "sqrt",
-                "cbrt",
-                "^2",
-                "^3"
-            )
-        var formatIndex = 0
-        while (formatIndex < formatArrays.size) {
-            var formatArrayIndex = 0
-            while (formatArrayIndex < formatArrays[formatIndex].size) {
-                finalExpression = finalExpression.replace(
-                    formatArrays[formatIndex][formatArrayIndex],
-                    replacingArray[formatIndex]
-                )
-                ++formatArrayIndex
+        var of = 0
+        while(of<operatorsAndFunctionsBoolean.size) {
+            var f = 0
+            while (f < operatorsAndFunctionsBoolean[of].size) {
+                operatorsAndFunctionsBoolean[of][f] = expression.contains(operatorsAndFunctionsArray[of][f])
+                ++f
             }
-            ++formatIndex
+            ++of
         }
-        return finalExpression
-    }
-
-    //for expression evaluation
-    private fun computerOps(expressionString: String): Boolean {
-        val expression = expressionize(expressionString)
-        if (!expression.contains(skivvy.numberPattern)) {
+        if (!operatorsAndFunctionsBoolean[0].contains(true)) {     //if no operators
+            if(operatorsAndFunctionsBoolean[1].contains(true)) {       //has a mathematical function
+                if(expression.contains(skivvy.numberPattern)) {
+                    speakOut(calculator.functionOperate(expression)!!)
+                    return true
+                }
+            }
             return false
         }
-        val operatorBool = arrayOfNulls<Boolean>(skivvy.operators.size)
-        val functionBool = arrayOfNulls<Boolean>(skivvy.mathFunctions.size)
 
-        var f = 0
-        while (f < functionBool.size) {
-            functionBool[f] = false
-            ++f
-        }
-        f = 0
-        while (f < operatorBool.size) {
-            operatorBool[f] = false
-            ++f
-        }
-
-        /**
-         * Storing availability of all operators in given expression, to an array of booleans.
-         */
-        var opIndex = 0
-        while (opIndex < operatorBool.size) {
-            operatorBool[opIndex] = expression.contains(skivvy.operators[opIndex])
-            ++opIndex
-        }
-        var funIndex = 0
-        while (funIndex < functionBool.size) {
-            functionBool[funIndex] = expression.contains(skivvy.mathFunctions[funIndex])
-            ++funIndex
-        }
-        if (!operatorBool.contains(true)) {
-            speakOut(functionOperate(expression)!!)
-            return true
-        }
-        /**
-         *  The following block stores the position of skivvy.operators in the given expression
-         *  in  a new array (of Integers), which will help the further block of code to contain
-         *  and create a distinction between operands (numbers) and skivvy.operators.
-         */
-
-        var expIndex = 0
-        var totalOps = 0
-        while (expIndex < expression.length) {
-            opIndex = 0
-            while (opIndex < operatorBool.size) {
-                if (expression[expIndex] == skivvy.operators[opIndex]) {
-                    ++totalOps              //counting total
-                }
-                ++opIndex
-            }
-            ++expIndex
-        }
-        if (totalOps == 0) {
+        val totalOps = calculator.totalOperatorsInExpression(expression)
+        if (totalOps == 0 || !calculator.isExpressionOperatable(expression) || calculator.segmentizeExpression(expression, 2 * totalOps + 1) == null)
             return false
-        }
-        expIndex = 0
-        val expOperatorPos = arrayOfNulls<Int>(totalOps)
-        var expOpIndex = 0
-        while (expIndex < expression.length) {
-            opIndex = 0
-            while (opIndex < operatorBool.size) {
-                if (expression[expIndex] == skivvy.operators[opIndex]) {
-                    expOperatorPos[expOpIndex] = expIndex         //saving operator positions
-                    ++expOpIndex
-                }
-                ++opIndex
-            }
-            ++expIndex
-        }
 
-        var localExp = expression
-        var kk = 0
-        while (kk < skivvy.operators.size) {
-            localExp = localExp.replace(skivvy.operators[kk].toString(), "")
-            ++kk
-        }
-        kk = 0
-        while (kk < skivvy.mathFunctions.size) {
-            localExp = localExp.replace(skivvy.mathFunctions[kk], "")
-            ++kk
-        }
-        localExp = localExp.replace(skivvy.numberPattern, "")
-        localExp = localExp.replace(".", "")
-        if (localExp != "") {
-            return false
-        }
-        /**
-         * The following block extracts values from given expression, char by char, and stores them
-         * in an array of Strings, by grouping digits in form of numbers at the same index as string,
-         * and skivvy.operators in the expression at a separate index if array of Strings.
-         *  For ex - Let the given expression be :   1234/556*89+4-23
-         *  Starting from index = 0, the following block will store digits till '/'  at index =0 of empty array of Strings, then
-         *  will store '/' itself at index =  1 of empty array of Strings. Then proceeds to store 5, 5  and 6
-         *  at the same index = 2 of e.a. of strings. And stores the next operator '*' at index = 3, and so on.
-         *  Thus a distinction between operands and operators is created and stored in a new array (of strings).
-         */
+        var arrayOfExpression= calculator.segmentizeExpression(expression, 2 * totalOps + 1)!!
 
-        val arrayOfExpression = arrayOfNulls<String>(2 * totalOps + 1)
-        var expArrayIndex = 0
-        var positionInExpression = expArrayIndex
-        var positionInOperatorPos = positionInExpression
-        while (positionInOperatorPos < expOperatorPos.size && positionInExpression < expression.length) {
-            while (positionInExpression < expOperatorPos[positionInOperatorPos]!!) {
-                if (arrayOfExpression[expArrayIndex] == null) {
-                    arrayOfExpression[expArrayIndex] = expression[positionInExpression].toString()
-                } else {
-                    arrayOfExpression[expArrayIndex] += expression[positionInExpression].toString()
-                }
-                ++positionInExpression
-            }
-            ++expArrayIndex
-            if (positionInExpression == expOperatorPos[positionInOperatorPos]) {
-                if (arrayOfExpression[expArrayIndex] == null) {
-                    arrayOfExpression[expArrayIndex] = expression[positionInExpression].toString()
-                } else {
-                    arrayOfExpression[expArrayIndex] += expression[positionInExpression].toString()
-                }
-                ++expArrayIndex
-            }
-            ++positionInExpression
-            ++positionInOperatorPos
-            if (positionInOperatorPos >= expOperatorPos.size) {
-                while (positionInExpression < expression.length) {
-                    if (arrayOfExpression[expArrayIndex] == null) {
-                        arrayOfExpression[expArrayIndex] =
-                            expression[positionInExpression].toString()
-                    } else {
-                        arrayOfExpression[expArrayIndex] += expression[positionInExpression].toString()
-                    }
-                    ++positionInExpression
-                }
-            }
-        }
-        //if operator comes first, place zero at null index
-        if (arrayOfExpression[0] == null) {
-            arrayOfExpression[0] = "0"
-        }
-        if (arrayOfExpression[arrayOfExpression.size - 1] == null) return false
-
-        //operator in place validity check
         var l = 0
         var k = 0
-        while (l < arrayOfExpression.size && k < arrayOfExpression.size) {
+        while (l < arrayOfExpression.size && k < arrayOfExpression.size) {  //operator in place validity check
             if (arrayOfExpression[l] != null && arrayOfExpression[k] != null) {
                 if (arrayOfExpression[k]!!.contains(skivvy.nonNumeralPattern)
                     && !arrayOfExpression[k]!!.contains(".")        //if decimal
-                    && !functionBool.contains(true)
+                    && !operatorsAndFunctionsBoolean[1].contains(true)
                 ) {
                     return false
                 }
@@ -1239,167 +1064,21 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             midOutput += arrayOfExpression[bb]
             ++bb
         }
-        input!!.text = midOutput
+        setFeedback(midOutput)      //segmentized expression to user
 
-        //Solves predefined mathematical functions.
-        if (functionBool.contains(true)) {
-            var fin = 0
-            while (fin < arrayOfExpression.size) {
-                if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {
-                    if (!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)) {
-                        if (arrayOfExpression[fin + 1]!! == "+") {
-                            arrayOfExpression[fin + 1] = ""
-                            var lk = fin + 2
-                            while (lk < arrayOfExpression.size) {
-                                if (lk == fin + 2) {
-                                    arrayOfExpression[lk - 2] += arrayOfExpression[lk]
-                                } else {
-                                    arrayOfExpression[lk - 2] = arrayOfExpression[lk]
-                                }
-                                ++lk
-                            }
-                            arrayOfExpression[arrayOfExpression.size - 1] = ""
-                            arrayOfExpression[arrayOfExpression.size - 2] = ""
-                        } else if (arrayOfExpression[fin + 1]!! == "-") {
-                            if (arrayOfExpression[fin + 2]!!.contains(skivvy.numberPattern)) {
-                                arrayOfExpression[fin + 2] =
-                                    (0 - arrayOfExpression[fin + 2]!!.toFloat()).toString()
-                                var lk = fin + 2
-                                while (lk < arrayOfExpression.size) {
-                                    if (lk == fin + 2) {
-                                        arrayOfExpression[lk - 2] += arrayOfExpression[lk]
-                                    } else {
-                                        arrayOfExpression[lk - 2] = arrayOfExpression[lk]
-                                    }
-                                    ++lk
-                                }
-                                arrayOfExpression[arrayOfExpression.size - 1] = ""
-                                arrayOfExpression[arrayOfExpression.size - 2] = ""
-                            } else return false
-                        } else return false
-                    }
-                    arrayOfExpression[fin] = functionOperate(arrayOfExpression[fin]!!)
-                    if (!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)) {
-                        return false
-                    }
-                }
-                ++fin
-            }
-        }
-        //validating final expression
-        var finalCheckIndex = 0
-        while (finalCheckIndex < arrayOfExpression.size) {
-            if (arrayOfExpression[finalCheckIndex] != null) {
-                if (arrayOfExpression[finalCheckIndex]!!.contains(skivvy.textPattern) &&
-                    arrayOfExpression[finalCheckIndex]!!.length > 1
-                ) {
-                    return false
-                }
+        if (operatorsAndFunctionsBoolean[1].contains(true)) {      //If expression has mathematical functions
+            if(calculator.evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression) == null){
+               return false
             } else {
-                return false
+                arrayOfExpression = calculator.evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression)!!
             }
-            ++finalCheckIndex
         }
 
-        /**
-         * Now, as we have the new array of strings, having the proper
-         * expression, with skivvy.operators at every even position of the array (at odd indices),
-         * the following block of code will evaluate the expression according to the BODMAS rule.
-         */
-
-        var nullPosCount = 0
-        opIndex = 0
-        while (opIndex < operatorBool.size) {
-            var opPos = 1
-            while (opPos < arrayOfExpression.size - nullPosCount) {
-                if (arrayOfExpression[opPos] == skivvy.operators[opIndex].toString()) {
-                    if (arrayOfExpression[opPos] == "-") {
-                        arrayOfExpression[opPos + 1] =
-                            (0 - arrayOfExpression[opPos + 1]!!.toFloat()).toString()
-                        arrayOfExpression[opPos] = "+"
-                    }
-                    arrayOfExpression[opPos - 1] = operate(
-                        arrayOfExpression[opPos - 1]!!.toFloat(),
-                        arrayOfExpression[opPos]!!.toCharArray()[0],
-                        arrayOfExpression[opPos + 1]!!.toFloat()
-                    ).toString()
-                    var j = opPos
-                    while (j + 2 < arrayOfExpression.size) {
-                        arrayOfExpression[j] = arrayOfExpression[j + 2]
-                        ++j
-                    }
-                    nullPosCount += 2
-                    if (arrayOfExpression.size > 3 &&
-                        arrayOfExpression[opPos] == skivvy.operators[opIndex].toString()
-                    ) {    //if replacing operator is same as the replaced one
-                        opPos -= 2            //index two indices back so that it returns at same position again
-                    }
-                }
-                opPos += 2        //next index of operator in array of expression
-            }
-            ++opIndex       //next operator
-        }
-        //final result stored at index = 0
-        if (arrayOfExpression[0]!!.toFloat() - arrayOfExpression[0]!!.toFloat().toInt() == 0F) {
-            speakOut(
-                arrayOfExpression[0]!!.toFloat().toInt().toString()
-            )
-        } else {
-            speakOut(arrayOfExpression[0]!!)
-        }
+        if(!calculator.isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression))     //if array contains invalid values
+            return false
+        else
+            speakOut(calculator.expressionCalculation(arrayOfExpression))
         return true
-    }
-
-    private fun functionOperate(func: String): String? {
-        return when {
-            func.contains("sin") -> sin(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
-            ).toString()
-            func.contains("cos") -> cos(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
-            ).toString()
-            func.contains("tan") -> tan(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
-            ).toString()
-            func.contains("cot") -> (1 / tan(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
-            )).toString()
-            func.contains("sec") -> (1 / cos(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
-            )).toString()
-            func.contains("cosec") -> (1 / sin(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
-            )).toString()
-            func.contains("log") -> {
-                log(func.replace(skivvy.textPattern, "").toFloat(), 10F).toString()
-            }
-            func.contains("ln") -> {
-                ln1p(func.replace(skivvy.textPattern, "").toFloat()).toString()
-            }
-            func.contains("sqrt") -> {
-                (func.replace(skivvy.textPattern, "").toFloat().pow(0.5F)).toString()
-            }
-            func.contains("cbrt") -> {
-                (func.replace(skivvy.textPattern, "").toFloat().pow((1 / 3).toFloat())).toString()
-            }
-            func.contains("exp") -> {
-                (exp(func.replace(skivvy.textPattern, "").toFloat())).toString()
-            }
-            else -> getString(invalid_expression)
-        }
-    }
-
-    private fun operate(a: Float, operator: Char, b: Float): Float? {
-        return when (operator) {
-            '/' -> a / b
-            '*' -> a * b
-            '+' -> a + b
-            '-' -> a - b
-            'p' -> (a / 100) * b
-            'm' -> a % b
-            '^' -> a.toDouble().pow(b.toDouble()).toFloat()
-            else -> null
-        }
     }
 
     private fun hasPermissions(context: Context, vararg permissions: String): Boolean =
@@ -1882,17 +1561,40 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
             if (cur?.count!! > 0) {
                 while (cur.moveToNext()) {
-                    //TODO: Additional Nickname support
-                    val dName =
+                    contact.contactID =
+                        cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID))
+                    contact.displayName =
                         cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-                            .toLowerCase(skivvy.locale)
-                    val fName = dName.substringBefore(" ")
-                    if (tempContact == dName || tempContact == fName) {
+                    //TODO: Additional Nickname support
+                    //for nicknames
+                    val nickCur: Cursor? = cr.query(
+                        ContactsContract.Data.CONTENT_URI,
+                        null,
+                        ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
+                        arrayOf(
+                            contact.contactID,
+                            ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE
+                        ),
+                        null
+                    )
+                    if (nickCur!!.count > 0) {
+                        var nc = 0
+                        contact.nickName = arrayOfNulls(nickCur.count)
+                        while (nickCur.moveToNext()) {
+                            contact.nickName!![nc] =
+                                nickCur.getString(nickCur.getColumnIndex(ContactsContract.CommonDataKinds.Nickname.NAME))
+                                    ?.toLowerCase(skivvy.locale)
+                            ++nc
+                        }
+                    }
+                    nickCur.close()
+                    val fName = contact.displayName?.substringBefore(" ")
+                    if (tempContact == contact.displayName?.toLowerCase(skivvy.locale) || tempContact == fName?.toLowerCase(
+                            skivvy.locale
+                        ) ||
+                        !contact.nickName.isNullOrEmpty() && contact.nickName!!.contains(tempContact)
+                    ) {
                         this.isContactPresent = true
-                        contact.contactID =
-                            cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID))
-                        contact.displayName =
-                            cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
                         val dpUri =
                             cur.getString(cur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
                         if (dpUri != null) {
@@ -1907,13 +1609,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                             rb.setAntiAlias(true)
                             waitingView(rb)
                         }
-                        val pCur: Cursor? = cr.query(
-                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                            null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                            arrayOf(contact.contactID),
-                            null
-                        )
                         val eCur: Cursor? = cr.query(
                             ContactsContract.CommonDataKinds.Email.CONTENT_URI,
                             null,
@@ -1953,6 +1648,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                             if (cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))
                                     .toInt() > 0
                             ) {
+                                val pCur: Cursor? = cr.query(
+                                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                                    null,
+                                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                                    arrayOf(contact.contactID),
+                                    null
+                                )
                                 pCur!!.moveToFirst()
                                 size = 0
                                 while (pCur.moveToNext()) {
@@ -2007,6 +1709,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                                         )
                                     }
                                 }
+                                pCur.close()
                             } else {
                                 errorView()
                                 speakOut(
@@ -2016,7 +1719,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                                 )
                             }
                         }
-                        pCur!!.close()
+                        eCur.close()
                         break
                     } else this.isContactPresent = false
                 }
@@ -2105,6 +1808,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         loading?.startAnimation(normalRotate)
         input?.text = null
         outPut?.text = null
+        feedback?.text = null
         icon?.setImageDrawable(null)
         contact = ContactModel()
         txt = null
@@ -2191,9 +1895,54 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
+    //Handle incoming phone calls
+    private var phoneStateListener: PhoneStateListener? = null
+    private var telephonyManager: TelephonyManager? = null
+    private var lastState: Int? = null
+
+    private fun callStateListener() {
+        telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        phoneStateListener = object : PhoneStateListener() {
+            override fun onCallStateChanged(state: Int, number: String) {
+                when (state) {
+                    lastState -> return
+                    TelephonyManager.CALL_STATE_RINGING -> {
+                        speakOut("Incoming $number")
+                        successView(null)
+                    }
+                    TelephonyManager.CALL_STATE_OFFHOOK -> {
+                        waitingView(null)
+                        if (lastState == TelephonyManager.CALL_STATE_RINGING) {
+                            speakOut("Speaking to $number")
+                        } else {
+                            speakOut("Connected with $number")
+                        }
+                    }
+                    TelephonyManager.CALL_STATE_IDLE -> {
+                        if (lastState == TelephonyManager.CALL_STATE_RINGING) {
+                            speakOut("You missed a call from $number")
+                            errorView()
+                        } else if (lastState == TelephonyManager.CALL_STATE_OFFHOOK) {
+                            speakOut("Call ended $number")
+                            successView(null)
+                        }
+                    }
+                }
+                lastState = state
+            }
+        }
+        // Register the listener with the telephony manager
+        // Listen for changes to the device call state.
+        telephonyManager!!.listen(
+            phoneStateListener,
+            PhoneStateListener.LISTEN_CALL_STATE
+        )
+    }
+
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
+
     private fun authStateAction(code: Int) {
         executor = ContextCompat.getMainExecutor(context)
         promptInfo = BiometricPrompt.PromptInfo.Builder()
@@ -2230,42 +1979,5 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     speakOut(getString(verification_unsuccessfull))
                 }
             })
-    }
-
-    override fun onReadyForSpeech(p0: Bundle?) {
-        Log.d("ctts", "ready")
-    }
-
-    override fun onRmsChanged(p0: Float) {
-        Log.d("ctts", "rmschange")
-    }
-
-    override fun onBufferReceived(p0: ByteArray?) {
-        Log.d("ctts", "received")
-        speakOut(p0.toString())
-    }
-
-    override fun onPartialResults(p0: Bundle?) {
-        Log.d("ctts", "partialres")
-    }
-
-    override fun onEvent(p0: Int, p1: Bundle?) {
-        Log.d("ctts", "event")
-    }
-
-    override fun onBeginningOfSpeech() {
-        Log.d("ctts", "begin")
-    }
-
-    override fun onEndOfSpeech() {
-        Log.d("ctts", "end")
-    }
-
-    override fun onError(p0: Int) {
-        Log.d("ctts", "error")
-    }
-
-    override fun onResults(p0: Bundle?) {
-        Log.d("ctts", "results")
     }
 }

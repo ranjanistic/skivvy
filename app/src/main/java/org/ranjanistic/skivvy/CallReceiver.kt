@@ -30,13 +30,7 @@ class CallReceiver : PhoneCallReceiver(){
         return this.endTime!!
     }
 
-    private val mainActivity:MainActivity = MainActivity()
     override fun onIncomingCallReceived(ctx: Context?, number: String?, start: Date?) {
-        if(mainActivity.isCreated){
-            mainActivity.setOutput("Incoming $number")
-            mainActivity.successView(null)
-            mainActivity.setInput(start.toString())
-        }
     }
     override fun onIncomingCallAnswered(ctx: Context?, number: String?, start: Date?) {
         this.isIncomingCallAnswered = true
@@ -58,11 +52,6 @@ class CallReceiver : PhoneCallReceiver(){
     }
 
     override fun onOutgoingCallEnded(ctx: Context?, number: String?, start: Date?, end: Date?) {
-        if(mainActivity.isCreated){
-            mainActivity.setOutput("Last called $number")
-            mainActivity.successView(null)
-            mainActivity.setInput(start.toString())
-        }
         this.isOutgoingCallEnded = true
         this.phoneNumber = number
         this.startTime = start.toString()

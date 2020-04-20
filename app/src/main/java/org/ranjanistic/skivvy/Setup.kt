@@ -1,20 +1,16 @@
 package org.ranjanistic.skivvy
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.view.View
-import android.view.View.inflate
 import android.view.animation.Animation
-import android.view.animation.AnimationUtils
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
@@ -22,7 +18,6 @@ import java.util.concurrent.Executor
 
 class Setup : AppCompatActivity() {
     lateinit var skivvy: Skivvy
-    private var scaleAnimation: Animation? = null
     private lateinit var vocalLayout:LinearLayout
     private lateinit var settingIcon: ImageView
     private lateinit var training: Switch
@@ -33,6 +28,7 @@ class Setup : AppCompatActivity() {
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
+    private lateinit var context: Context
     override fun onBackPressed() {
         super.onBackPressed()
         overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
@@ -41,6 +37,7 @@ class Setup : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         skivvy = this.application as Skivvy
+        context = this
         setContentView(R.layout.activity_setup)
         settingIcon = findViewById(R.id.settingIcon)
         training = findViewById(R.id.trainingModeBtn)
@@ -107,13 +104,13 @@ class Setup : AppCompatActivity() {
                 biometricPrompt.authenticate(promptInfo)
             } else {
                 Snackbar.make(findViewById(R.id.setup_layout),"Confirm to reset and disable vocal authentication?",5000)
-                    .setTextColor(resources.getColor(R.color.dull_white))
-                    .setBackgroundTint(resources.getColor(R.color.dark_red))
-                    .setAction("Reset") {
+                    .setTextColor(ContextCompat.getColor(context,R.color.dull_white))
+                    .setBackgroundTint(ContextCompat.getColor(context,R.color.dark_red))
+                    .setAction(getString(R.string.reset)) {
                         skivvy.setVoiceKeyPhrase(null)
                         defaultVoiceAuthUIState()
                     }
-                    .setActionTextColor(resources.getColor(R.color.colorPrimary))
+                    .setActionTextColor(ContextCompat.getColor(context,R.color.colorPrimary))
                     .show()
             }
         }
@@ -146,12 +143,12 @@ class Setup : AppCompatActivity() {
                         speakOut("'$text' is the phrase.")
                         if(!skivvy.getBiometricStatus() && skivvy.checkBioMetrics()){
                             Snackbar.make(findViewById(R.id.setup_layout),getString(R.string.biometric_recommendation_passphrase_enabling),25000)
-                                .setTextColor(resources.getColor(R.color.pitch_white))
-                                .setBackgroundTint(resources.getColor(R.color.charcoal))
+                                .setTextColor(ContextCompat.getColor(context,R.color.pitch_white))
+                                .setBackgroundTint(ContextCompat.getColor(context,R.color.charcoal))
                                 .setAction("Enable") {
                                     setBiometricsStatus(true)
                                 }
-                                .setActionTextColor(resources.getColor(R.color.colorPrimaryDark))
+                                .setActionTextColor(ContextCompat.getColor(context,R.color.colorPrimaryDark))
                                 .show()
                         }
                     } else {
@@ -159,12 +156,12 @@ class Setup : AppCompatActivity() {
                         defaultVoiceAuthUIState()
                         speakOut(getString(R.string.confirmation_phrase_didnt_match))
                         Snackbar.make(findViewById(R.id.setup_layout),getString(R.string.confirmation_phrase_didnt_match),10000)
-                            .setTextColor(resources.getColor(R.color.dull_white))
-                            .setBackgroundTint(resources.getColor(R.color.dark_red))
+                            .setTextColor(ContextCompat.getColor(context,R.color.dull_white))
+                            .setBackgroundTint(ContextCompat.getColor(context,R.color.dark_red))
                             .setAction("Try again") {
                                 startVoiceRecIntent(skivvy.CODE_VOICE_AUTH_INIT,getString(R.string.tell_new_secret_phrase))
                             }
-                            .setActionTextColor(resources.getColor(R.color.colorPrimary))
+                            .setActionTextColor(ContextCompat.getColor(context,R.color.colorPrimary))
                             .show()
                     }
                 }
@@ -185,10 +182,6 @@ class Setup : AppCompatActivity() {
             setBiometricsStatus(false)
         }
         super.onStart()
-    }
-
-    private fun startFinishAnimation() {
-        settingIcon.startAnimation(scaleAnimation)
     }
 
     private fun authSetup(code:Int) {
@@ -310,8 +303,8 @@ class Setup : AppCompatActivity() {
                 "Error in speech recognition.",
                 Snackbar.LENGTH_SHORT
             )
-                .setBackgroundTint(resources.getColor(R.color.dark_red))
-                .setTextColor(resources.getColor(R.color.dull_white))
+                .setBackgroundTint(ContextCompat.getColor(context,R.color.dark_red))
+                .setTextColor(ContextCompat.getColor(context,R.color.dull_white))
         }
     }
     private fun speakOut(text: String) {

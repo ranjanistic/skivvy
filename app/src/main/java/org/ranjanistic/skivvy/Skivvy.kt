@@ -20,7 +20,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 
-class Skivvy : Application() {
+open class Skivvy : Application() {
     //permission codes
     val CODE_ALL_PERMISSIONS = 999
     val CODE_CALL_REQUEST = 1000
@@ -72,8 +72,9 @@ class Skivvy : Application() {
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
     val PREF_KEY_TRAINING = "training"
     val FINISH_ACTION = "finish"
+
     val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","sqrt","cbrt","exp")
-    val operators: Array<Char> = arrayOf('^', 'p', '/', '*', 'm', '-', '+')
+    val operators = arrayOf("^", "p", "/", "*", "m", "-", "+")
 
     var tts: TextToSpeech? = null
     var packageData:PackageData = PackageData()
