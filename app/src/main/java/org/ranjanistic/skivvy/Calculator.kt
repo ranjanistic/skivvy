@@ -1,7 +1,5 @@
 package org.ranjanistic.skivvy
 
-import android.content.Context
-import android.util.Log
 import kotlin.math.*
 
 @ExperimentalStdlibApi
@@ -10,30 +8,30 @@ class Calculator(var skivvy: Skivvy) {
         var finalExpression = expression
         val toBeRemoved = arrayOf(
             " ", "calculate", "compute", "solve", "whatis",
-            "what's","tellme","thevalueof", "valueof", "of"
+            "what's", "tellme", "thevalueof", "valueof"
         )
         val toBePercented = arrayOf("%of", "percentof")
         val toBeModded = arrayOf("%", "mod")
         val toBeLogged = arrayOf("naturallogof", "naturallog")
         val toBeLog = arrayOf("logof")
         val toBeMultiplied = arrayOf("x", "multipliedby", "into", "and")
-        val toBeDivided = arrayOf("dividedby", "by", "upon", "over","÷","divideby","divide")
-        val toBeAdded = arrayOf("add","plus", "or")
-        val toBeSubtracted = arrayOf("minus", "negative","subtract")
+        val toBeDivided = arrayOf("dividedby", "by", "upon", "over", "÷", "divideby", "divide")
+        val toBeAdded = arrayOf("add", "plus", "or")
+        val toBeSubtracted = arrayOf("minus", "negative", "subtract")
         val toBeNumerized = arrayOf("hundred")
         val toBePowered = arrayOf(
             "raisedtothepowerof", "raisetothepowerof", "raisedtothepower", "raisetothepower",
             "tothepowerof", "tothepower", "raisedto", "raiseto", "raised", "raise", "kipower"
         )
-        val toBeCuberooted = arrayOf("cuberoot","thirdroot")
-        val toBeRooted = arrayOf("squareroot","root","secondroot")
+        val toBeCuberooted = arrayOf("cuberoot", "thirdroot")
+        val toBeRooted = arrayOf("squareroot", "root", "secondroot")
         val toBeSquared = arrayOf("square")
         val toBeCubed = arrayOf("cube")
 
         val formatArrays = arrayOf(
             toBeRemoved, toBePercented, toBeModded, toBeLogged, toBeLog,
             toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBeNumerized
-            , toBePowered,  toBeCuberooted, toBeRooted,toBeSquared, toBeCubed
+            , toBePowered, toBeCuberooted, toBeRooted, toBeSquared, toBeCubed
         )
         val replacingArray =
             arrayOf(
@@ -55,7 +53,7 @@ class Calculator(var skivvy: Skivvy) {
         return finalExpression
     }
 
-    fun totalOperatorsInExpression(expression: String):Int{
+    fun totalOperatorsInExpression(expression: String): Int {
         var expIndex = 0
         var totalOps = 0
         while (expIndex < expression.length) {
@@ -77,7 +75,7 @@ class Calculator(var skivvy: Skivvy) {
      *  @param expression: the expression string
      *  @return the array of positions of operators in given string
      */
-    fun positionsOfOperatorsInExpression(expression: String):Array<Int?>{
+    fun positionsOfOperatorsInExpression(expression: String): Array<Int?> {
         var expIndex = 0
         val expOperatorPos = arrayOfNulls<Int>(totalOperatorsInExpression(expression))
         var expOpIndex = 0
@@ -94,6 +92,7 @@ class Calculator(var skivvy: Skivvy) {
         }
         return expOperatorPos
     }
+
     /**
      * The following block extracts values from given expression, char by char, and stores them
      * in an array of Strings, by grouping digits in form of numbers at the same index as string,
@@ -107,7 +106,7 @@ class Calculator(var skivvy: Skivvy) {
      *  @param sizeOfArray: takes size of segmented array to be formed (2*total operators+1)
      *  @return the segmented array of expression
      */
-    fun segmentizeExpression(expression:String,sizeOfArray:Int):Array<String?>?{
+    fun segmentizeExpression(expression: String, sizeOfArray: Int): Array<String?>? {
         val arrayOfExpression = arrayOfNulls<String>(sizeOfArray)
         val expOperatorPos = positionsOfOperatorsInExpression(expression)
         var expArrayIndex = 0
@@ -154,7 +153,7 @@ class Calculator(var skivvy: Skivvy) {
         return arrayOfExpression
     }
 
-    fun evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression: Array<String?>):Array<String?>?{
+    fun evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression: Array<String?>): Array<String?>? {
         var fin = 0
         while (fin < arrayOfExpression.size) {
             if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {
@@ -192,7 +191,16 @@ class Calculator(var skivvy: Skivvy) {
                 }
                 //TODO: numbers before functions at same index to be multiplied(like '12cos60' to '12*cos60')
                 arrayOfExpression[fin] = this.functionOperate(arrayOfExpression[fin]!!)
-                if (!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)) {
+                if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {
+                    if(arrayOfExpression[fin]!!.contains('E',false)){
+                        val indexE = arrayOfExpression[fin]!!.indexOf('E')
+                        if(arrayOfExpression[fin]?.get(indexE+1) == '-'){
+                            arrayOfExpression[fin]!!.replace(skivvy.numberPattern,"0")
+                        } else {
+                            arrayOfExpression[fin]!!.replace(skivvy.numberPattern,"1/0")
+                        }
+                    } else return null
+                } else if(!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)){
                     return null
                 }
             }
@@ -205,17 +213,18 @@ class Calculator(var skivvy: Skivvy) {
      * Checks if expression doesn't have any illegal characters,
      * and returns true if operatable.
      */
-    fun isExpressionOperatable(expression: String):Boolean{
+    fun isExpressionOperatable(expression: String): Boolean {
         var localExp = expression
-        if(!localExp.contains(skivvy.numberPattern)){
+        if (!localExp.contains(skivvy.numberPattern)) {
             return false
         } else {
             localExp = localExp.replace(skivvy.numberPattern, "")
         }
         val validCharsOfExpression = arrayOf(".")
-        val operatorsFunctionsNumbers = arrayOf(skivvy.operators,skivvy.mathFunctions,validCharsOfExpression)
+        val operatorsFunctionsNumbers =
+            arrayOf(skivvy.operators, skivvy.mathFunctions, validCharsOfExpression)
         var kkk = 0
-        while(kkk<operatorsFunctionsNumbers.size) {
+        while (kkk < operatorsFunctionsNumbers.size) {
             var kk = 0
             while (kk < operatorsFunctionsNumbers[kkk].size) {
                 localExp = localExp.replace(operatorsFunctionsNumbers[kkk][kk], "")
@@ -223,10 +232,10 @@ class Calculator(var skivvy: Skivvy) {
             }
             ++kkk
         }
-        return localExp ==""
+        return localExp == ""
     }
 
-    fun isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression: Array<String?>):Boolean{
+    fun isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression: Array<String?>): Boolean {
         var fci = 0
         while (fci < arrayOfExpression.size) {
             if (arrayOfExpression[fci] != null) {
@@ -242,6 +251,7 @@ class Calculator(var skivvy: Skivvy) {
         }
         return true
     }
+
     /**
      * Considering having the new array of strings, the proper segmented
      * expression as
@@ -250,13 +260,13 @@ class Calculator(var skivvy: Skivvy) {
      * the following block of code will evaluate the expression according to the BODMAS rule.
      * @return the final answer solved at index = 0 of the given array of expression.
      */
-    fun expressionCalculation(arrayOfExpression: Array<String?>):String{
+    fun expressionCalculation(arrayOfExpression: Array<String?>): String {
         var nullPosCount = 0
         var opIndex = 0
         while (opIndex < skivvy.operators.size) {
             var opPos = 1
             while (opPos < arrayOfExpression.size - nullPosCount) {
-                if (arrayOfExpression[opPos] == skivvy.operators[opIndex].toString()) {
+                if (arrayOfExpression[opPos] == skivvy.operators[opIndex]) {
                     if (arrayOfExpression[opPos] == "-") {
                         arrayOfExpression[opPos + 1] =
                             (0 - arrayOfExpression[opPos + 1]!!.toFloat()).toString()
@@ -274,7 +284,7 @@ class Calculator(var skivvy: Skivvy) {
                     }
                     nullPosCount += 2
                     if (arrayOfExpression.size > 3 &&
-                        arrayOfExpression[opPos] == skivvy.operators[opIndex].toString()
+                        arrayOfExpression[opPos] == skivvy.operators[opIndex]
                     ) {    //if replacing operator is same as the replaced one
                         opPos -= 2            //index two indices back so that it returns at same position again
                     }
@@ -283,12 +293,7 @@ class Calculator(var skivvy: Skivvy) {
             }
             ++opIndex       //next operator
         }
-        //final result stored at index = 0
-        return if (arrayOfExpression[0]!!.toFloat() - arrayOfExpression[0]!!.toFloat().toInt() == 0F) {
-            arrayOfExpression[0]!!.toFloat().toInt().toString()
-        } else {
-            arrayOfExpression[0]!!
-        }
+        return formatToProperValue(arrayOfExpression[0].toString())     //final result stored at index = 0
     }
 
     fun operate(a: Float, operator: Char, b: Float): Float? {
@@ -303,6 +308,7 @@ class Calculator(var skivvy: Skivvy) {
             else -> null
         }
     }
+
     fun functionOperate(func: String): String? {
         return when {
             func.contains("sin") -> sin(
@@ -333,7 +339,7 @@ class Calculator(var skivvy: Skivvy) {
                 (func.replace(skivvy.textPattern, "").toFloat().pow(0.5F)).toString()
             }
             func.contains("cbrt") -> {
-                (func.replace(skivvy.textPattern, "").toFloat().pow(1/3)).toString()
+                (func.replace(skivvy.textPattern, "").toFloat().pow(1 / 3)).toString()
             }
             func.contains("exp") -> {
                 (exp(func.replace(skivvy.textPattern, "").toFloat())).toString()
@@ -342,4 +348,13 @@ class Calculator(var skivvy: Skivvy) {
         }
     }
 
+    private fun isFloat(value: String): Boolean {
+        return value.toFloat() - value.toFloat().toInt() != 0F
+    }
+
+    fun formatToProperValue(value: String): String {
+        return if (isFloat(value)) {
+            value.toFloat().toString()
+        } else value.toFloat().toInt().toString()
+    }
 }

@@ -7,6 +7,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.ContentResolver
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.database.Cursor
@@ -16,6 +17,7 @@ import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
+import androidx.core.app.ActivityCompat
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
@@ -27,16 +29,20 @@ open class Skivvy : Application() {
     val CODE_STORAGE_REQUEST = 1001
     val CODE_CONTACTS_REQUEST = 1002
     val CODE_SMS_REQUEST = 1003
+    val CODE_CALL_LOG_REQUEST = 1004
+    val CODE_BODY_SENSOR_REQUEST = 1005
     val permissions = arrayOf(
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
         Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.WRITE_CONTACTS,
         Manifest.permission.READ_CONTACTS,
         Manifest.permission.CALL_PHONE,
+        Manifest.permission.READ_CALL_LOG,
         Manifest.permission.ACCESS_WIFI_STATE,
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.SEND_SMS,
         Manifest.permission.READ_SMS,
+        Manifest.permission.CAMERA,
         Manifest.permission.BODY_SENSORS
     )
 
@@ -54,15 +60,16 @@ open class Skivvy : Application() {
     val CODE_EMAIL_CONF = 13
     val CODE_EMAIL_CONTENT = 14
     val CODE_SMS_CONF = 15
-    val CODE_WHATSAPP_ACTION = 151
     val CODE_TEXT_MESSAGE_BODY = 16
-    val CODE_VOICE_AUTH_INIT = 17
-    val CODE_VOICE_AUTH_CONFIRM = 18
-    val CODE_BIOMETRIC_CONFIRM = 19
-    //command codes
-    val CODE_LOCATION_SERVICE = 100
-    val CODE_LOCK_SCREEN = 101
+    val CODE_WHATSAPP_ACTION = 17
+    val CODE_VOICE_AUTH_INIT = 18
+    val CODE_VOICE_AUTH_CONFIRM = 19
+    val CODE_BIOMETRIC_CONFIRM = 20
 
+    val CODE_LOCATION_SERVICE = 100
+//    val CODE_LOCK_SCREEN = 101
+    val CODE_DEVICE_ADMIN = 102
+    val nonVocalRequestCodes = intArrayOf(CODE_LOCATION_SERVICE,CODE_DEVICE_ADMIN)
     //default strings and arrays
     val PREF_HEAD_SECURITY = "security"
     val PREF_KEY_BIOMETRIC = "fingerprint"
@@ -71,26 +78,28 @@ open class Skivvy : Application() {
     val PREF_HEAD_VOICE = "voice"
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
     val PREF_KEY_TRAINING = "training"
+    val PREF_HEAD_CALC = "calculator"
+    val PREF_KEY_LAST_CALC = "lastResult"
     val FINISH_ACTION = "finish"
-
     val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","sqrt","cbrt","exp")
     val operators = arrayOf("^", "p", "/", "*", "m", "-", "+")
 
+    //default objects
     var tts: TextToSpeech? = null
-    var packageData:PackageData = PackageData()
+    var packageDataManager:PackageDataManager = PackageDataManager()
     var contactData:ContactData = ContactData()
 
     override fun onCreate() {
         super.onCreate()
+        GlobalScope.launch {    //Long running task, getting all packages
+            getLocalPackages()
+        }
         this.tts = TextToSpeech(this, TextToSpeech.OnInitListener {
             if (it == TextToSpeech.SUCCESS) {
                 this.tts!!.language = this.locale
             } else
                 Toast.makeText(this, "Error in speaking", Toast.LENGTH_SHORT).show()
         })
-        GlobalScope.launch {    //Long running task, getting all packages
-            getLocalPackages()
-        }
         /*
         GlobalScope.launch {    //Long running task, getting all contacts
             getLocalContacts()
@@ -101,27 +110,24 @@ open class Skivvy : Application() {
 
     //gets all packages and respective details available on device
     private fun getLocalPackages() {
-        var counter = 0
+        var count = 0
         val pm: PackageManager = packageManager
         val packages: List<ApplicationInfo> =
             pm.getInstalledApplications(PackageManager.GET_META_DATA)
-        packageData.setTotalPackages(packages.size)
-        packageData.setPackageInitials(arrayOfNulls(packageData.getTotalPackages()),
-            arrayOfNulls(packageData.getTotalPackages()),arrayOfNulls(packageData.getTotalPackages()),
-            arrayOfNulls(packageData.getTotalPackages())
-        )
+        this.packageDataManager.setTotalPackages(packages.size)
+        val packageData = PackageDataManager.PackageData(this.packageDataManager.getTotalPackages())
         for (packageInfo in packages) {
             if (pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
-                packageData.setPackageDetails(counter,pm.getApplicationLabel(packageInfo).toString().toLowerCase(this.locale),
-                    packageInfo.packageName.toLowerCase(this.locale),
-                    pm.getLaunchIntentForPackage(packageInfo.packageName)!!,
-                    pm.getApplicationIcon(packageInfo)
-                )
-                ++counter
-            } else {
-                packageData.setTotalPackages(packageData.getTotalPackages()-1)                    //removing un-launchable packages
+                packageData.appName[count] = pm.getApplicationLabel(packageInfo).toString().toLowerCase(this.locale)
+                packageData.appPackage[count] = packageInfo.packageName.toLowerCase(this.locale)
+                packageData.appIntent[count] = pm.getLaunchIntentForPackage(packageInfo.packageName)!!
+                packageData.appIcon[count] = pm.getApplicationIcon(packageInfo)
+                ++count
+            } else {                    //removing un-launchable packages
+                this.packageDataManager.setTotalPackages(this.packageDataManager.getTotalPackages()-1)
             }
         }
+        this.packageDataManager.setPackagesDetail(packageData)
     }
 
     private fun getLocalContacts(){
@@ -274,20 +280,18 @@ open class Skivvy : Application() {
         getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_VOCAL_AUTH, voiceAuthStatus).apply()
     }
-    fun setVoiceKeyPhrase(phrase: String?){
-        getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
-            .putString(this.PREF_KEY_TRAINING, phrase).apply()
-    }
     fun getVoiceKeyPhrase():String?{
         return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
             .getString(this.PREF_KEY_TRAINING,null)
     }
-
+    fun setVoiceKeyPhrase(phrase: String?){
+        getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
+            .putString(this.PREF_KEY_TRAINING, phrase).apply()
+    }
     fun getTrainingStatus(): Boolean {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_TRAINING, false)
     }
-
     fun checkBioMetrics(): Boolean {
         val biometricManager = BiometricManager.from(this)
         return when (biometricManager.canAuthenticate()) {
@@ -295,7 +299,6 @@ open class Skivvy : Application() {
             else -> false
         }
     }
-
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelID = resources.getStringArray(R.array.notification_channel)[0]
@@ -308,4 +311,8 @@ open class Skivvy : Application() {
             notificationManager.createNotificationChannel(mChannel)
         }
     }
+    fun hasPermissions(context: Context): Boolean =
+        this.permissions.all {
+            ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
 }
