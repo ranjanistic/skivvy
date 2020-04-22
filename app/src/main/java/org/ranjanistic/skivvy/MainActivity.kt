@@ -3,11 +3,12 @@ package org.ranjanistic.skivvy
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.PendingIntent
 import android.app.admin.DevicePolicyManager
 import android.bluetooth.BluetoothAdapter
-import android.content.*
-import android.content.pm.PackageInstaller
+import android.content.ComponentName
+import android.content.ContentResolver
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
@@ -31,7 +32,6 @@ import android.telephony.TelephonyManager
 import android.text.format.DateFormat
 import android.util.Log
 import android.view.KeyEvent
-import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.ImageButton
@@ -53,58 +53,46 @@ import java.util.concurrent.Executor
 
 @ExperimentalStdlibApi
 open class MainActivity : AppCompatActivity() {
+
     lateinit var skivvy: Skivvy
-    private var outPut: TextView? = null
-    fun setOutput(text: String) {
-        this.outPut!!.text = text
-    }
 
-    private var input: TextView? = null
-    fun setInput(text: String) {
-        this.input!!.text = text
-    }
+    private lateinit var outPut: TextView
+    private lateinit var input: TextView
+    private lateinit var greet: TextView
+    private lateinit var feedback: TextView
 
-    private var feedback: TextView? = null
-    private var focusRotate: Animation? = null
-    private var normalRotate: Animation? = null
-    private var rotateSlow: Animation? = null
-    private var exitAnimation: Animation? = null
-    private var fadeAnimation: Animation? = null
-    private var bubbleAnimation: Animation? = null
-    private var fallAnimation: Animation? = null
-    private var riseAnimation: Animation? = null
-    private var extendAnimation: Animation? = null
-    private var pillExitAnim: Animation? = null
-    private var pillEnterAnim: Animation? = null
-    private var fadeOffAnimation: Animation? = null
-    private var fadeOnAnimation: Animation? = null
-    private var translateAnimation: Animation? = null
-    private var receiver: ImageButton? = null
+    private lateinit var focusDeFocusRotate: Animation
+    private lateinit var zoomInOutRotate: Animation
+    private lateinit var focusRotate: Animation
+    private lateinit var zoomInRotate: Animation
+    private lateinit var fadeOnFadeOff: Animation
+    private lateinit var waveDamped: Animation
+    private lateinit var fallDown: Animation
+    private lateinit var riseUp: Animation
+    private lateinit var extendDown: Animation
+    private lateinit var rotateRevolveToRight: Animation
+    private lateinit var revolveRotateToLeft: Animation
+    private lateinit var fadeOff: Animation
+    private lateinit var fadeOn: Animation
+
+    private lateinit var receiver: ImageButton
     private lateinit var setting: ImageButton
     private lateinit var settingBack: ImageView
-    private var greet: TextView? = null
-    private var tempPackageIndex: Int = 0
-    private var tempPhoneNumberIndex: Int = 0
-    private var tempEmailIndex: Int = 0
-    private var loading: ImageView? = null
-    private var outputStat: ImageView? = null
-    private var icon: ImageView? = null
-    private var txt: String? = null
-    private var tempPhone: String? = null
-    private var tempMail: String? = null
-    private var tempMailSubject: String? = null
-    private var tempMailBody: String? = null
-    private var tempTextBody: String? = null
-    private var tempContact: String? = null
-    private var tempContactIndex: Int = 0
-    private var tempContactCode: Int? = null
+    private lateinit var loading: ImageView
     private lateinit var backfall: ImageView
+    private lateinit var icon: ImageView
+
+    private var txt: String? = null
+
     private lateinit var context: Context
-    private var deviceManger: DevicePolicyManager? = null
-    private var compName: ComponentName? = null
-    private var contact: ContactModel = ContactModel()
     private lateinit var calculator: Calculator
+
+    private lateinit var deviceManager: DevicePolicyManager
+    private lateinit var compName: ComponentName
     private lateinit var audioManager: AudioManager
+
+    private var contact: ContactModel = ContactModel()
+    private var temp: Temporary = Temporary()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -115,8 +103,8 @@ open class MainActivity : AppCompatActivity() {
         loadDefaultAnimations()
         normalView()
         setListeners()
-        outPut?.text = getString(im_ready)
-        input?.text = getString(tap_the_button)
+        outPut.text = getString(im_ready)
+        input.text = getString(tap_the_button)
     }
 
     private fun setViewAndDefaults() {
@@ -130,50 +118,53 @@ open class MainActivity : AppCompatActivity() {
         receiver = findViewById(R.id.receiverBtn)
         greet = findViewById(R.id.greeting)
         backfall = findViewById(R.id.backdrop)
-        outputStat = findViewById(R.id.outputStatusView)
-        outputStat!!.visibility = View.INVISIBLE
         audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        deviceManager =
+            applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        compName = ComponentName(context, Administrator::class.java)
         calculator = Calculator(skivvy)
     }
 
     private fun loadDefaultAnimations() {
-        fallAnimation = AnimationUtils.loadAnimation(context, R.anim.fall_back)
-        backfall.startAnimation(fallAnimation)
-        riseAnimation = AnimationUtils.loadAnimation(context, R.anim.rise_back)
-        bubbleAnimation = AnimationUtils.loadAnimation(context, R.anim.bubble_wave)
-        receiver!!.startAnimation(bubbleAnimation)
-        greet!!.startAnimation(bubbleAnimation)
-        normalRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_emerge_demerge)
-        focusRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_focus)
-        rotateSlow = AnimationUtils.loadAnimation(context, R.anim.rotate_slow)
-        fadeAnimation = AnimationUtils.loadAnimation(context, R.anim.fade)
-        exitAnimation = AnimationUtils.loadAnimation(context, R.anim.rotate_exit)
-        fadeOffAnimation = AnimationUtils.loadAnimation(context, R.anim.fade_off)
-        fadeOnAnimation = AnimationUtils.loadAnimation(context, R.anim.fade_on)
-        pillEnterAnim = AnimationUtils.loadAnimation(context, R.anim.pill_slide_left)
-        setting.startAnimation(pillEnterAnim)
-        pillExitAnim = AnimationUtils.loadAnimation(context, R.anim.pill_slide_right)
-        extendAnimation = AnimationUtils.loadAnimation(context, R.anim.extend_back)
+        fallDown = AnimationUtils.loadAnimation(context, R.anim.fall_back)
+        backfall.startAnimation(fallDown)
+        riseUp = AnimationUtils.loadAnimation(context, R.anim.rise_back)
+        waveDamped = AnimationUtils.loadAnimation(context, R.anim.bubble_wave)
+        receiver.startAnimation(waveDamped)
+        greet.startAnimation(waveDamped)
+        zoomInOutRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_emerge_demerge)
+        focusDeFocusRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_focus)
+        focusRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_slow)
+        fadeOnFadeOff = AnimationUtils.loadAnimation(context, R.anim.fade)
+        zoomInRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_exit)
+        fadeOff = AnimationUtils.loadAnimation(context, R.anim.fade_off)
+        fadeOn = AnimationUtils.loadAnimation(context, R.anim.fade_on)
+        revolveRotateToLeft = AnimationUtils.loadAnimation(context, R.anim.pill_slide_left)
+        setting.startAnimation(revolveRotateToLeft)
+        rotateRevolveToRight = AnimationUtils.loadAnimation(context, R.anim.pill_slide_right)
+        extendDown = AnimationUtils.loadAnimation(context, R.anim.extend_back)
     }
 
     private fun startSettingAnimate() {
-        setting.startAnimation(pillExitAnim)
-        backfall.startAnimation(extendAnimation)
-        greet!!.startAnimation(fadeOffAnimation)
-        outPut!!.startAnimation(fadeOffAnimation)
-        receiver!!.startAnimation(fadeOffAnimation)
-        input!!.startAnimation(fadeOffAnimation)
-        settingBack.startAnimation(fadeOffAnimation)
+        setting.startAnimation(rotateRevolveToRight)
+        backfall.startAnimation(extendDown)
+        greet.startAnimation(fadeOff)
+        outPut.startAnimation(fadeOff)
+        receiver.startAnimation(fadeOff)
+        input.startAnimation(fadeOff)
+        settingBack.startAnimation(fadeOff)
     }
 
     private fun startResumeAnimate() {
-        setting.startAnimation(pillEnterAnim)
-        backfall.startAnimation(riseAnimation)
-        greet!!.startAnimation(fadeOnAnimation)
-        outPut!!.startAnimation(fadeOnAnimation)
-        receiver!!.startAnimation(fadeOnAnimation)
-        input!!.startAnimation(fadeOnAnimation)
-        settingBack.startAnimation(fadeOnAnimation)
+        greet.startAnimation(fadeOn)
+        receiver.startAnimation(fadeOn)
+        greet.startAnimation(waveDamped)
+        receiver.startAnimation(waveDamped)
+        setting.startAnimation(revolveRotateToLeft)
+        backfall.startAnimation(riseUp)
+        outPut.startAnimation(fadeOn)
+        input.startAnimation(fadeOn)
+        settingBack.startAnimation(fadeOn)
     }
 
     private fun setListeners() {
@@ -181,12 +172,12 @@ open class MainActivity : AppCompatActivity() {
         setting.setOnClickListener {
             startSettingAnimate()
         }
-        receiver?.setOnClickListener {
+        receiver.setOnClickListener {
             speakOut("")
             normalView()
             startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
         }
-        pillExitAnim!!.setAnimationListener(object : Animation.AnimationListener {
+        extendDown.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationEnd(p0: Animation?) {
                 startActivity(Intent(context, Setup::class.java))
                 overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
@@ -204,12 +195,12 @@ open class MainActivity : AppCompatActivity() {
                 TextToSpeech.SUCCESS -> {
                     when (skivvy.tts!!.setLanguage(skivvy.locale)) {
                         TextToSpeech.LANG_MISSING_DATA,
-                        TextToSpeech.LANG_NOT_SUPPORTED -> outPut!!.text = getString(
+                        TextToSpeech.LANG_NOT_SUPPORTED -> outPut.text = getString(
                             language_not_supported
                         )
                     }
                 }
-                else -> outPut!!.text = getString(output_error)
+                else -> outPut.text = getString(output_error)
             }
         })
     }
@@ -237,9 +228,9 @@ open class MainActivity : AppCompatActivity() {
                                 skivvy.CODE_CALL_CONF
                             )
                         }
-                        tempPhone != null -> {
+                        temp.getPhone() != null -> {
                             speakOut(
-                                getString(should_i_call) + "$tempPhone?",
+                                getString(should_i_call) + "${temp.getPhone()}?",
                                 skivvy.CODE_CALL_CONF
                             )
                         }
@@ -248,7 +239,7 @@ open class MainActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    tempPhone = null
+                    temp.setPhone(null)
                     errorView()
                     speakOut(getString(call_permit_denied))
                 }
@@ -263,9 +254,9 @@ open class MainActivity : AppCompatActivity() {
                                 skivvy.CODE_SMS_CONF
                             )
                         }
-                        tempPhone != null -> {
+                        temp.getPhone() != null -> {
                             speakOut(
-                                getString(should_i_text) + "$tempPhone?",
+                                getString(should_i_text) + "${temp.getPhone()}?",
                                 skivvy.CODE_SMS_CONF
                             )
                         }
@@ -274,7 +265,7 @@ open class MainActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    tempPhone = null
+                    temp.setPhone(null)
                     errorView()
                     speakOut(getString(sms_permit_denied))
                 }
@@ -290,8 +281,8 @@ open class MainActivity : AppCompatActivity() {
             }
             skivvy.CODE_CONTACTS_REQUEST -> {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (tempContact != null && tempContactCode != null) {
-                        contactOps(tempContact!!, tempContactCode!!)
+                    if (temp.getContact() != null && temp.getContactCode() != null) {
+                        contactOps(temp.getContact()!!, temp.getContactCode()!!)
                     } else {
                         speakOut(getString(null_variable_error))
                     }
@@ -304,11 +295,14 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun setFeedback(text: String?) {
-        feedback!!.text = text
+        feedback.text = text
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
+            KeyEvent.KEYCODE_BACK -> {
+                startSettingAnimate()
+            }
             KeyEvent.KEYCODE_HEADSETHOOK -> {
                 speakOut("")
                 normalView()
@@ -342,11 +336,12 @@ open class MainActivity : AppCompatActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
-    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (!skivvy.nonVocalRequestCodes.contains(requestCode)) {
-            if (data == null || data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+            if (data == null || data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)
+                    .toString()
                     .toLowerCase(skivvy.locale) == ""
             ) {
                 normalView()
@@ -354,11 +349,11 @@ open class MainActivity : AppCompatActivity() {
                 return
             }
         }
+        val result = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)!!
+        input.text = result[0]
         when (requestCode) {
             skivvy.CODE_SPEECH_RECORD -> {
-                val temp =
-                    data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
-                        .toLowerCase(skivvy.locale)
+                val temp = result[0].toString().toLowerCase(skivvy.locale)
                 if (txt == null || txt == "") {
                     txt = temp
                 } else {
@@ -374,7 +369,7 @@ open class MainActivity : AppCompatActivity() {
                     }
                 }
                 if (txt != null) {
-                    input?.text = txt
+                    input.text = txt
                     if (!respondToCommand(txt!!)) {
                         if (!directActions(txt!!)) {
                             if (!computerOps(txt!!)) {
@@ -388,7 +383,7 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             skivvy.CODE_VOICE_AUTH_CONFIRM -> {
-                txt = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                txt = result[0].toString()
                     .toLowerCase(skivvy.locale)
                 if (txt != skivvy.getVoiceKeyPhrase()) {
                     if (skivvy.getBiometricStatus()) {
@@ -404,7 +399,7 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             skivvy.CODE_BIOMETRIC_CONFIRM -> {
-                txt = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                txt = result[0].toString()
                     .toLowerCase(skivvy.locale)
                 if (txt != skivvy.getVoiceKeyPhrase()) {
                     if (skivvy.getBiometricStatus()) {
@@ -419,17 +414,34 @@ open class MainActivity : AppCompatActivity() {
                     speakOut(getString(biometric_is_off))
                 }
             }
+            skivvy.CODE_VOLUME_CONFIRM ->{
+                txt = result[0].toString().toLowerCase(skivvy.locale)
+                if(txt!=null){
+                    for (k in resources.getStringArray(R.array.acceptances)) {              //TODO: use this loop to check response everywhere.
+                        if (txt!!.contains(k)) {
+                            setVolume(temp.getVolumePercent())
+                            speakOut("Volume at ${temp.getVolumePercent().toInt()}%")
+                        }
+                    }
+                    for(k in resources.getStringArray(R.array.denials)) {
+                        if(txt!!.contains(k)){
+                            outPut.text = getString(okay)
+                            volumeOps("40%")
+                        }
+                    }
+                }
+            }
             skivvy.CODE_APP_CONF -> {
-                txt = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                txt = result[0].toString()
                     .toLowerCase(skivvy.locale)
                 val pData = skivvy.packageDataManager
                 if (resources.getStringArray(R.array.acceptances).contains(txt)) {
-                    successView(pData.getPackageIcon(tempPackageIndex))
+                    successView(pData.getPackageIcon(temp.getPackageIndex()))
                     speakOut(
-                        getString(opening) + pData.getPackageAppName(tempPackageIndex)!!
+                        getString(opening) + pData.getPackageAppName(temp.getPackageIndex())!!
                             .capitalize(skivvy.locale)
                     )
-                    startActivity(Intent(pData.getPackageIntent(tempPackageIndex)))
+                    startActivity(Intent(pData.getPackageIntent(temp.getPackageIndex())))
                 } else if (resources.getStringArray(R.array.denials).contains(txt) ||
                     resources.getStringArray(R.array.disruptions).contains(txt)
                 ) {
@@ -438,7 +450,7 @@ open class MainActivity : AppCompatActivity() {
                 } else {
                     speakOut(
                         getString(recognize_error) + "\n" + getString(do_u_want_open) + "${pData.getPackageAppName(
-                            tempPackageIndex
+                            temp.getPackageIndex()
                         )!!.capitalize(skivvy.locale)}?",
                         skivvy.CODE_APP_CONF
                     )
@@ -465,7 +477,7 @@ open class MainActivity : AppCompatActivity() {
             }
             skivvy.CODE_CALL_CONF -> {
                 //val cdata = skivvy.contactData
-                txt = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                txt = result[0].toString()
                     .toLowerCase(skivvy.locale)
                 when {
                     resources.getStringArray(R.array.acceptances).contains(txt) -> {
@@ -484,26 +496,27 @@ open class MainActivity : AppCompatActivity() {
                             if (this.isContactPresent) {
                                 successView(null)
                                 callingOps(
-                                    contact.phoneList!![tempPhoneNumberIndex],
-//                                        cdata.getContactNames()[tempContactIndex]!!
+                                    contact.phoneList!![temp.getPhoneIndex()],
+//                                        cdata.getContactNames()[temp.getContactIndex()]!!
                                     contact.displayName!!
                                 )
                             } else {
                                 successView(getDrawable(ic_glossyphone))
-                                callingOps(tempPhone)
-                                tempPhone = null
+                                callingOps(temp.getPhone())
+                                temp.setPhone(null)
                             }
                         }
                     }
                     resources.getStringArray(R.array.denials).contains(txt) ||
                             resources.getStringArray(R.array.disruptions).contains(txt) -> {
-                        tempPhoneNumberIndex += 1
-                        if (this.isContactPresent && tempPhoneNumberIndex < contact.phoneList!!.size && !resources.getStringArray(
+
+                        temp.setPhoneIndex(temp.getPhoneIndex() + 1)
+                        if (this.isContactPresent && temp.getPhoneIndex() < contact.phoneList!!.size && !resources.getStringArray(
                                 R.array.disruptions
                             ).contains(txt)
                         ) {
                             speakOut(
-                                "At ${contact.phoneList!![tempPhoneNumberIndex]}?",
+                                "At ${contact.phoneList!![temp.getPhoneIndex()]}?",
                                 skivvy.CODE_CALL_CONF
                             )
                         } else {
@@ -514,12 +527,12 @@ open class MainActivity : AppCompatActivity() {
                     else -> {
                         if (this.isContactPresent) {
                             speakOut(
-                                getString(recognize_error) + "\n" + getString(should_i_call) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex]}?",
+                                getString(recognize_error) + "\n" + getString(should_i_call) + "${contact.displayName} at ${contact.phoneList!![temp.getPhoneIndex()]}?",
                                 skivvy.CODE_CALL_CONF
                             )
                         } else {
                             speakOut(
-                                getString(recognize_error) + "\n" + getString(should_i_call) + "$tempPhone?",
+                                getString(recognize_error) + "\n" + getString(should_i_call) + "${temp.getPhone()}?",
                                 skivvy.CODE_CALL_CONF
                             )
                         }
@@ -529,7 +542,7 @@ open class MainActivity : AppCompatActivity() {
 
             skivvy.CODE_EMAIL_CONTENT -> {
                 //val cdata = skivvy.contactData
-                txt = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                txt = result[0].toString()
                     .toLowerCase(skivvy.locale)
                 when {
                     resources.getStringArray(R.array.disruptions).contains(txt) -> {
@@ -537,47 +550,47 @@ open class MainActivity : AppCompatActivity() {
                         speakOut(getString(okay))
                     }
                     txt != null -> {
-                        if (tempMailSubject == null) {
-                            tempMailSubject = txt
+                        if (temp.getEmailSubject() == null) {
+                            temp.setEmailSubject(txt)
                             speakOut(
                                 getString(subject_added) + "\n" + getString(what_is_body),
                                 skivvy.CODE_EMAIL_CONTENT
                             )
-                        } else if (tempMailBody == null) {
-                            tempMailBody = txt
+                        } else if (temp.getEmailBody() == null) {
+                            temp.setEmailBody(txt)
                             if (this.isContactPresent) {
                                 if (contact.emailList!!.size == 1) {
                                     speakOut(
                                         getString(body_added) + "\n" +
-//                                                    getString(should_i_email) + "${cdata.getContactNames()[tempContactIndex]} at\n${cdata.getContactEmails()[tempContactIndex]!![tempEmailIndex]}?",
-                                                getString(should_i_email) + "${contact.displayName} at\n${contact.emailList!![tempEmailIndex]}?",
+//                                                    getString(should_i_email) + "${cdata.getContactNames()[temp.getContactIndex()]} at\n${cdata.getContactEmails()[temp.getContactIndex()]!![temp.getEmailIndex()]}?",
+                                                getString(should_i_email) + "${contact.displayName} at\n${contact.emailList!![temp.getEmailIndex()]}?",
                                         skivvy.CODE_EMAIL_CONF
                                     )
                                 } else {
                                     speakOut(
-//                                            getString(body_added) + "I've got ${cdata.getContactEmails()[tempContactIndex]!!.size} addresses of ${cdata.getContactNames()[tempContactIndex]}.\n" +
-//                                                    getString(should_i_email) + "them at\n${cdata.getContactEmails()[tempContactIndex]!![tempEmailIndex]}?",
+//                                            getString(body_added) + "I've got ${cdata.getContactEmails()[temp.getContactIndex()]!!.size} addresses of ${cdata.getContactNames()[temp.getContactIndex()]}.\n" +
+//                                                    getString(should_i_email) + "them at\n${cdata.getContactEmails()[temp.getContactIndex()]!![temp.getEmailIndex()]}?",
                                         getString(body_added) + "I've got ${contact.emailList!!.size} addresses of ${contact.displayName}.\n" +
-                                                getString(should_i_email) + "them at\n${contact.emailList!![tempEmailIndex]}?",
+                                                getString(should_i_email) + "them at\n${contact.emailList!![temp.getEmailIndex()]}?",
                                         skivvy.CODE_EMAIL_CONF
                                     )
                                 }
                             } else {
                                 speakOut(
                                     getString(body_added) + "\n" +
-                                            getString(should_i_email) + "$tempMail?",
+                                            getString(should_i_email) + "${temp.getEmail()}?",
                                     skivvy.CODE_EMAIL_CONF
                                 )
                             }
                         }
                     }
                     else -> {
-                        if (tempMailSubject == null) {
+                        if (temp.getEmailSubject() == null) {
                             speakOut(
                                 getString(recognize_error) + "\n" + getString(what_is_subject),
                                 skivvy.CODE_EMAIL_CONTENT
                             )
-                        } else if (tempMailBody == null) {
+                        } else if (temp.getEmailBody() == null) {
                             speakOut(
                                 getString(recognize_error) + "\n" + getString(what_is_body),
                                 skivvy.CODE_EMAIL_CONTENT
@@ -589,7 +602,7 @@ open class MainActivity : AppCompatActivity() {
 
             skivvy.CODE_EMAIL_CONF -> {
                 //val cdata = skivvy.contactData
-                txt = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                txt = result[0].toString()
                     .toLowerCase(skivvy.locale)
                 when {
                     resources.getStringArray(R.array.acceptances).contains(txt) -> {
@@ -597,24 +610,28 @@ open class MainActivity : AppCompatActivity() {
                         speakOut(getString(preparing_email))
                         if (this.isContactPresent) {
                             emailingOps(
-//                                    cdata.getContactEmails()[tempContactIndex]!![tempEmailIndex],
-                                contact.emailList!![tempEmailIndex],
-                                tempMailSubject,
-                                tempMailBody
+//                                    cdata.getContactEmails()[temp.getContactIndex()]!![temp.getEmailIndex()],
+                                contact.emailList!![temp.getEmailIndex()],
+                                temp.getEmailSubject(),
+                                temp.getEmailBody()
                             )
                         } else {
-                            emailingOps(tempMail, tempMailSubject, tempMailBody)
+                            emailingOps(
+                                temp.getEmail(),
+                                temp.getEmailSubject(),
+                                temp.getEmailBody()
+                            )
                         }
                     }
                     resources.getStringArray(R.array.denials).contains(txt) ||
                             resources.getStringArray(R.array.disruptions).contains(txt) -> {
-                        tempEmailIndex += 1
-                        if (this.isContactPresent && tempEmailIndex < contact.emailList!!.size && !resources.getStringArray(
+                        temp.setEmailIndex(temp.getEmailIndex() + 1)
+                        if (this.isContactPresent && temp.getEmailIndex() < contact.emailList!!.size && !resources.getStringArray(
                                 R.array.disruptions
                             ).contains(txt)
                         ) {
                             speakOut(
-                                "At ${contact.emailList!![tempEmailIndex]}?",
+                                "At ${contact.emailList!![temp.getEmailIndex()]}?",
                                 skivvy.CODE_EMAIL_CONF
                             )
                         } else {
@@ -626,14 +643,14 @@ open class MainActivity : AppCompatActivity() {
                         if (contact.emailList != null) {
                             speakOut(
                                 getString(recognize_error) + "\n" +
-//                                            getString(should_i_email) + "${cdata.getContactNames()[tempContactIndex]} at\n${cdata.getContactEmails()[tempContactIndex]!![tempEmailIndex]}?",
-                                        getString(should_i_email) + "${contact.displayName} at\n${contact.emailList!![tempEmailIndex]}?",
+//                                            getString(should_i_email) + "${cdata.getContactNames()[temp.getContactIndex()]} at\n${cdata.getContactEmails()[temp.getContactIndex()]!![temp.getEmailIndex()]}?",
+                                        getString(should_i_email) + "${contact.displayName} at\n${contact.emailList!![temp.getEmailIndex()]}?",
                                 skivvy.CODE_EMAIL_CONF
                             )
                         } else {
                             speakOut(
                                 getString(recognize_error) + "\n" +
-                                        getString(should_i_email) + "$tempMail?",
+                                        getString(should_i_email) + "${temp.getEmail()}?",
                                 skivvy.CODE_EMAIL_CONF
                             )
                         }
@@ -643,7 +660,7 @@ open class MainActivity : AppCompatActivity() {
 
             skivvy.CODE_TEXT_MESSAGE_BODY -> {
                 //val cdata = skivvy.contactData
-                txt = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                txt = result[0].toString()
                     .toLowerCase(skivvy.locale)
                 when {
                     resources.getStringArray(R.array.disruptions).contains(txt)
@@ -653,18 +670,18 @@ open class MainActivity : AppCompatActivity() {
                     }
                     txt != null -> {
                         waitingView(null)
-                        tempTextBody = txt
+                        temp.setTextBody(txt)
                         if (this.isContactPresent) {
                             speakOut(
-                                //                                  getString(should_i_text) + "${cdata.getContactNames()[tempContactIndex]} at ${cdata.getContactPhones()[tempContactIndex]!![tempPhoneNumberIndex]}" + getString( via_sms),
-                                getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex]}" + getString(
+                                //                                  getString(should_i_text) + "${cdata.getContactNames()[temp.getContactIndex()]} at ${cdata.getContactPhones()[temp.getContactIndex()]!![temp.getPhoneIndex()]}" + getString( via_sms),
+                                getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![temp.getPhoneIndex()]}" + getString(
                                     via_sms
                                 ),
                                 skivvy.CODE_SMS_CONF
                             )
                         } else {
                             speakOut(
-                                getString(should_i_text) + "$tempPhone" + getString(via_sms),
+                                getString(should_i_text) + "${temp.getPhone()}" + getString(via_sms),
                                 skivvy.CODE_SMS_CONF
                             )
                         }
@@ -680,7 +697,7 @@ open class MainActivity : AppCompatActivity() {
 
             skivvy.CODE_SMS_CONF -> {
                 //val cdata = skivvy.contactData
-                txt = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                txt = result[0].toString()
                     .toLowerCase(skivvy.locale)
                 when {
                     resources.getStringArray(R.array.acceptances).contains(txt) -> {
@@ -697,17 +714,17 @@ open class MainActivity : AppCompatActivity() {
                             )
                         } else {
                             if (this.isContactPresent) {
-                                speakOut(getString(sending_sms_at) + "${contact.phoneList!![tempPhoneNumberIndex]}")
+                                speakOut(getString(sending_sms_at) + "${contact.phoneList!![temp.getPhoneIndex()]}")
                                 textMessageOps(
-                                    contact.phoneList!![tempPhoneNumberIndex]!!,
-                                    tempTextBody!!,
+                                    contact.phoneList!![temp.getPhoneIndex()]!!,
+                                    temp.getTextBody()!!,
                                     skivvy.CODE_SMS_CONF
                                 )
-                            } else if (tempPhone != null) {
-                                speakOut(getString(sending_sms_at) + "$tempPhone")
+                            } else if (temp.getPhone() != null) {
+                                speakOut(getString(sending_sms_at) + "${temp.getPhone()}")
                                 textMessageOps(
-                                    tempPhone!!,
-                                    tempTextBody!!,
+                                    temp.getPhone()!!,
+                                    temp.getTextBody()!!,
                                     skivvy.CODE_SMS_CONF
                                 )
                             }
@@ -716,15 +733,15 @@ open class MainActivity : AppCompatActivity() {
                     resources.getStringArray(R.array.denials)
                         .contains(txt) || resources.getStringArray(R.array.disruptions)
                         .contains(txt) -> {
-                        tempPhoneNumberIndex += 1
-                        // if (this.isContactPresent && tempPhoneNumberIndex < cdata.getContactPhones()[tempContactIndex]!!.size && !resources.getStringArray(
-                        if (this.isContactPresent && tempPhoneNumberIndex < contact.phoneList!!.size && !resources.getStringArray(
+                        temp.setPhoneIndex(temp.getPhoneIndex() + 1)
+                        // if (this.isContactPresent && temp.getPhoneIndex() < cdata.getContactPhones()[temp.getContactIndex()]!!.size && !resources.getStringArray(
+                        if (this.isContactPresent && temp.getPhoneIndex() < contact.phoneList!!.size && !resources.getStringArray(
                                 R.array.disruptions
                             ).contains(txt)
                         ) {
                             speakOut(
-                                //                                 "At ${cdata.getContactPhones()[tempContactIndex]!![tempPhoneNumberIndex]}?",
-                                "At ${contact.phoneList!![tempPhoneNumberIndex]}?",
+                                //                                 "At ${cdata.getContactPhones()[temp.getContactIndex()]!![temp.getPhoneIndex()]}?",
+                                "At ${contact.phoneList!![temp.getPhoneIndex()]}?",
                                 skivvy.CODE_SMS_CONF
                             )
                         } else {
@@ -735,15 +752,15 @@ open class MainActivity : AppCompatActivity() {
                     else -> {
                         if (this.isContactPresent) {
                             speakOut(
-//                                getString(should_i_text) + "${cdata.getContactNames()[tempContactIndex]} at ${cdata.getContactPhones()[tempContactIndex]!![tempPhoneNumberIndex]}" + getString( via_sms),
-                                getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![tempPhoneNumberIndex]}" + getString(
+//                                getString(should_i_text) + "${cdata.getContactNames()[temp.getContactIndex()]} at ${cdata.getContactPhones()[temp.getContactIndex()]!![temp.getPhoneIndex()]}" + getString( via_sms),
+                                getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![temp.getPhoneIndex()]}" + getString(
                                     via_sms
                                 ),
                                 skivvy.CODE_SMS_CONF
                             )
                         } else {
                             speakOut(
-                                getString(should_i_text) + "$tempPhone" + getString(via_sms),
+                                getString(should_i_text) + "${temp.getPhone()}" + getString(via_sms),
                                 skivvy.CODE_SMS_CONF
                             )
                         }
@@ -751,7 +768,9 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             skivvy.CODE_WHATSAPP_ACTION -> {
-                txt = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)[0].toString()
+                val pData = skivvy.packageDataManager
+
+                txt = result[0].toString()
                     .toLowerCase(skivvy.locale)
                 if (txt != "") {
                     try {
@@ -763,7 +782,7 @@ open class MainActivity : AppCompatActivity() {
                                 Intent(
                                     Intent.ACTION_VIEW, Uri.parse(
                                         "https://api.whatsapp.com/send?phone="
-                                                + contact.phoneList!![tempPhoneNumberIndex] + "&text=" + URLEncoder.encode(
+                                                + contact.phoneList!![temp.getPhoneIndex()] + "&text=" + URLEncoder.encode(
                                             txt,
                                             "UTF-8"
                                         )
@@ -874,6 +893,12 @@ open class MainActivity : AppCompatActivity() {
             }
             text.contains("voice authentication") -> {
                 return when {
+                    text.contains("enable") && text.contains("disable") -> {
+                        txt = text.replace("enable", "")
+                        txt = txt!!.replace("disable", "")
+                        speakOut(getString(enable_or_disable), skivvy.CODE_SPEECH_RECORD)
+                        true
+                    }
                     text.contains("enable") -> {
                         if (!skivvy.getPhraseKeyStatus()) {
                             if (skivvy.getVoiceKeyPhrase() != null) {
@@ -913,6 +938,12 @@ open class MainActivity : AppCompatActivity() {
                     speakOut("Your device doesn't support biometric authentication.")
                 } else {
                     return when {
+                        text.contains("enable") && text.contains("disable") -> {
+                            txt = text.replace("enable", "")
+                            txt = txt!!.replace("disable", "")
+                            speakOut(getString(enable_or_disable), skivvy.CODE_SPEECH_RECORD)
+                            true
+                        }
                         text.contains("enable") -> {
                             if (skivvy.getBiometricStatus()) {
                                 speakOut(getString(biometric_already_on))
@@ -950,16 +981,17 @@ open class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+            /*
             text.contains("uninstall") -> {
                 if (text.replace("uninstall", "").trim().isNullOrBlank()) {
                     txt = text
                     speakOut("Uninstall what?", skivvy.CODE_SPEECH_RECORD)
                     return true
                 }
-                deviceManger =
+                deviceManager =
                     applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
                 compName = ComponentName(context, Administrator::class.java)
-                if (!deviceManger!!.isAdminActive(compName!!)) {
+                if (!deviceManager!!.isAdminActive(compName!!)) {
                     waitingView(null)
                     speakOut(getString(device_admin_request))
                     startActivityForResult(
@@ -993,6 +1025,7 @@ open class MainActivity : AppCompatActivity() {
                 }
                 return false
             }
+             */
             text == "get permission" -> {
                 if (!skivvy.hasPermissions(context)) {
                     ActivityCompat.requestPermissions(
@@ -1010,6 +1043,7 @@ open class MainActivity : AppCompatActivity() {
         return true
     }
 
+    /*
     private val ACTION_UNINSTALL_RESULT = "uninstall"
     private val receiverBroad = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, intent: Intent?) {
@@ -1032,7 +1066,7 @@ open class MainActivity : AppCompatActivity() {
         super.onPause()
         unregisterReceiver(receiverBroad)
     }
-
+     */
     private fun computerOps(rawExpression: String): Boolean {
         val expression = calculator.expressionize(rawExpression)
 
@@ -1166,13 +1200,10 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun deviceLockOps() {
-        deviceManger =
-            applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-        compName = ComponentName(context, Administrator::class.java)
-        if (deviceManger!!.isAdminActive(compName!!)) {
+        if (deviceManager.isAdminActive(compName)) {
             successView(getDrawable(ic_glossylock))
             speakOut(getString(screen_locked))
-            deviceManger!!.lockNow()
+            deviceManager.lockNow()
         } else {
             waitingView(getDrawable(ic_glossylock))
             speakOut(getString(device_admin_request))
@@ -1187,18 +1218,33 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setVolume(percent:Float, feedback:Boolean = false){
+        if(feedback) setFeedback("Volume at ${percent.toInt()}%")
+        audioManager.setStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            (audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) * (percent/100)).toInt(),
+            AudioManager.FLAG_SHOW_UI
+        )
+    }
     private fun volumeOps(action: String) {
         when {
             action.contains(skivvy.numberPattern) -> {
-                val percent = action.replace(skivvy.nonNumeralPattern, "").toFloat() / 100
-                val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                val volumeLevel = (maxVolume * percent).toInt()
-                audioManager.setStreamVolume(
-                    AudioManager.STREAM_MUSIC,
-                    volumeLevel,
-                    AudioManager.FLAG_SHOW_UI
-                )
-                speakOut("Volume at ${(percent * 100).toInt()}%")
+                val percent = action.replace(skivvy.nonNumeralPattern, "").toFloat()
+                if(percent>100F){
+                    speakOut("Invalid volume level.")
+                    return
+                }
+                if(percent > 75F){
+                    setVolume(40F,feedback = true)
+                    temp.setVolumePercent(percent)
+                    speakOut("Volume at this level might cause harm to you. Are you sure about ${percent.toInt()}%?",skivvy.CODE_VOLUME_CONFIRM,true)
+                } else {
+                    setVolume(percent,feedback = true)
+                    speakOut("Volume at ${percent.toInt()}%",null,
+                        parallelReceiver = false,
+                        isFeedback = true
+                    )
+                }
             }
             action.contains("up") || action.contains("increase") ||
                     action.contains("raise") -> {
@@ -1212,7 +1258,7 @@ open class MainActivity : AppCompatActivity() {
                         AudioManager.ADJUST_RAISE,
                         AudioManager.FLAG_SHOW_UI
                     )
-                    speakOut("Volume increased")
+                    speakOut("Volume increased", null, parallelReceiver = false, isFeedback = true)
                 }
             }
             action.contains("down") || action.contains("decrease") -> {
@@ -1231,7 +1277,7 @@ open class MainActivity : AppCompatActivity() {
                         AudioManager.ADJUST_LOWER,
                         AudioManager.FLAG_SHOW_UI
                     )
-                    speakOut("Volume decreased")
+                    speakOut("Volume decreased", null, parallelReceiver = false, isFeedback = true)
                 }
             }
             action.contains("max") ||
@@ -1283,6 +1329,19 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun isThereAnyAppNamed(name: String, startFrom: Int = 0): Boolean {
+        val pData = skivvy.packageDataManager
+        var index = startFrom
+        while (index < pData.getTotalPackages()) {
+            if (name == pData.getPackageAppName(index)) {
+                temp.setPackageIndex(index)
+                return true
+            }
+            ++index
+        }
+        return false
+    }
+
     //TODO: specific app actions
     //actions invoking other applications
     private fun appOptions(text: String?): Boolean {
@@ -1309,7 +1368,7 @@ open class MainActivity : AppCompatActivity() {
                             return true
                         }
                         localText == pData.getPackageAppName(i) -> {
-                            tempPackageIndex = i
+                            temp.setPackageIndex(i)
                             successView(pData.getPackageIcon(i))
                             speakOut(
                                 getString(opening) + pData.getPackageAppName(i)!!
@@ -1319,7 +1378,7 @@ open class MainActivity : AppCompatActivity() {
                             return true
                         }
                         pData.getPackageName(i)!!.contains(localText) -> {
-                            tempPackageIndex = i
+                            temp.setPackageIndex(i)
                             waitingView(pData.getPackageIcon(i))
                             speakOut(
                                 getString(do_u_want_open) + "${pData.getPackageAppName(i)!!
@@ -1344,27 +1403,26 @@ open class MainActivity : AppCompatActivity() {
         when {
             text.contains("add") || text.contains("plus") || text.contains("subtract")//||text.contains("multiply")||text.contains("divide" )
             -> {
-                if (getLastCalculationResult() != "0") {
-                    localTxt = getLastCalculationResult() + text
-                    computerOps(calculator.expressionize(localTxt))
+                if (getLastCalculationResult() != "0" && text.contains(skivvy.numberPattern)) {
+                    computerOps(getLastCalculationResult() + text)
                 } else return false
 //                startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD,"Continue calculation")
             }
             text.contains(getString(call)) -> {
                 waitingView(getDrawable(ic_glossyphone))
                 localTxt = text.replace(getString(call), "", true).trim()
-                tempPhone = text.replace(skivvy.nonNumeralPattern, "")
-                if (tempPhone != null) {
+                temp.setPhone(text.replace(skivvy.nonNumeralPattern, ""))
+                if (temp.getPhone() != null) {
                     when {
-                        tempPhone!!.contains(skivvy.numberPattern) -> {
-                            if (tempPhone!!.length == 10) {
-                                val local = tempPhone
-                                tempPhone = ""
+                        temp.getPhone()!!.contains(skivvy.numberPattern) -> {
+                            if (temp.getPhone()!!.length == 10) {
+                                val local = temp.getPhone()
+                                temp.setPhone("")
                                 var k = 0
                                 while (k < 10) {
-                                    tempPhone += local!![k]
+                                    temp.setPhone(temp.getPhone() + local!![k])
                                     if (k == 4) {
-                                        tempPhone += " "
+                                        temp.setPhone(temp.getPhone() + " ")
                                     }
                                     ++k
                                 }
@@ -1382,7 +1440,7 @@ open class MainActivity : AppCompatActivity() {
                                 )
                             } else {
                                 speakOut(
-                                    getString(should_i_call) + "$tempPhone?",
+                                    getString(should_i_call) + "${temp.getPhone()}?",
                                     skivvy.CODE_CALL_CONF
                                 )
                             }
@@ -1404,10 +1462,10 @@ open class MainActivity : AppCompatActivity() {
             text.contains(getString(email)) -> {
                 waitingView(getDrawable(ic_email_envelope))
                 localTxt = text.replace(getString(email), "", true).trim()
-                tempMail = localTxt.replace(" ", "").trim()
+                temp.setEmail(localTxt.replace(" ", "").trim())
                 when {
-                    tempMail!!.matches(skivvy.emailPattern) -> {
-                        input!!.text = tempMail
+                    temp.getEmail()!!.matches(skivvy.emailPattern) -> {
+                        input.text = temp.getEmail()
                         speakOut(getString(what_is_subject), skivvy.CODE_EMAIL_CONTENT)
                     }
                     localTxt.length > 1 -> {
@@ -1419,13 +1477,13 @@ open class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            text.contains("text") -> {
+            text.contains(getString(R.string.text)) -> {
                 waitingView(getDrawable(ic_messageicon))
-                localTxt = text.replace("text", "", false)
+                localTxt = text.replace(getString(R.string.text), "", false)
                 localTxt = localTxt.trim()
-                tempPhone = localTxt.replace(skivvy.nonNumeralPattern, "")
+                temp.setPhone(localTxt.replace(skivvy.nonNumeralPattern, ""))
                 when {
-                    tempPhone!!.contains(skivvy.numberPattern) -> {
+                    temp.getPhone()!!.contains(skivvy.numberPattern) -> {
                         speakOut(getString(what_is_message), skivvy.CODE_TEXT_MESSAGE_BODY)
                     }
                     localTxt.contains("whatsapp") -> {
@@ -1439,7 +1497,7 @@ open class MainActivity : AppCompatActivity() {
                         contactOps(localTxt, skivvy.CODE_SMS_CONF)
                     }
                     else -> {
-                        txt = "text "
+                        txt = text
                         speakOut("Text who?", skivvy.CODE_SPEECH_RECORD)
                     }
                 }
@@ -1499,10 +1557,10 @@ open class MainActivity : AppCompatActivity() {
     //TODO: Either create contact list data class and use that here, or do direct lookup faster in background.
     private var isContactPresent = false
     private fun contactOps(name: String, code: Int) {
-        tempContactCode = code
-        tempPhoneNumberIndex = 0
-        tempEmailIndex = 0
-        tempContact = name.trim()
+        temp.setContactCode(code)
+        temp.setPhoneIndex(0)
+        temp.setEmailIndex(0)
+        temp.setContact(name.trim())
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.READ_CONTACTS
@@ -1526,11 +1584,11 @@ open class MainActivity : AppCompatActivity() {
                     if(cd.getContactIDs()[contactIndex].isNullOrEmpty()){
                         speakOut("Please wait",skivvy.CODE_SPEECH_RECORD)
                         normalView()
-                    } else if (tempContact == cd.getContactNames()[contactIndex]!!.toLowerCase(skivvy.locale) ||
-                        tempContact == cd.getContactNames()[contactIndex]!!.substringBefore(" ").toLowerCase(skivvy.locale)||
-                        !cd.getContactNicknames()[contactIndex].isNullOrEmpty()&&cd.getContactNicknames()[contactIndex]!!.contains(tempContact)
+                    } else if (temp.getContact() == cd.getContactNames()[contactIndex]!!.toLowerCase(skivvy.locale) ||
+                        temp.getContact() == cd.getContactNames()[contactIndex]!!.substringBefore(" ").toLowerCase(skivvy.locale)||
+                        !cd.getContactNicknames()[contactIndex].isNullOrEmpty()&&cd.getContactNicknames()[contactIndex]!!.contains(temp.getContact())
                     ) {
-                        tempContactIndex = contactIndex
+                        temp.setContactIndex(contactIndex)
                         this.isContactPresent = true
                         if (cd.getContactPhotoUris()[contactIndex] != null) {
                             val rb: RoundedBitmapDrawable =
@@ -1542,7 +1600,7 @@ open class MainActivity : AppCompatActivity() {
                             rb.setAntiAlias(true)
                             waitingView(rb)
                         } else waitingView(null)
-                        if (tempContactCode == skivvy.CODE_EMAIL_CONF) {
+                        if (temp.getContactCode() == skivvy.CODE_EMAIL_CONF) {
                             if (!cd.getContactEmails()[contactIndex].isNullOrEmpty()) {
                                 speakOut(getString(what_is_subject), skivvy.CODE_EMAIL_CONTENT)
                             } else {
@@ -1565,7 +1623,7 @@ open class MainActivity : AppCompatActivity() {
                                         speakOut(
                                             "I've got ${cd.getContactPhones()[contactIndex]!!.size} phone numbers of ${cd.getContactNames()[contactIndex]}.\nShould I call them at " +
                                                     "${cd.getContactPhones()[contactIndex]?.get(
-                                                        tempPhoneNumberIndex
+                                                        temp.getPhoneIndex()
                                                     )}?",
                                             skivvy.CODE_CALL_CONF
                                         )
@@ -1627,10 +1685,10 @@ open class MainActivity : AppCompatActivity() {
                     }
                     nickCur.close()
                     val fName = contact.displayName?.substringBefore(" ")
-                    if (tempContact == contact.displayName?.toLowerCase(skivvy.locale) || tempContact == fName?.toLowerCase(
+                    if (temp.getContact() == contact.displayName?.toLowerCase(skivvy.locale) || temp.getContact() == fName?.toLowerCase(
                             skivvy.locale
                         ) ||
-                        !contact.nickName.isNullOrEmpty() && contact.nickName!!.contains(tempContact)
+                        !contact.nickName.isNullOrEmpty() && contact.nickName!!.contains(temp.getContact())
                     ) {
                         this.isContactPresent = true
                         val dpUri =
@@ -1668,12 +1726,12 @@ open class MainActivity : AppCompatActivity() {
                                 eCur.moveToNext()
                                 ++k
                             }
-                            if (tempContactCode == skivvy.CODE_EMAIL_CONF) {
+                            if (temp.getContactCode() == skivvy.CODE_EMAIL_CONF) {
                                 speakOut(getString(what_is_subject), skivvy.CODE_EMAIL_CONTENT)
                             }
                             eCur.close()
                         } else {
-                            if (tempContactCode == skivvy.CODE_EMAIL_CONF) {
+                            if (temp.getContactCode() == skivvy.CODE_EMAIL_CONF) {
                                 errorView()
                                 speakOut(
                                     getString(you_dont_seem_having) + contact.displayName + getString(
@@ -1682,7 +1740,7 @@ open class MainActivity : AppCompatActivity() {
                                 )
                             }
                         }
-                        if (tempContactCode == skivvy.CODE_CALL_CONF || tempContactCode == skivvy.CODE_SMS_CONF || tempContactCode == skivvy.CODE_WHATSAPP_ACTION) {
+                        if (temp.getContactCode() == skivvy.CODE_CALL_CONF || temp.getContactCode() == skivvy.CODE_SMS_CONF || temp.getContactCode() == skivvy.CODE_WHATSAPP_ACTION) {
                             if (cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))
                                     .toInt() > 0
                             ) {
@@ -1708,7 +1766,7 @@ open class MainActivity : AppCompatActivity() {
                                     ++k
                                 }
                                 if (size == 1) {
-                                    when (tempContactCode) {
+                                    when (temp.getContactCode()) {
                                         skivvy.CODE_CALL_CONF -> {
                                             speakOut(
                                                 getString(should_i_call) + "${contact.displayName}?",
@@ -1729,18 +1787,18 @@ open class MainActivity : AppCompatActivity() {
                                         }
                                     }
                                 } else {
-                                    if (tempContactCode == skivvy.CODE_CALL_CONF) {
+                                    if (temp.getContactCode() == skivvy.CODE_CALL_CONF) {
                                         speakOut(
                                             "I've got $size phone numbers of ${contact.displayName}.\nShould I call them at " +
-                                                    "${contact.phoneList!![tempPhoneNumberIndex]}?",
+                                                    "${contact.phoneList!![temp.getPhoneIndex()]}?",
                                             skivvy.CODE_CALL_CONF
                                         )
-                                    } else if (tempContactCode == skivvy.CODE_SMS_CONF) {
+                                    } else if (temp.getContactCode() == skivvy.CODE_SMS_CONF) {
                                         speakOut(
                                             getString(what_is_message),
                                             skivvy.CODE_TEXT_MESSAGE_BODY
                                         )
-                                    } else if (tempContactCode == skivvy.CODE_WHATSAPP_ACTION) {
+                                    } else if (temp.getContactCode() == skivvy.CODE_WHATSAPP_ACTION) {
                                         speakOut(
                                             "What is your message to ${contact.displayName} via whatsapp?",
                                             skivvy.CODE_WHATSAPP_ACTION
@@ -1852,7 +1910,7 @@ open class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        loading?.startAnimation(exitAnimation)
+        loading.startAnimation(zoomInRotate)
         speakOut(getString(exit_msg))
         if (skivvy.tts != null) {
             skivvy.tts!!.stop()
@@ -1863,81 +1921,59 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         speakOut(getString(exit_msg))
-        loading?.startAnimation(exitAnimation)
+        loading.startAnimation(zoomInRotate)
         super.onBackPressed()
     }
 
     private fun normalView() {
-        loading?.setImageDrawable(getDrawable(ic_dotsincircle))
-        loading?.startAnimation(normalRotate)
-        input?.text = null
-        outPut?.text = null
-        feedback?.text = null
-        icon?.setImageDrawable(null)
+        loading.setImageDrawable(getDrawable(ic_dotsincircle))
+        loading.startAnimation(zoomInOutRotate)
+        input.text = null
+        outPut.text = null
+        feedback.text = null
+        icon.setImageDrawable(null)
         contact = ContactModel()
+        temp = Temporary()
         txt = null
-        tempMail = null
-        tempMailSubject = null
-        tempMailBody = null
-        tempPackageIndex = 0
-        tempPhoneNumberIndex = 0
-        tempContactIndex = 0
-        tempEmailIndex = 0
-        tempPhone = null
-        tempTextBody = null
-        tempContactCode = null
-        tempContact = null
         isContactPresent = false
     }
 
     fun waitingView(image: Drawable?) {
-        loading?.startAnimation(rotateSlow)
-        loading?.setImageDrawable(getDrawable(ic_yellow_dotsincircle))
+        loading.startAnimation(focusRotate)
+        loading.setImageDrawable(getDrawable(ic_yellow_dotsincircle))
         if (image != null) {
-            icon?.setImageDrawable(image)
+            icon.setImageDrawable(image)
         }
     }
 
     fun errorView(): Boolean {
-        loading?.startAnimation(fadeAnimation)
-        loading?.setImageDrawable(getDrawable(ic_red_dotsincircle))
+        loading.startAnimation(fadeOnFadeOff)
+        loading.setImageDrawable(getDrawable(ic_red_dotsincircle))
         return false
     }
 
     fun successView(image: Drawable?) {
-        loading?.startAnimation(focusRotate)
-        loading?.setImageDrawable(getDrawable(ic_green_dotsincircle))
+        loading.startAnimation(focusDeFocusRotate)
+        loading.setImageDrawable(getDrawable(ic_green_dotsincircle))
         if (image != null) {
-            icon?.setImageDrawable(image)
+            icon.setImageDrawable(image)
         }
     }
 
-    private fun speakOut(text: String) {
-        outPut?.text = text
-        skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onDone(utteranceId: String) {}
-            override fun onError(utteranceId: String) {}
-            override fun onStart(utteranceId: String) {}
-        })
-        if (!skivvy.getMuteStatus()) skivvy.tts!!.speak(
-            text,
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            text
-        )
-        else
-            outPut?.text = text
-    }
-
-    private fun speakOut(text: String, taskCode: Int) {
-        outPut?.text = text
+    private fun speakOut(text: String, taskCode: Int? = null, parallelReceiver:Boolean = false,isFeedback: Boolean = false) {
+        if (isFeedback) setFeedback(text)
+        else outPut.text = text
         skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onDone(utteranceId: String) {
-                startVoiceRecIntent(taskCode)
+                if(!parallelReceiver)
+                    taskCode?.let { startVoiceRecIntent(it, text) }
             }
 
             override fun onError(utteranceId: String) {}
-            override fun onStart(utteranceId: String) {}
+            override fun onStart(utteranceId: String) {
+                if(parallelReceiver)
+                    taskCode?.let { startVoiceRecIntent(it, text) }
+            }
         })
         if (!skivvy.getMuteStatus()) skivvy.tts!!.speak(
             text,
@@ -1946,28 +1982,14 @@ open class MainActivity : AppCompatActivity() {
             ""
         )
         else
-            startVoiceRecIntent(taskCode, text)
+            taskCode?.let { startVoiceRecIntent(it, text) }
     }
 
     //intent voice recognition, code according to action command, serving activity result
-    private fun startVoiceRecIntent(code: Int) {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            .putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
-            .putExtra(RecognizerIntent.EXTRA_PROMPT, "I'm listening")
-        if (intent.resolveActivity(packageManager) != null)
-            startActivityForResult(intent, code)
-        else {
-            errorView()
-            speakOut(getString(internal_error))
-        }
-    }
-
-    //intent voice recognition, code according to action command, serving activity result
-    private fun startVoiceRecIntent(code: Int, message: String) {
+    private fun startVoiceRecIntent(
+        code: Int,
+        message: String = getString(generic_voice_rec_text)
+    ) {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             .putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -2015,7 +2037,13 @@ open class MainActivity : AppCompatActivity() {
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    speakOut(getString(biometric_off_error))
+                    when (code) {
+                        skivvy.CODE_BIOMETRIC_CONFIRM ->
+                            speakOut(getString(biometric_off_error))
+                        skivvy.CODE_VOICE_AUTH_CONFIRM ->
+                            speakOut(getString(vocal_auth_off_error))
+                    }
+
                 }
 
                 override fun onAuthenticationFailed() {

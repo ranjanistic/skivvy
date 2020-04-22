@@ -65,6 +65,7 @@ open class Skivvy : Application() {
     val CODE_VOICE_AUTH_INIT = 18
     val CODE_VOICE_AUTH_CONFIRM = 19
     val CODE_BIOMETRIC_CONFIRM = 20
+    val CODE_VOLUME_CONFIRM = 21
 
     val CODE_LOCATION_SERVICE = 100
 //    val CODE_LOCK_SCREEN = 101

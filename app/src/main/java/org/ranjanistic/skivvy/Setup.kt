@@ -93,6 +93,9 @@ class Setup : AppCompatActivity() {
                     deleteVoiceSetup.visibility = View.VISIBLE
                     deleteVoiceSetup.alpha = 1F
                     deleteVoiceSetup.isClickable = true
+                    if(!skivvy.getBiometricStatus()){
+                        showBiometricRecommendation()
+                    }
                 }
             } else {
                 defaultVoiceAuthUIState()
@@ -142,14 +145,7 @@ class Setup : AppCompatActivity() {
                         deleteVoiceSetup.isClickable = true
                         speakOut("'$text' is the phrase.")
                         if(!skivvy.getBiometricStatus() && skivvy.checkBioMetrics()){
-                            Snackbar.make(findViewById(R.id.setup_layout),getString(R.string.biometric_recommendation_passphrase_enabling),25000)
-                                .setTextColor(ContextCompat.getColor(context,R.color.pitch_white))
-                                .setBackgroundTint(ContextCompat.getColor(context,R.color.charcoal))
-                                .setAction("Enable") {
-                                    setBiometricsStatus(true)
-                                }
-                                .setActionTextColor(ContextCompat.getColor(context,R.color.colorPrimaryDark))
-                                .show()
+                            showBiometricRecommendation()
                         }
                     } else {
                         skivvy.setVoiceKeyPhrase(null)
@@ -173,6 +169,16 @@ class Setup : AppCompatActivity() {
         }
     }
 
+    private fun showBiometricRecommendation(){
+        Snackbar.make(findViewById(R.id.setup_layout),getString(R.string.biometric_recommendation_passphrase_enabling),25000)
+            .setTextColor(ContextCompat.getColor(context,R.color.pitch_white))
+            .setBackgroundTint(ContextCompat.getColor(context,R.color.charcoal))
+            .setAction("Enable") {
+                setBiometricsStatus(true)
+            }
+            .setActionTextColor(ContextCompat.getColor(context,R.color.colorPrimaryDark))
+            .show()
+    }
     override fun onStart() {
         if (skivvy.checkBioMetrics()) {
             biometrics.visibility = View.VISIBLE

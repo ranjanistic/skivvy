@@ -161,16 +161,4 @@
         app:layout_constraintVertical_bias="0.5"
         app:srcCompat="@drawable/ic_skivvycommandicon" />
 
-    <ImageView
-        android:id="@+id/outputStatusView"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_margin="@dimen/minimum_separation"
-        android:contentDescription="@string/speaking_indicator"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/backdrop"
-        app:layout_constraintVertical_bias="1"
-        app:srcCompat="@drawable/ic_speakericon" />
 </androidx.constraintlayout.widget.ConstraintLayout>

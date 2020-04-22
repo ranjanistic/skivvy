@@ -5,7 +5,7 @@
     <string name="recognize_error">I didn\'t get it.&#160;</string>
     <string name="no_input">You didn\'t say anything</string>
     <string name="theme">Theme</string>
-
+    <string name="bottom_sheet_behavior" translatable="false">com.google.android.material.bottomsheet.BottomSheetBehavior</string>
     <string-array name="acceptances">
         <item>yes</item>
         <item>yep</item>
@@ -13,6 +13,8 @@
         <item>yups</item>
         <item>yeah</item>
         <item>yo</item>
+        <item>sure</item>
+        <item>do it</item>
     </string-array>
     <string-array name="denials">
         <item>no</item>
@@ -21,6 +23,7 @@
         <item>nah</item>
         <item>don\'t</item>
         <item>stop</item>
+        <item>do not</item>
     </string-array>
 
     <string-array name="disruptions">
@@ -159,6 +162,10 @@
     <string name="confirmation_phrase_didnt_match">Confirmation phrase didn\'t match the phrase you\'ve set.</string>
     <string name="biometric_recommendation_passphrase_enabling">I recommend enabling biometric too, in case you forget the passphrase.</string>
     <string name="reset">Reset</string>
+    <string name="enable_or_disable">Enable or Disable?</string>
+    <string name="text">text</string>
+    <string name="vocal_auth_off_error">I could not disable vocal authentication.</string>
+    <string name="generic_voice_rec_text">I\'m listening</string>
     <string-array name="notification_channel">
         <item>SKIVVY_MAIN_NOTIFICATION</item>
         <item>Skivvy is active</item>
