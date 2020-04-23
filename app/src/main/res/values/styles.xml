@@ -6,25 +6,26 @@
         <item name="android:statusBarColor">@color/dead_blue</item>
         <item name="android:background">@drawable/splash</item>
     </style>
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
+
+    <style name="LightTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="fontFamily">@font/varela_round_regular</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
-        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
+        <item name="android:statusBarColor">@color/dull_white</item>
+        <item name="android:navigationBarColor">@color/pitch_white</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="base_text_color">@color/pitch_black</item>
         <item name="secondary_text_color">@color/charcoal</item>
-        <item name="action_text_color">@color/bright_blue</item>
-        <item name="base_background_color">@color/colorPrimaryDark</item>
-        <item name="secondary_background_color">@color/colorPrimary</item>
+        <item name="action_text_color">@color/dead_blue</item>
+        <item name="base_background_color">@color/pitch_white</item>
+        <item name="secondary_background_color">@color/dull_white</item>
+        <item name="tertiary_background_color">@color/pitch_white</item>
         <item name="action_button_color">@color/light_green</item>
-        <item name="text_button_color">@color/dark_blue</item>
+        <item name="text_button_color">@color/dead_blue</item>
         <item name="warning_button_color">@color/dark_red</item>
-        <item name="warning_button_color_text">@color/pitch_white</item>
-        <item name="action_button_color_text">@color/pitch_white</item>
+        <item name="warning_button_color_text">@color/dull_white</item>
+        <item name="action_button_color_text">@color/dull_white</item>
     </style>
 
     <style name="DarkTheme" parent="Theme.AppCompat.Light.NoActionBar">
@@ -43,8 +44,8 @@
         <item name="tertiary_background_color">@color/spruce</item>
         <item name="action_button_color">@color/light_green</item>
         <item name="text_button_color">@color/dead_blue</item>
-        <item name="warning_button_color">@color/light_red</item>
-        <item name="warning_button_color_text">@color/pitch_black</item>
+        <item name="warning_button_color">@color/dull_red</item>
+        <item name="warning_button_color_text">@color/pitch_white</item>
         <item name="action_button_color_text">@color/dull_white</item>
     </style>
 

@@ -6,6 +6,8 @@ import android.Manifest
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.ApplicationInfo
@@ -68,7 +70,6 @@ open class Skivvy : Application() {
     val CODE_VOLUME_CONFIRM = 21
 
     val CODE_LOCATION_SERVICE = 100
-//    val CODE_LOCK_SCREEN = 101
     val CODE_DEVICE_ADMIN = 102
     val nonVocalRequestCodes = intArrayOf(CODE_LOCATION_SERVICE,CODE_DEVICE_ADMIN)
     //default strings and arrays
@@ -79,19 +80,24 @@ open class Skivvy : Application() {
     val PREF_HEAD_VOICE = "voice"
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
     val PREF_KEY_TRAINING = "training"
+    val PREF_KEY_THEME = "theme"
     val PREF_HEAD_CALC = "calculator"
     val PREF_KEY_LAST_CALC = "lastResult"
     val FINISH_ACTION = "finish"
     val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","sqrt","cbrt","exp")
     val operators = arrayOf("^", "p", "/", "*", "m", "-", "+")
-
+    val LIGHT_THEME = 9999
+    val DARK_THEME = 9998
     //default objects
     var tts: TextToSpeech? = null
     var packageDataManager:PackageDataManager = PackageDataManager()
     var contactData:ContactData = ContactData()
-
+    lateinit var deviceManager: DevicePolicyManager
+    lateinit var compName: ComponentName
     override fun onCreate() {
         super.onCreate()
+        deviceManager = applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        compName = ComponentName(this, Administrator::class.java)
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalPackages()
         }
@@ -292,6 +298,14 @@ open class Skivvy : Application() {
     fun getTrainingStatus(): Boolean {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_TRAINING, false)
+    }
+    fun setThemeState(themeCode:Int){
+        getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
+            .putInt(this.PREF_KEY_THEME, themeCode).apply()
+    }
+    fun getThemeState():Int{
+        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+            .getInt(this.PREF_KEY_THEME, R.style.DarkTheme)
     }
     fun checkBioMetrics(): Boolean {
         val biometricManager = BiometricManager.from(this)

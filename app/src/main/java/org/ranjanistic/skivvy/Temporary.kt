@@ -10,7 +10,8 @@ class Temporary {
     private var emailSubject: String? = null
     private var emailBody: String? = null
     private var textBody: String? = null
-    private var contact: String? = null
+    private var contactPresence:Boolean = false
+    private var contactReceived: String? = null
     private var contactIndex: Int = 0
     private var contactCode: Int? = null
     private var volumePercent:Float = 40F
@@ -23,7 +24,8 @@ class Temporary {
     fun getEmailSubject(): String? = this.emailSubject
     fun getEmailBody(): String? = this.emailBody
     fun getTextBody(): String? = this.textBody
-    fun getContact(): String? = this.contact
+    fun getContactPresence():Boolean = this.contactPresence
+    fun getContactReceived(): String? = this.contactReceived
     fun getContactIndex(): Int = this.contactIndex
     fun getContactCode(): Int? = this.contactCode
     fun getVolumePercent():Float = this.volumePercent
@@ -60,8 +62,12 @@ class Temporary {
         this.textBody = textBody
     }
 
-    fun setContact(contact: String?) {
-        this.contact = contact
+    fun setContactPresence(isPresent:Boolean){
+        this.contactPresence = isPresent
+    }
+
+    fun setContactReceived(contactReceived: String?) {
+        this.contactReceived = contactReceived
     }
 
     fun setContactIndex(contactIndex: Int) {

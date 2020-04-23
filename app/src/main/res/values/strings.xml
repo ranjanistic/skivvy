@@ -166,6 +166,11 @@
     <string name="text">text</string>
     <string name="vocal_auth_off_error">I could not disable vocal authentication.</string>
     <string name="generic_voice_rec_text">I\'m listening</string>
+    <string name="switch_to_dark">Switch to dark theme</string>
+    <string name="switch_to_light">Switch to light theme</string>
+    <string name="grant_permissions">Grant permissions</string>
+    <string name="make_device_admin">Make device admin</string>
+    <string name="device_admin_success">Thanks for making me your device admin.</string>
     <string-array name="notification_channel">
         <item>SKIVVY_MAIN_NOTIFICATION</item>
         <item>Skivvy is active</item>
