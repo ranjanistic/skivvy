@@ -1,21 +1,29 @@
 package org.ranjanistic.skivvy
 
+import android.R.id.message
 import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.delay
+import java.util.*
 import java.util.concurrent.Executor
+import kotlin.concurrent.schedule
+
 
 @ExperimentalStdlibApi
 class Setup : AppCompatActivity() {
@@ -34,6 +42,8 @@ class Setup : AppCompatActivity() {
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     private lateinit var context: Context
+    private var temp = Temporary()
+    private lateinit var recognitionIntent:Intent
     override fun onBackPressed() {
         super.onBackPressed()
         overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
@@ -78,14 +88,28 @@ class Setup : AppCompatActivity() {
         if (skivvy.getPhraseKeyStatus()) {
             voiceAuth.isChecked = true
             voiceAuth.text = getString(R.string.disable_vocal_authentication)
-            voiceAuth.thumbTintList = ContextCompat.getColorStateList(this, R.color.colorPrimary)
+            voiceAuth.thumbTintList = ContextCompat.getColorStateList(context, R.color.colorPrimary)
             deleteVoiceSetup.visibility = View.VISIBLE
-            deleteVoiceSetup.isClickable = true
-            deleteVoiceSetup.alpha = 1F
         } else defaultVoiceAuthUIState()
+        recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
+
         setListeners()
     }
 
+    override fun onStart() {
+        super.onStart()
+        for(k in arrayOf(mute,theme,biometrics,vocalLayout,permissions,deviceAdmin)) {
+                bubbleThis(k)
+        }
+    }
+    private fun bubbleThis(view:View){
+        view.startAnimation(AnimationUtils.loadAnimation(context, R.anim.reveal_delay))
+    }
     private fun setListeners() {
         settingIcon.setOnClickListener {
             finish()
@@ -135,8 +159,7 @@ class Setup : AppCompatActivity() {
             } else {
                 if (skivvy.getBiometricStatus()) {
                     if (skivvy.checkBioMetrics()) {
-                        authSetup(skivvy.CODE_BIOMETRIC_CONFIRM)
-                        biometricPrompt.authenticate(promptInfo)
+                        initAndShowBioAuth(skivvy.CODE_BIOMETRIC_CONFIRM)
                     }
                 }
             }
@@ -151,12 +174,12 @@ class Setup : AppCompatActivity() {
                 } else {
                     speakOut("Voice auth enabled")
                     voiceAuth.thumbTintList =
-                        ContextCompat.getColorStateList(this, R.color.colorPrimary)
+                        ContextCompat.getColorStateList(context, R.color.colorPrimary)
                     voiceAuth.text = getString(R.string.disable_vocal_authentication)
                     skivvy.setPhraseKeyStatus(true)
                     deleteVoiceSetup.visibility = View.VISIBLE
-                    deleteVoiceSetup.alpha = 1F
-                    deleteVoiceSetup.isClickable = true
+                    
+                    
                     if (!skivvy.getBiometricStatus()) {
                         showBiometricRecommendation()
                     }
@@ -168,8 +191,7 @@ class Setup : AppCompatActivity() {
         }
         deleteVoiceSetup.setOnClickListener {
             if (skivvy.checkBioMetrics()) {
-                authSetup(skivvy.CODE_VOICE_AUTH_CONFIRM)
-                biometricPrompt.authenticate(promptInfo)
+                initAndShowBioAuth(skivvy.CODE_VOICE_AUTH_CONFIRM)
             } else {
                 speakOut(getString(R.string.reset_voice_auth_confirm))
                 Snackbar.make(
@@ -187,6 +209,11 @@ class Setup : AppCompatActivity() {
                     .show()
             }
         }
+        deleteVoiceSetup.setOnLongClickListener{view->
+            view.startAnimation(AnimationUtils.loadAnimation(context, R.anim.bubble_wave))
+            speakOut("This will delete your existing passphrase.")
+            true
+        }
         permissions.setOnClickListener {
             if (!skivvy.hasPermissions(context)) {
                 speakOut("I need these permissions to work perfectly.")
@@ -196,6 +223,13 @@ class Setup : AppCompatActivity() {
                 )
             }
         }
+
+        permissions.setOnLongClickListener { view ->
+            view.startAnimation(AnimationUtils.loadAnimation(context, R.anim.bubble_wave))
+            speakOut("Grant me some permissions for later use")
+            true
+        }
+
         deviceAdmin.setOnClickListener {
             if (!skivvy.deviceManager.isAdminActive(skivvy.compName)) {
                 startActivityForResult(
@@ -207,6 +241,11 @@ class Setup : AppCompatActivity() {
                         ), skivvy.CODE_DEVICE_ADMIN
                 )
             }
+        }
+        deviceAdmin.setOnLongClickListener{view->
+            view.startAnimation(AnimationUtils.loadAnimation(context, R.anim.bubble_wave))
+            speakOut("Make me your device admin for better performance")
+            true
         }
     }
 
@@ -274,7 +313,6 @@ class Setup : AppCompatActivity() {
                         speakOut("Say that again to confirm", skivvy.CODE_VOICE_AUTH_CONFIRM)
                     }
                 } else {
-                    //TODO: this
                     skivvy.setVoiceKeyPhrase(null)
                     defaultVoiceAuthUIState()
                     speakOut(getString(R.string.no_input))
@@ -287,9 +325,9 @@ class Setup : AppCompatActivity() {
                     voiceAuth.isChecked = true
                     skivvy.setPhraseKeyStatus(true)
                     deleteVoiceSetup.visibility = View.VISIBLE
-                    deleteVoiceSetup.alpha = 1F
-                    deleteVoiceSetup.isClickable = true
-                    speakOut("'$text' is the phrase.")
+                    
+                    
+                    speakOut("'${skivvy.getVoiceKeyPhrase()}' is the phrase.")
                     if (!skivvy.getBiometricStatus() && skivvy.checkBioMetrics()) {
                         showBiometricRecommendation()
                     }
@@ -302,7 +340,7 @@ class Setup : AppCompatActivity() {
                         getString(R.string.confirmation_phrase_didnt_match),
                         10000
                     )
-                        .setTextColor(ContextCompat.getColor(context, R.color.dull_white))
+                        .setTextColor(ContextCompat.getColor(context, R.color.pitch_white))
                         .setBackgroundTint(ContextCompat.getColor(context, R.color.dark_red))
                         .setAction("Try again") {
                             startVoiceRecIntent(
@@ -310,7 +348,7 @@ class Setup : AppCompatActivity() {
                                 getString(R.string.tell_new_secret_phrase)
                             )
                         }
-                        .setActionTextColor(ContextCompat.getColor(context, R.color.colorPrimary))
+                        .setActionTextColor(ContextCompat.getColor(context, R.color.light_green))
                         .show()
                 }
             }
@@ -320,8 +358,8 @@ class Setup : AppCompatActivity() {
                     showSnackBar(getString(R.string.device_admin_success))
                     deviceAdmin.visibility = View.GONE
                 } else {
-                    speakOut(getString(R.string.device_admin_failure))
                     showSnackBar(getString(R.string.device_admin_failure), R.color.dark_red)
+                    speakOut(getString(R.string.device_admin_failure))
                 }
             }
         }
@@ -338,11 +376,11 @@ class Setup : AppCompatActivity() {
             .setAction("Enable") {
                 setBiometricsStatus(true)
             }
-            .setActionTextColor(ContextCompat.getColor(context, R.color.colorPrimaryDark))
+            .setActionTextColor(ContextCompat.getColor(context, R.color.dull_white))
             .show()
     }
 
-    private fun authSetup(code: Int) {
+    private fun initAndShowBioAuth(code: Int) {
         executor = ContextCompat.getMainExecutor(this)
         promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(getString(R.string.auth_demand_title))
@@ -372,18 +410,29 @@ class Setup : AppCompatActivity() {
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    if (code == skivvy.CODE_BIOMETRIC_CONFIRM) {
-                        setBiometricsStatus(true)
+                    when(code){
+                        skivvy.CODE_BIOMETRIC_CONFIRM-> {
+                            setBiometricsStatus(true)
+                        }
                     }
                 }
 
                 override fun onAuthenticationFailed() {
-                    if (code == skivvy.CODE_BIOMETRIC_CONFIRM) {
-                        setBiometricsStatus(true)
-                    }
                     super.onAuthenticationFailed()
+                    when(code){
+                        skivvy.CODE_BIOMETRIC_CONFIRM ->{
+                            setBiometricsStatus(true)
+                        }
+                        skivvy.CODE_VOICE_AUTH_CONFIRM ->{
+                            temp.setAuthAttemptCount(temp.getAuthAttemptCount()-1)
+                            if(temp.getAuthAttemptCount() == 0){
+                                //TODO: Set countdown to delete
+                            }
+                        }
+                    }
                 }
             })
+        biometricPrompt.authenticate(promptInfo)
     }
 
     private fun setBiometricsStatus(isEnabled: Boolean) {
@@ -391,10 +440,10 @@ class Setup : AppCompatActivity() {
             .putBoolean(skivvy.PREF_KEY_BIOMETRIC, isEnabled).apply()
         biometrics.isChecked = isEnabled
         if (isEnabled) {
-            biometrics.thumbTintList = ContextCompat.getColorStateList(this, R.color.colorPrimary)
+            biometrics.thumbTintList = ContextCompat.getColorStateList(context, R.color.colorPrimary)
             biometrics.text = getString(R.string.disable_fingerprint)
         } else {
-            biometrics.thumbTintList = ContextCompat.getColorStateList(this, R.color.light_spruce)
+            biometrics.thumbTintList = ContextCompat.getColorStateList(context, R.color.light_spruce)
             biometrics.text = getString(R.string.enable_fingerprint)
         }
     }
@@ -404,10 +453,10 @@ class Setup : AppCompatActivity() {
             .putBoolean(skivvy.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
         mute.isChecked = isMuted
         if (isMuted) {
-            mute.thumbTintList = ContextCompat.getColorStateList(this, R.color.colorPrimary)
+            mute.thumbTintList = ContextCompat.getColorStateList(context, R.color.colorPrimary)
             mute.text = getString(R.string.unmute_text)
         } else {
-            mute.thumbTintList = ContextCompat.getColorStateList(this, R.color.light_spruce)
+            mute.thumbTintList = ContextCompat.getColorStateList(context, R.color.light_spruce)
             mute.text = getString(R.string.mute_text)
         }
     }
@@ -417,10 +466,10 @@ class Setup : AppCompatActivity() {
             .putInt(skivvy.PREF_KEY_THEME, themeCode).apply()
         theme.isChecked = themeCode == R.style.LightTheme
         if (theme.isChecked) {
-            theme.thumbTintList = ContextCompat.getColorStateList(this, R.color.colorPrimary)
+            theme.thumbTintList = ContextCompat.getColorStateList(context, R.color.colorPrimary)
             theme.text = getString(R.string.switch_to_dark)
         } else {
-            theme.thumbTintList = ContextCompat.getColorStateList(this, R.color.light_spruce)
+            theme.thumbTintList = ContextCompat.getColorStateList(context, R.color.light_spruce)
             theme.text = getString(R.string.switch_to_light)
         }
     }
@@ -430,20 +479,27 @@ class Setup : AppCompatActivity() {
             .putBoolean(skivvy.PREF_KEY_TRAINING, isTraining).apply()
         training.isChecked = isTraining
         if (isTraining) {
-            training.thumbTintList = ContextCompat.getColorStateList(this, R.color.colorPrimary)
+            training.thumbTintList = ContextCompat.getColorStateList(context, R.color.colorPrimary)
             training.text = getString(R.string.deactivate_training_text)
         } else {
-            training.thumbTintList = ContextCompat.getColorStateList(this, R.color.light_spruce)
+            training.thumbTintList = ContextCompat.getColorStateList(context, R.color.light_spruce)
             training.text = getString(R.string.activate_training_text)
         }
     }
 
-    private fun speakOut(text: String, code: Int) {
+    private fun defaultVoiceAuthUIState() {
+        voiceAuth.isChecked = false
+        skivvy.setPhraseKeyStatus(false)
+        voiceAuth.text = getString(R.string.enable_vocal_authentication)
+        voiceAuth.thumbTintList = ContextCompat.getColorStateList(context, R.color.light_spruce)
+        deleteVoiceSetup.visibility = View.GONE
+    }
+
+    private fun speakOut(text: String, code: Int? = null) {
         skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onDone(utteranceId: String) {
-                startVoiceRecIntent(code, text)
+                code?.let{startVoiceRecIntent(code, text)}
             }
-
             override fun onError(utteranceId: String) {}
             override fun onStart(utteranceId: String) {}
         })
@@ -452,56 +508,19 @@ class Setup : AppCompatActivity() {
                 text,
                 TextToSpeech.QUEUE_FLUSH,
                 null,
-                ""
+                "$code"
             )
         } else {
-            startVoiceRecIntent(code, text)
+            code?.let{startVoiceRecIntent(code, text)}
         }
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
     }
 
-    private fun defaultVoiceAuthUIState() {
-        voiceAuth.isChecked = false
-        voiceAuth.text = getString(R.string.enable_vocal_authentication)
-        voiceAuth.thumbTintList = ContextCompat.getColorStateList(this, R.color.light_spruce)
-        skivvy.setPhraseKeyStatus(false)
-        deleteVoiceSetup.visibility = View.GONE
-    }
-
     private fun startVoiceRecIntent(code: Int, msg: String) {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            .putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
-            .putExtra(RecognizerIntent.EXTRA_PROMPT, msg)
-        if (intent.resolveActivity(packageManager) != null)
-            startActivityForResult(intent, code)
-        else {
-            Snackbar.make(
-                findViewById(R.id.setup_layout),
-                "Error in speech recognition.",
-                Snackbar.LENGTH_SHORT
-            )
-                .setBackgroundTint(ContextCompat.getColor(context, R.color.dark_red))
-                .setTextColor(ContextCompat.getColor(context, R.color.dull_white))
-        }
-    }
-
-    private fun speakOut(text: String) {
-        skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onDone(utteranceId: String) {}
-            override fun onError(utteranceId: String) {}
-            override fun onStart(utteranceId: String) {}
-        })
-        if (!skivvy.getMuteStatus()) {
-            skivvy.tts!!.speak(
-                text,
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                ""
-            )
-        } else Toast.makeText(this, text, Toast.LENGTH_LONG).show()
+        recognitionIntent.putExtra(RecognizerIntent.EXTRA_PROMPT, msg)
+        if (recognitionIntent.resolveActivity(packageManager) != null)
+            startActivityForResult(recognitionIntent, code)
+        else
+            showSnackBar("Error in speech recognition.",R.color.dark_red,R.color.dull_white)
     }
 }
