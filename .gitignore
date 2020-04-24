@@ -16,3 +16,7 @@ gradle-app.setting
 *.gradle
 app/app.iml
 *.apk
+.project
+app/.classpath
+.settings/org.eclipse.buildship.core.prefs
+app/.settings/org.eclipse.buildship.core.prefs

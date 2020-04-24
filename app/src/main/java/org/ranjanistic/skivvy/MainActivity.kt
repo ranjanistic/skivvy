@@ -5,11 +5,14 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.bluetooth.BluetoothAdapter
-import android.content.*
+import android.content.ContentResolver
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.hardware.Camera
 import android.location.LocationManager
 import android.media.AudioManager
 import android.net.Uri
@@ -1865,6 +1868,14 @@ open class MainActivity : AppCompatActivity() {
             speakOut(getString(snap_failed))
             e.printStackTrace()
         }
+    }
+//TODO: flashlight, airplane mode, power off, restart phone,brightness,autorotation,hotspot, specific settings
+    private fun flashlight(){
+        val cam: Camera = Camera.open()
+        val p: Camera.Parameters = cam.parameters
+        p.flashMode = Camera.Parameters.FLASH_MODE_TORCH
+        cam.parameters = p
+        cam.startPreview()
     }
 
     private fun saveCalculationResult(result: String) {
