@@ -171,6 +171,7 @@
     <string name="grant_permissions">Grant permissions</string>
     <string name="make_device_admin">Make device admin</string>
     <string name="device_admin_success">Thanks for making me your device admin.</string>
+    <string name="reset_voice_auth_confirm">Confirm to reset and disable vocal authentication?</string>
     <string-array name="notification_channel">
         <item>SKIVVY_MAIN_NOTIFICATION</item>
         <item>Skivvy is active</item>

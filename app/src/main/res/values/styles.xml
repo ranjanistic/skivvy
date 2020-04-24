@@ -6,6 +6,12 @@
         <item name="android:statusBarColor">@color/dead_blue</item>
         <item name="android:background">@drawable/splash</item>
     </style>
+    <style name="SplashLight" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/dull_white</item>
+        <item name="android:statusBarColor">@color/dull_white</item>
+        <item name="android:background">@drawable/splash_light</item>
+    </style>
 
     <style name="LightTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="fontFamily">@font/varela_round_regular</item>

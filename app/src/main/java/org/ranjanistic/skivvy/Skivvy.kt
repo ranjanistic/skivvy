@@ -33,6 +33,7 @@ open class Skivvy : Application() {
     val CODE_SMS_REQUEST = 1003
     val CODE_CALL_LOG_REQUEST = 1004
     val CODE_BODY_SENSOR_REQUEST = 1005
+    val CODE_CALENDER_REQUEST = 1006
     val permissions = arrayOf(
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
         Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -40,6 +41,8 @@ open class Skivvy : Application() {
         Manifest.permission.READ_CONTACTS,
         Manifest.permission.CALL_PHONE,
         Manifest.permission.READ_CALL_LOG,
+        Manifest.permission.WRITE_CALENDAR,
+        Manifest.permission.READ_CALENDAR,
         Manifest.permission.ACCESS_WIFI_STATE,
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.SEND_SMS,
@@ -86,14 +89,14 @@ open class Skivvy : Application() {
     val FINISH_ACTION = "finish"
     val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","sqrt","cbrt","exp")
     val operators = arrayOf("^", "p", "/", "*", "m", "-", "+")
-    val LIGHT_THEME = 9999
-    val DARK_THEME = 9998
+
     //default objects
     var tts: TextToSpeech? = null
     var packageDataManager:PackageDataManager = PackageDataManager()
     var contactData:ContactData = ContactData()
     lateinit var deviceManager: DevicePolicyManager
     lateinit var compName: ComponentName
+    @ExperimentalStdlibApi
     override fun onCreate() {
         super.onCreate()
         deviceManager = applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager

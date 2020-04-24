@@ -1568,7 +1568,6 @@ open class MainActivity : AppCompatActivity() {
     }
 
     //TODO: Either create contact list data class and use that here, or do direct lookup faster in background.
-    private var isContactPresent = false
     private fun contactOps(name: String, code: Int) {
         temp.setContactCode(code)
         temp.setPhoneIndex(0)
@@ -1899,7 +1898,7 @@ open class MainActivity : AppCompatActivity() {
                             waitingView(getDrawable(ic_glossyphone))
                             speakOut("Speaking to $number")
                         } else {
-                            if (isContactPresent) {
+                            if (temp.getContactPresence()) {
                                 speakOut("Calling ${contact.displayName}")
                             } else {
                                 speakOut("Calling $number")
@@ -1911,7 +1910,7 @@ open class MainActivity : AppCompatActivity() {
                             speakOut("You missed a call from $number")
                             errorView()
                         } else if (lastState == TelephonyManager.CALL_STATE_OFFHOOK) {
-                            if (isContactPresent) {
+                            if (temp.getContactPresence()) {
                                 speakOut("Call ended with ${contact.displayName}")
                             } else {
                                 speakOut("Call ended with\n$number")
@@ -1956,7 +1955,6 @@ open class MainActivity : AppCompatActivity() {
         contact = ContactModel()
         temp = Temporary()
         txt = null
-        isContactPresent = false
     }
 
     fun waitingView(image: Drawable?) {
