@@ -12,7 +12,8 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
-import android.hardware.Camera
+import android.hardware.camera2.CameraAccessException
+import android.hardware.camera2.CameraManager
 import android.location.LocationManager
 import android.media.AudioManager
 import android.net.Uri
@@ -32,6 +33,7 @@ import android.telephony.TelephonyManager
 import android.text.format.DateFormat
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.ImageButton
@@ -71,6 +73,7 @@ open class MainActivity : AppCompatActivity() {
     private lateinit var fallDown: Animation
     private lateinit var riseUp: Animation
     private lateinit var extendDown: Animation
+    private lateinit var extendDownStartSetup: Animation
     private lateinit var rotateRevolveToRight: Animation
     private lateinit var revolveRotateToLeft: Animation
     private lateinit var fadeOff: Animation
@@ -140,11 +143,12 @@ open class MainActivity : AppCompatActivity() {
         setting.startAnimation(revolveRotateToLeft)
         rotateRevolveToRight = AnimationUtils.loadAnimation(context, R.anim.pill_slide_right)
         extendDown = AnimationUtils.loadAnimation(context, R.anim.extend_back)
+        extendDownStartSetup = AnimationUtils.loadAnimation(context, R.anim.extend_back)
     }
 
     private fun startSettingAnimate() {
         setting.startAnimation(rotateRevolveToRight)
-        backfall.startAnimation(extendDown)
+        backfall.startAnimation(extendDownStartSetup)
         greet.startAnimation(fadeOff)
         outPut.startAnimation(fadeOff)
         receiver.startAnimation(fadeOff)
@@ -153,8 +157,10 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun startResumeAnimate() {
+        greet.text = getString(app_name)
         greet.startAnimation(fadeOn)
         receiver.startAnimation(fadeOn)
+        receiver.visibility = View.VISIBLE
         greet.startAnimation(waveDamped)
         receiver.startAnimation(waveDamped)
         setting.startAnimation(revolveRotateToLeft)
@@ -162,6 +168,8 @@ open class MainActivity : AppCompatActivity() {
         outPut.startAnimation(fadeOn)
         input.startAnimation(fadeOn)
         settingBack.startAnimation(fadeOn)
+        loading.setImageDrawable(getDrawable(ic_dotsincircle))
+        loading.startAnimation(zoomInOutRotate)
     }
 
     private fun setListeners() {
@@ -174,7 +182,7 @@ open class MainActivity : AppCompatActivity() {
             normalView()
             startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
         }
-        extendDown.setAnimationListener(object : Animation.AnimationListener {
+        extendDownStartSetup.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationEnd(p0: Animation?) {
                 startActivity(Intent(context, Setup::class.java))
                 overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
@@ -204,7 +212,11 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onRestart() {
         super.onRestart()
-        startResumeAnimate()
+        if (!skivvy.getTrainingStatus()) {
+            startResumeAnimate()
+        } else {
+            trainingView()
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -818,6 +830,28 @@ open class MainActivity : AppCompatActivity() {
             R.array.snap_list
         )
         when {
+            text.contains("training mode") -> {
+                if (text == "acitivate training mode") {
+                    if (!skivvy.getTrainingStatus()) {
+                        skivvy.setTrainingStatus(true)
+                        speakOut("Activating training mode")
+                        trainingView()
+                    } else {
+                        speakOut("Already learning")
+                    }
+                } else {
+                    if (text.contains("deactivate")) {
+                        if (skivvy.getTrainingStatus()) {
+                            skivvy.setTrainingStatus(false)
+                            speakOut("Deactivating training mode")
+                            startResumeAnimate()
+                        } else {
+                            speakOut("Already inactive")
+                        }
+                    }
+                }
+            }
+
             text.contains("setup") || text.contains("set up") -> {
                 startActivity(Intent(context, Setup::class.java))
             }
@@ -859,6 +893,19 @@ open class MainActivity : AppCompatActivity() {
                     )
                 } else {
                     takeScreenshot()
+                }
+            }
+            text.contains("flash") -> {
+                if (isFlashAvailable()) {
+                    if (text.contains("off")) {
+                        speakOut("Flashlight is off")
+                        setFlashLight(false)
+                    } else {
+                        speakOut("Flashlight is on")
+                        setFlashLight(true)
+                    }
+                } else {
+                    speakOut("Flashlight not available")
                 }
             }
             text.contains("search") -> {
@@ -1869,13 +1916,23 @@ open class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
-//TODO: flashlight, airplane mode, power off, restart phone,brightness,autorotation,hotspot, specific settings
-    private fun flashlight(){
-        val cam: Camera = Camera.open()
-        val p: Camera.Parameters = cam.parameters
-        p.flashMode = Camera.Parameters.FLASH_MODE_TORCH
-        cam.parameters = p
-        cam.startPreview()
+
+    //TODO: flashlight, airplane mode, power off, restart phone,brightness,auto rotation,hotspot, specific settings
+    private fun setFlashLight(status: Boolean) {
+        try {
+            val mCameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            val mCameraId = mCameraManager.cameraIdList[0]
+            Log.d("Flash", mCameraId)
+            mCameraManager.setTorchMode(mCameraId, status)
+        } catch (e: CameraAccessException) {
+            speakOut("Can't access your flashlight")
+            e.printStackTrace()
+        }
+    }
+
+    private fun isFlashAvailable(): Boolean {
+        return applicationContext.packageManager
+            .hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT)
     }
 
     private fun saveCalculationResult(result: String) {
@@ -1966,6 +2023,18 @@ open class MainActivity : AppCompatActivity() {
         contact = ContactModel()
         temp = Temporary()
         txt = null
+    }
+
+    private fun trainingView() {
+        skivvy.saveMuteStatus(false)
+        backfall.startAnimation(extendDown)
+        receiver.startAnimation(fadeOff)
+        loading.startAnimation(focusDeFocusRotate)
+        loading.setImageDrawable(getDrawable(ic_yellow_dotsincircle))
+        receiver.visibility = View.GONE
+        greet.text = getString(traning_title)
+        setting.visibility = View.GONE
+        settingBack.visibility = View.GONE
     }
 
     fun waitingView(image: Drawable?) {

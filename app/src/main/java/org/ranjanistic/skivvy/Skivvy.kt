@@ -302,6 +302,10 @@ open class Skivvy : Application() {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_TRAINING, false)
     }
+    fun setTrainingStatus(isTraining: Boolean) {
+        getSharedPreferences(this.PREF_HEAD_APP_MODE, MODE_PRIVATE).edit()
+            .putBoolean(this.PREF_KEY_TRAINING, isTraining).apply()
+    }
     fun setThemeState(themeCode:Int){
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putInt(this.PREF_KEY_THEME, themeCode).apply()

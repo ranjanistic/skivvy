@@ -34,7 +34,7 @@
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES"/>
     <uses-permission android:name="android.permission.READ_CALENDAR"/>
     <uses-permission android:name="android.permission.WRITE_CALENDAR"/>
-
+    <uses-feature android:name="android.hardware.camera.flash" />
     <application
         android:name=".Skivvy"
         android:allowBackup="false"
@@ -43,7 +43,7 @@
         android:fullBackupContent="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/LightTheme">
+        android:theme="@style/DarkTheme">
         <activity android:name=".Setup" />
         <service android:name=".CommandService"/>
         <activity
