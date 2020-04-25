@@ -895,6 +895,23 @@ open class MainActivity : AppCompatActivity() {
                     takeScreenshot()
                 }
             }
+            text.contains("airplane") -> {
+                if (isAirplaneModeEnabled()) {
+                    if (text.contains("on") || text.contains("enable")) {
+                        speakOut("Already on airplane mode")
+                    } else {
+                        speakOut("Airplane mode on")
+                        setAirplaneMode(false)
+                    }
+                } else {
+                    if (text.contains("off") || text.contains("disable")) {
+                        speakOut("Airplane mode already off")
+                    } else {
+                        speakOut("Airplane mode off")
+                        setAirplaneMode(true)
+                    }
+                }
+            }
             text.contains("flash") -> {
                 if (isFlashAvailable()) {
                     if (text.contains("off")) {
@@ -1917,7 +1934,29 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    //TODO: flashlight, airplane mode, power off, restart phone,brightness,auto rotation,hotspot, specific settings
+    //TODO:  airplane mode, power off, restart phone,brightness,auto rotation,hotspot, specific settings
+
+    private fun isAirplaneModeEnabled(): Boolean {
+        return Settings.System.getInt(contentResolver, Settings.System.AIRPLANE_MODE_ON, 0) == 1
+    }
+
+    private fun setAirplaneMode(status: Boolean) {
+        Settings.System.putInt(
+            contentResolver, Settings.System.AIRPLANE_MODE_ON,
+            if (status) 1
+            else 0
+        )
+        try {
+            sendBroadcast(
+                Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED).putExtra(
+                    "state", status
+                )
+            )
+        } catch (e:SecurityException) {
+            speakOut("I'm not allowed to do that")
+        }
+    }
+
     private fun setFlashLight(status: Boolean) {
         try {
             val mCameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
