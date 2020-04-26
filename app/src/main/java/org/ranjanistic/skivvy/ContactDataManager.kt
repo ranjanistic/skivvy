@@ -1,6 +1,12 @@
 package org.ranjanistic.skivvy
 
-class ContactData {
+/**
+ * Device contacts manager class, to hold the details of contacts
+ * on the device for direct supply to Skivvy on demand.
+ * @author Priyanshu Ranjan
+ */
+
+class ContactDataManager {
     private var totalContacts:Int = 0
     private lateinit var contactID:Array<String?>
     private lateinit  var photoID:Array<String?>
@@ -8,6 +14,15 @@ class ContactData {
     private lateinit var  nickName:Array<Array<String?>?>
     private lateinit  var phoneList:Array<Array<String?>?>
     private lateinit  var emailList:Array<Array<String?>?>
+
+    data class ContactData(val size: Int){
+        var iDs: Array<String?> = arrayOfNulls(size)
+        var photoIDs:Array<String?> = arrayOfNulls(size)
+        var names:Array<String?> = arrayOfNulls(size)
+        var nickNames:Array<Array<String?>?> = arrayOfNulls(size)
+         var phones:Array<Array<String?>?> = arrayOfNulls(size)
+        var emails:Array<Array<String?>?> = arrayOfNulls(size)
+    }
 
     fun setTotalContacts(size:Int){
         this.totalContacts = size
@@ -29,6 +44,16 @@ class ContactData {
         this.photoID[index] = photoUri
         this.displayName[index] = contactName
     }
+
+    fun setContactDetails(contactData:ContactData){
+        this.contactID = contactData.iDs
+        this.photoID = contactData.photoIDs
+        this.displayName = contactData.names
+        this.nickName = contactData.nickNames
+        this.phoneList = contactData.phones
+        this.emailList = contactData.emails
+    }
+
     fun setContactNicknameInitials(contactIndex: Int,nicknames:Array<String?>){
         this.nickName[contactIndex] =  nicknames
     }

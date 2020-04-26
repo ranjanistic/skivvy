@@ -16,6 +16,7 @@ class PackageDataManager {
     private lateinit var packagesIcon: Array<Drawable?>
     private var packagesTotal: Int = 0
 
+    //For receiving package manager data at instant
     data class PackageData(val size:Int){
         var appName: Array<String?> = arrayOfNulls(size)
         var appPackage: Array<String?> = arrayOfNulls(size)

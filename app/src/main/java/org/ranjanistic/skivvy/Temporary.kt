@@ -16,6 +16,7 @@ class Temporary {
     private var contactCode: Int? = null
     private var volumePercent:Float = 40F
     private var authAttemptCount:Int = 3
+    private var retryCommandCount = 0
 
     fun getPackageIndex(): Int = this.packageIndex
     fun getPhoneIndex(): Int = this.phoneIndex
@@ -31,6 +32,7 @@ class Temporary {
     fun getContactCode(): Int? = this.contactCode
     fun getVolumePercent():Float = this.volumePercent
     fun getAuthAttemptCount():Int = this.authAttemptCount
+    fun getRetryCommandCount():Int = this.retryCommandCount
 
     fun setPackageIndex(packageIndex: Int) {
         this.packageIndex = packageIndex
@@ -85,4 +87,8 @@ class Temporary {
     fun setAuthAttemptCount(count:Int){
         this.authAttemptCount = count
     }
+    fun setRetryCommandCount(count:Int){
+        this.retryCommandCount = count
+    }
+
 }

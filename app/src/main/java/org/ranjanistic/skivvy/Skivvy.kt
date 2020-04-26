@@ -59,6 +59,7 @@ open class Skivvy : Application() {
     val nonNumeralPattern = "[^0-9]".toRegex()
 
     //action codes
+    val CODE_TRAINING_MODE = 9
     val CODE_SPEECH_RECORD = 10
     val CODE_APP_CONF = 11
     val CODE_CALL_CONF = 12
@@ -94,7 +95,7 @@ open class Skivvy : Application() {
     //default objects
     var tts: TextToSpeech? = null
     var packageDataManager:PackageDataManager = PackageDataManager()
-    var contactData:ContactData = ContactData()
+    var contactDataManager:ContactDataManager = ContactDataManager()
     lateinit var deviceManager: DevicePolicyManager
     lateinit var compName: ComponentName
     @ExperimentalStdlibApi
@@ -143,38 +144,50 @@ open class Skivvy : Application() {
 
     private fun getLocalContacts(){
         var contactCount = 0
+        lateinit var contactData:ContactDataManager.ContactData
         val cr: ContentResolver = contentResolver
         val cur: Cursor? = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
         if (cur!!.count > 0) {
-            this.contactData.setTotalContacts(cur.count)
-            this.contactData.setContactDataInitials(
-                arrayOfNulls(this.contactData.getTotalContacts()),
-                arrayOfNulls(this.contactData.getTotalContacts()),
-                arrayOfNulls(this.contactData.getTotalContacts()),
-                arrayOfNulls(this.contactData.getTotalContacts()),
-                arrayOfNulls(this.contactData.getTotalContacts()),
-                arrayOfNulls(this.contactData.getTotalContacts())
+            this.contactDataManager.setTotalContacts(cur.count)
+            contactData = ContactDataManager.ContactData(this.contactDataManager.getTotalContacts())
+            /*
+            this.contactDataManager.setContactDataInitials(
+                arrayOfNulls(this.contactDataManager.getTotalContacts()),
+                arrayOfNulls(this.contactDataManager.getTotalContacts()),
+                arrayOfNulls(this.contactDataManager.getTotalContacts()),
+                arrayOfNulls(this.contactDataManager.getTotalContacts()),
+                arrayOfNulls(this.contactDataManager.getTotalContacts()),
+                arrayOfNulls(this.contactDataManager.getTotalContacts())
             )
+             */
             while (cur.moveToNext()) {
-                this.contactData.setContactSoloData(contactCount,
+                contactData.iDs[contactCount] = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID))
+                contactData.photoIDs[contactCount] = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
+                contactData.names[contactCount] = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
+                /*
+                this.contactDataManager.setContactSoloData(contactCount,
                     cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID)),
                     cur.getString(cur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI)),
                     cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
                 )
 
+                 */
+
                 //for nicknames
                 var deepCur:Cursor? = cr.query(ContactsContract.Data.CONTENT_URI,
                     null,
                     ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
-                    arrayOf(contactData.getContactIDs()[contactCount], ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE),
+                    arrayOf(contactData.iDs[contactCount], ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE),
                     null
                 )
                 if(deepCur!!.count>0) {
-                    this.contactData.setContactNicknameInitials(contactCount, arrayOfNulls(deepCur.count))
+//                    this.contactDataManager.setContactNicknameInitials(contactCount, arrayOfNulls(deepCur.count))
+                    contactData.nickNames[contactCount] = arrayOfNulls(deepCur.count)
                     var nickCount = 0
                     while (deepCur.moveToNext()) {
                         val nicknameName = deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Nickname.NAME))?.toLowerCase(this.locale)
-                        this.contactData.setContactNicknameData(contactCount,nickCount,nicknameName)
+                        contactData.nickNames[contactCount]?.set(nickCount, nicknameName)
+//                        this.contactDataManager.setContactNicknameData(contactCount,nickCount,nicknameName)
                         ++nickCount
                     }
                 }
@@ -184,18 +197,20 @@ open class Skivvy : Application() {
                     ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                     null,
                     ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                    arrayOf(contactData.getContactIDs()[contactCount]),
+                    arrayOf(contactDataManager.getContactIDs()[contactCount]),
                     null
                 )
                     var size = 0
                     while(deepCur!!.moveToNext()){
                         ++size
                     }
+                contactData.phones[contactCount] = arrayOfNulls(size)
                 val localPhone = arrayOfNulls<String>(size)
                     var pCount = 0
                     deepCur.moveToFirst()
                     while (pCount<size) {
                         localPhone[pCount] = deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                        //TODO: Check this too if using this method
                         var tempPhone = ""
                         if(localPhone[pCount]!=null) {
                             localPhone[pCount] = localPhone[pCount]!!.replace("+", "")
@@ -227,10 +242,8 @@ open class Skivvy : Application() {
                                     }
                                 }
                             }
-                            this.contactData.setContactPhoneData(
-                                contactCount, pCount,
-                                tempPhone
-                            )
+                            contactData.phones[contactCount]?.set(pCount, tempPhone)
+//                            this.contactDataManager.setContactPhoneData(contactCount, pCount, tempPhone)
                         }
                         deepCur.moveToNext()
                         if(tempPhone!=" ") {
@@ -243,17 +256,15 @@ open class Skivvy : Application() {
                     ContactsContract.CommonDataKinds.Email.CONTENT_URI,
                     null,
                     ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
-                    arrayOf(contactData.getContactIDs()[contactCount]),
+                    arrayOf(contactDataManager.getContactIDs()[contactCount]),
                     null
                 )
                 if(deepCur!!.count>0) {
-                    this.contactData.setContactEmailsInitials(contactCount, arrayOfNulls(deepCur.count))
+                    this.contactDataManager.setContactEmailsInitials(contactCount, arrayOfNulls(deepCur.count))
                     var eCount = 0
                     while(deepCur.moveToNext()) {
-                        this.contactData.setContactEmailData(
-                            contactCount,eCount,
-                            deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA))
-                        )
+                        contactData.emails[contactCount]?.set(eCount,deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA)))
+//                        this.contactDataManager.setContactEmailData(contactCount,eCount, deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA)))
                         ++eCount
                     }
                 }
@@ -262,6 +273,7 @@ open class Skivvy : Application() {
             }
         }
         cur.close()
+        this.contactDataManager.setContactDetails(contactData)
     }
 
     fun getBiometricStatus(): Boolean {

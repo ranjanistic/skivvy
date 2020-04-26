@@ -219,6 +219,10 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        skivvy.setTrainingStatus(false)
+    }
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -330,42 +334,46 @@ open class MainActivity : AppCompatActivity() {
                             / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}%"
                 )
             }
-            KeyEvent.KEYCODE_CAPS_LOCK -> {
-                setFeedback("Caps lock toggled")
-            }
-            KeyEvent.KEYCODE_HOME -> {
-                setFeedback("I'm still working")
-            }
-            KeyEvent.KEYCODE_MEDIA_PLAY -> {
-                setFeedback("Your music must be playing now")
-            }
-            KeyEvent.KEYCODE_MEDIA_PAUSE -> {
-                setFeedback("Music paused")
-            }
         }
         return super.onKeyDown(keyCode, event)
     }
 
+    private fun handleTrainingInput(input:String?){
+        speakOut("Okay")
+        Log.d("training", "handled $input")
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         var result: ArrayList<String> = ArrayList(1)
-        if (!skivvy.nonVocalRequestCodes.contains(requestCode)) {
-            if (data == null || data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                    ?.get(0)
-                    .toString()
-                    .toLowerCase(skivvy.locale) == ""
-            ) {
-                normalView()
-                speakOut(getString(no_input))
-                return
-            } else {
-                result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)!!
-                input.text = result[0]
+        if(!skivvy.getTrainingStatus()) {
+            if (!skivvy.nonVocalRequestCodes.contains(requestCode)) {
+                if (data == null || data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                        ?.get(0)
+                        .toString()
+                        .toLowerCase(skivvy.locale) == ""
+                ) {
+                    normalView()
+                    speakOut(getString(no_input))
+                    return
+                } else {
+                    result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)!!
+                    input.text = result[0]
+                }
             }
         }
-
         when (requestCode) {
+            skivvy.CODE_TRAINING_MODE->{
+                if(data!=null) {
+                    result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)!!
+                    input.text = result[0]
+                    Log.d("training", result[0])
+                    handleTrainingInput(result[0])
+                } else {
+                    Log.d("training","null input")
+                    handleTrainingInput(null)
+                }
+            }
             skivvy.CODE_SPEECH_RECORD -> {
                 val temp = result[0].toLowerCase(skivvy.locale)
                 if (txt == null || txt == "") {
@@ -497,7 +505,7 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             skivvy.CODE_CALL_CONF -> {
-                //val cdata = skivvy.contactData
+                //val cdata = skivvy.contactDataManager
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
                 when (isCooperative(txt!!)) {
@@ -560,7 +568,7 @@ open class MainActivity : AppCompatActivity() {
             }
 
             skivvy.CODE_EMAIL_CONTENT -> {
-                //val cdata = skivvy.contactData
+                //val cdata = skivvy.contactDataManager
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
                 when (isCooperative(txt!!)) {
@@ -621,7 +629,7 @@ open class MainActivity : AppCompatActivity() {
             }
 
             skivvy.CODE_EMAIL_CONF -> {
-                //val cdata = skivvy.contactData
+                //val cdata = skivvy.contactDataManager
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
                 when (isCooperative(txt!!)) {
@@ -678,7 +686,7 @@ open class MainActivity : AppCompatActivity() {
             }
 
             skivvy.CODE_TEXT_MESSAGE_BODY -> {
-                //val cdata = skivvy.contactData
+                //val cdata = skivvy.contactDataManager
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
                 when (isCooperative(txt!!)) {
@@ -717,7 +725,7 @@ open class MainActivity : AppCompatActivity() {
             }
 
             skivvy.CODE_SMS_CONF -> {
-                //val cdata = skivvy.contactData
+                //val cdata = skivvy.contactDataManager
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
                 when (isCooperative(txt!!)) {
@@ -818,6 +826,7 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
+    //TODO: extend this to other types of responses too
     private fun isCooperative(response: String): Boolean? {
         for (k in resources.getStringArray(R.array.acceptances)) {
             if (response.contains(k)) {
@@ -850,11 +859,12 @@ open class MainActivity : AppCompatActivity() {
         )
         when {
             text.contains("training mode") -> {
-                if (text == "acitivate training mode") {
+                if (text == "activate training mode") {
                     if (!skivvy.getTrainingStatus()) {
                         skivvy.setTrainingStatus(true)
-                        speakOut("Activating training mode")
-                        trainingView()
+                        speakOut("Activating training mode",skivvy.CODE_TRAINING_MODE)
+                        //trainingView()
+                        //recreate()
                     } else {
                         speakOut("Already learning")
                     }
@@ -863,7 +873,9 @@ open class MainActivity : AppCompatActivity() {
                         if (skivvy.getTrainingStatus()) {
                             skivvy.setTrainingStatus(false)
                             speakOut("Deactivating training mode")
-                            startResumeAnimate()
+                            normalView(true)
+                            //startResumeAnimate()
+                            //recreate()
                         } else {
                             speakOut("Already inactive")
                         }
@@ -1511,13 +1523,14 @@ open class MainActivity : AppCompatActivity() {
     //action invoking direct intents
     private fun directActions(text: String): Boolean {
         var localTxt: String
+        val continuationOperators:Array<String> = arrayOf("add","plus","+","-","minus","subtract","divide","multiply","/","x")
         when {
-            text.contains("add") || text.contains("plus") || text.contains("subtract")//||text.contains("multiply")||text.contains("divide" )
-            -> {
-                if (getLastCalculationResult() != "0" && text.contains(skivvy.numberPattern)) {
+            continuationOperators.contains(text.substringBefore(" ").toLowerCase(skivvy.locale)) -> {
+                if (text.contains(skivvy.numberPattern)) {
                     computerOps(getLastCalculationResult() + text)
+                        //TODO: continued calculation
+            //        startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD,"Continue calculation")
                 } else return false
-//                startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD,"Continue calculation")
             }
             text.contains(getString(call)) -> {
                 waitingView(getDrawable(ic_glossyphone))
@@ -1672,7 +1685,7 @@ open class MainActivity : AppCompatActivity() {
             )
         } else {
             /*
-            val cd = skivvy.contactData
+            val cd = skivvy.contactDataManager
             if (cd.getTotalContacts() == 0) {
                 errorView()
                 speakOut(getString(no_contacts_available))
@@ -2008,7 +2021,6 @@ open class MainActivity : AppCompatActivity() {
     private var telephonyManager: TelephonyManager? = null
     private var lastState: Int? = null
 
-
     private fun callStateListener() {
         telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         phoneStateListener = object : PhoneStateListener() {
@@ -2016,8 +2028,9 @@ open class MainActivity : AppCompatActivity() {
                 when (state) {
                     lastState -> return
                     TelephonyManager.CALL_STATE_RINGING -> {
+                        successView(getDrawable(ic_glossyphone))
+                        setVolume(50F)
                         speakOut("Incoming call from $number")
-                        successView(null)
                     }
                     TelephonyManager.CALL_STATE_OFFHOOK -> {
                         if (lastState == TelephonyManager.CALL_STATE_RINGING) {
@@ -2071,7 +2084,7 @@ open class MainActivity : AppCompatActivity() {
         super.onBackPressed()
     }
 
-    private fun normalView() {
+    private fun normalView(fromTraining:Boolean = false) {
         loading.setImageDrawable(getDrawable(ic_dotsincircle))
         loading.startAnimation(zoomInOutRotate)
         input.text = null
@@ -2081,16 +2094,29 @@ open class MainActivity : AppCompatActivity() {
         contact = ContactModel()
         temp = Temporary()
         txt = null
+        if(fromTraining) {
+            startResumeAnimate()
+            receiver.isClickable = true
+            setting.isClickable = true
+            receiver.visibility = View.VISIBLE
+            greet.visibility = View.VISIBLE
+            setting.visibility = View.VISIBLE
+            settingBack.visibility = View.VISIBLE
+            outPut.text = getString(im_ready)
+            input.text = getString(tap_the_button)
+        }
     }
 
     private fun trainingView() {
         skivvy.saveMuteStatus(false)
-        backfall.startAnimation(extendDown)
-        receiver.startAnimation(fadeOff)
-        loading.startAnimation(focusDeFocusRotate)
+        backfall.startAnimation(AnimationUtils.loadAnimation(context, R.anim.extend_back))
+        receiver.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_off))
+        loading.startAnimation(AnimationUtils.loadAnimation(context, R.anim.rotate_slow))
         loading.setImageDrawable(getDrawable(ic_yellow_dotsincircle))
-        receiver.visibility = View.GONE
+        receiver.isClickable = false
+        setting.isClickable = false
         greet.text = getString(traning_title)
+        receiver.visibility = View.GONE
         setting.visibility = View.GONE
         settingBack.visibility = View.GONE
     }

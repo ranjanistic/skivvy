@@ -10,6 +10,7 @@ import android.os.Handler
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.view.LayoutInflater
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
@@ -20,6 +21,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.delay
+import org.ranjanistic.skivvy.databinding.ActivityMainBinding.inflate
 import java.util.*
 import java.util.concurrent.Executor
 import kotlin.concurrent.schedule
@@ -121,7 +123,10 @@ class Setup : AppCompatActivity() {
         training.setOnCheckedChangeListener {view, isChecked ->
             skivvy.setTrainingStatus(isChecked)
             setThumbAttrs(view as Switch,isChecked,getString(R.string.deactivate_training_text),getString(R.string.activate_training_text))
-            if(isChecked) speakOut(getString(R.string.activate_training_text))
+            if(isChecked){
+                speakOut(getString(R.string.activate_training_text))
+                finish()
+            }
             else speakOut(getString(R.string.deactivate_training_text))
         }
         mute.setOnCheckedChangeListener { view, isChecked ->
@@ -485,11 +490,11 @@ class Setup : AppCompatActivity() {
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
     }
 
-    private fun startVoiceRecIntent(code: Int, msg: String) {
+    private fun startVoiceRecIntent(code: Int, msg: String = getString(R.string.generic_voice_rec_text)) {
         recognitionIntent.putExtra(RecognizerIntent.EXTRA_PROMPT, msg)
         if (recognitionIntent.resolveActivity(packageManager) != null)
             startActivityForResult(recognitionIntent, code)
         else
-            showSnackBar("Error in speech recognition.",R.color.dark_red,R.color.dull_white)
+            showSnackBar(getString(R.string.recognition_service_error),R.color.dark_red,R.color.dull_white)
     }
 }

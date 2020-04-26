@@ -27,16 +27,16 @@ class Calculator(var skivvy: Skivvy) {
         val toBeRooted = arrayOf("squareroot", "root", "secondroot")
         val toBeSquared = arrayOf("square")
         val toBeCubed = arrayOf("cube")
-
+        val toBeZeroed = arrayOf("zero")
         val formatArrays = arrayOf(
             toBeRemoved, toBePercented, toBeModded, toBeLogged, toBeLog,
             toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBeNumerized
-            , toBePowered, toBeCuberooted, toBeRooted, toBeSquared, toBeCubed
+            , toBePowered, toBeCuberooted, toBeRooted, toBeSquared, toBeCubed, toBeZeroed
         )
         val replacingArray =
             arrayOf(
                 "", "p", "m", "ln", "log", "*", "/", "+",
-                "-", "100", "^", "cbrt", "sqrt", "^2", "^3"
+                "-", "100", "^", "cbrt", "sqrt", "^2", "^3","0"
             )
         var formatIndex = 0
         while (formatIndex < formatArrays.size) {
@@ -293,6 +293,8 @@ class Calculator(var skivvy: Skivvy) {
             }
             ++opIndex       //next operator
         }
+        if(arrayOfExpression[0].toString().contains("NaN"))
+            return "Undefined result in my logic"
         return formatToProperValue(arrayOfExpression[0].toString())     //final result stored at index = 0
     }
 
@@ -339,7 +341,7 @@ class Calculator(var skivvy: Skivvy) {
                 (func.replace(skivvy.textPattern, "").toFloat().pow(0.5F)).toString()
             }
             func.contains("cbrt") -> {
-                (func.replace(skivvy.textPattern, "").toFloat().pow(1 / 3)).toString()
+                (func.replace(skivvy.textPattern, "").toDouble().pow(1 / 3.toDouble())).toString()
             }
             func.contains("exp") -> {
                 (exp(func.replace(skivvy.textPattern, "").toFloat())).toString()
