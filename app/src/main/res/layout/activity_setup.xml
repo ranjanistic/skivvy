@@ -2,9 +2,9 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/setup_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/setup_layout"
     android:background="?attr/secondary_background_color"
     tools:context=".Setup">
 
@@ -12,7 +12,7 @@
         android:id="@+id/settingIcon"
         android:layout_width="110dp"
         android:layout_height="110dp"
-        android:layout_margin="@dimen/base_separation"
+        android:layout_marginVertical="@dimen/base_separation"
         android:contentDescription="@string/setting_icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,6 +22,7 @@
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginVertical="14dp"
         app:layout_constraintBottom_toTopOf="@id/version"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,177 +30,109 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:paddingVertical="@dimen/minimum_separation"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="@dimen/secondary_separation"
+            android:paddingVertical="14dp">
 
-            <Switch
+            <include
                 android:id="@+id/trainingModeBtn"
+                layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="true"
-                android:hapticFeedbackEnabled="true"
-                android:fontFamily="@font/varela_round_regular"
-                android:layout_gravity="center_vertical"
-                android:gravity="center_vertical"
-                android:layout_margin="@dimen/base_separation"
-                android:paddingVertical="@dimen/secondary_separation"
-                android:paddingHorizontal="@dimen/base_separation"
-                android:background="@drawable/spruce_square_round_button"
-                android:backgroundTint="?attr/tertiary_background_color"
-                android:textColor="?attr/base_text_color"
-                android:thumbTint="@color/light_spruce"
-                android:trackTint="@color/charcoal"
-                android:textSize="@dimen/normal_text_size"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <Switch
+            <include
                 android:id="@+id/muteUnmuteBtn"
+                layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="true"
-                android:hapticFeedbackEnabled="true"
-                android:fontFamily="@font/varela_round_regular"
-                android:layout_gravity="center_vertical"
-                android:gravity="center_vertical"
-                android:layout_margin="@dimen/base_separation"
-                android:paddingVertical="@dimen/secondary_separation"
-                android:paddingHorizontal="@dimen/base_separation"
-                android:background="@drawable/spruce_square_round_button"
-                android:textColor="?attr/base_text_color"
-                android:thumbTint="@color/light_spruce"
-                android:trackTint="@color/charcoal"
-                android:textSize="@dimen/normal_text_size"
+                android:layout_marginVertical="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/trainingModeBtn" />
 
-            <Switch
+            <include
                 android:id="@+id/themeSwitch"
+                layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_margin="@dimen/base_separation"
-                android:background="@drawable/spruce_square_round_button"
-                android:checked="false"
-                android:clickable="true"
-                android:focusable="true"
-                android:fontFamily="@font/varela_round_regular"
-                android:gravity="center_vertical"
-                android:hapticFeedbackEnabled="true"
-                android:paddingHorizontal="@dimen/base_separation"
-                android:paddingVertical="@dimen/secondary_separation"
-                android:textColor="?attr/base_text_color"
-                android:textSize="@dimen/normal_text_size"
-                android:thumbTint="@color/light_spruce"
-                android:trackTint="@color/charcoal"
+                android:layout_marginVertical="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/muteUnmuteBtn" />
 
-            <Switch
-                android:id="@+id/biometricsBtn"
+            <include
+                android:id="@+id/parallelResponseBtn"
+                layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="true"
-                android:hapticFeedbackEnabled="true"
-                android:fontFamily="@font/varela_round_regular"
-                android:layout_gravity="center_vertical"
-                android:gravity="center_vertical"
-                android:textColor="?attr/base_text_color"
-                android:thumbTint="@color/light_spruce"
-                android:trackTint="@color/charcoal"
-                android:layout_margin="@dimen/base_separation"
-                android:paddingVertical="@dimen/secondary_separation"
-                android:paddingHorizontal="@dimen/base_separation"
-                android:background="@drawable/spruce_square_round_button"
-                android:textSize="@dimen/normal_text_size"
+                android:layout_marginVertical="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/themeSwitch" />
+
+            <include
+                android:id="@+id/biometricsBtn"
+                layout="@layout/switch_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/parallelResponseBtn" />
+
             <LinearLayout
                 android:id="@+id/voice_setup"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/base_separation"
+                android:layout_marginVertical="@dimen/base_separation"
                 android:background="@drawable/spruce_square_round_button"
+                android:orientation="vertical"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/biometricsBtn"
-                android:orientation="vertical">
-                <Switch
+                app:layout_constraintTop_toBottomOf="@id/biometricsBtn">
+
+                <include
                     android:id="@+id/voice_auth_switch"
+                    layout="@layout/switch_layout"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:fontFamily="@font/varela_round_regular"
-                    android:layout_gravity="center_vertical"
-                    android:gravity="center_vertical"
-                    android:paddingVertical="@dimen/secondary_separation"
-                    android:paddingHorizontal="@dimen/base_separation"
-                    android:textColor="?attr/base_text_color"
-                    android:thumbTint="@color/light_spruce"
-                    android:trackTint="@color/charcoal"
-                    android:checked="false"
-                    android:textSize="@dimen/normal_text_size" />
+                    android:layout_height="match_parent" />
+
                 <TextView
                     android:id="@+id/delete_voice_key"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/minimum_separation"
+                    android:layout_marginBottom="@dimen/minimum_separation"
+                    android:background="@drawable/red_square_round_button"
                     android:clickable="true"
+                    android:elevation="@dimen/base_separation"
                     android:focusable="true"
                     android:gravity="center"
-                    android:textSize="@dimen/normal_text_size"
-                    android:elevation="@dimen/base_separation"
-                    android:background="@drawable/red_square_round_button"
-                    android:textColor="?attr/warning_button_color_text"
                     android:paddingVertical="@dimen/minimum_separation"
-                    android:layout_marginBottom="@dimen/minimum_separation"
-                    android:layout_marginHorizontal="@dimen/minimum_separation"
-                    android:text="@string/reset_secret_phrase"/>
+                    android:text="@string/reset_secret_phrase"
+                    android:textColor="?attr/warning_button_color_text"
+                    android:textSize="@dimen/normal_text_size" />
             </LinearLayout>
-            <TextView
+
+            <include
                 android:id="@+id/permissionBtn"
+                layout="@layout/text_button_setting_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="true"
-                android:hapticFeedbackEnabled="true"
-                android:fontFamily="@font/varela_round_regular"
-                android:gravity="center_vertical"
-                android:textColor="?attr/base_text_color"
-                android:drawableEnd="@drawable/ic_keyfillteal"
-                android:text="@string/grant_permissions"
-                android:layout_margin="@dimen/base_separation"
-                android:paddingVertical="@dimen/secondary_separation"
-                android:paddingHorizontal="@dimen/base_separation"
-                android:background="@drawable/spruce_square_round_button"
-                android:textSize="@dimen/normal_text_size"
+                android:layout_marginVertical="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/voice_setup" />
-            <TextView
+
+            <include
                 android:id="@+id/deviceAdminBtn"
+                layout="@layout/text_button_setting_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="true"
-                android:hapticFeedbackEnabled="true"
-                android:fontFamily="@font/varela_round_regular"
-                android:drawableEnd="@drawable/ic_locknkey"
-                android:gravity="center_vertical"
-                android:textColor="?attr/base_text_color"
-                android:text="@string/make_device_admin"
-                android:layout_margin="@dimen/base_separation"
-                android:paddingVertical="@dimen/secondary_separation"
-                android:paddingHorizontal="@dimen/base_separation"
-                android:background="@drawable/spruce_square_round_button"
-                android:textSize="@dimen/normal_text_size"
+                android:layout_marginVertical="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/permissionBtn" />
@@ -224,6 +157,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/minimum_separation"
+        android:layout_marginBottom="@dimen/base_separation"
         android:gravity="center"
         android:text="@string/app_tag_line"
         android:textColor="?attr/secondary_text_color"

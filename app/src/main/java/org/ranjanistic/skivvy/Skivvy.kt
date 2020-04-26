@@ -84,6 +84,7 @@ open class Skivvy : Application() {
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
     val PREF_KEY_TRAINING = "training"
     val PREF_KEY_THEME = "theme"
+    val PREF_KEY_PARLLEL_TALK = "paralledResponse"
     val PREF_HEAD_CALC = "calculator"
     val PREF_KEY_LAST_CALC = "lastResult"
     val FINISH_ACTION = "finish"
@@ -313,6 +314,14 @@ open class Skivvy : Application() {
     fun getThemeState():Int{
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getInt(this.PREF_KEY_THEME, R.style.DarkTheme)
+    }
+    fun setParallelResponseStatus(isParallel:Boolean){
+        getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
+            .putBoolean(this.PREF_KEY_PARLLEL_TALK, isParallel).apply()
+    }
+    fun getParallelResponseStatus():Boolean{
+        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_PARLLEL_TALK, false)
     }
     fun checkBioMetrics(): Boolean {
         val biometricManager = BiometricManager.from(this)

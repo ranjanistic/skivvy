@@ -173,6 +173,18 @@
     <string name="device_admin_success">Thanks for making me your device admin.</string>
     <string name="reset_voice_auth_confirm">Confirm to reset and disable vocal authentication?</string>
     <string name="traning_title">Skivvy : Training</string>
+    <string name="optimal_volume">40%</string>
+    <string name="parallel_receive_text">I\'ll receive while speaking</string>
+    <string name="queued_receive_text">I\'ll receive after speaking</string>
+    <string name="set_parallel_receive">Set receive while speaking</string>
+    <string name="set_queued_receive">Set receive after speaking</string>
+    <string name="muted">Muted</string>
+    <string name="speaking">Speaking</string>
+    <string name="voice_auth_enabled">Voice auth enabled</string>
+    <string name="voice_auth_disabled">Voice auth disabled</string>
+    <string name="light_theme_set">This is light theme</string>
+    <string name="dark_theme_set">This is dark theme</string>
+    <string name="fingerprint_is_on">Fingerprint enabled</string>
     <string-array name="notification_channel">
         <item>SKIVVY_MAIN_NOTIFICATION</item>
         <item>Skivvy is active</item>
