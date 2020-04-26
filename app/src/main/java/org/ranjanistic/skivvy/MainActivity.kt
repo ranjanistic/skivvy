@@ -58,7 +58,7 @@ import kotlin.collections.ArrayList
 open class MainActivity : AppCompatActivity() {
 
     lateinit var skivvy: Skivvy
-
+//TODO: add up with last command and retry
     private lateinit var outPut: TextView
     private lateinit var input: TextView
     private lateinit var greet: TextView
