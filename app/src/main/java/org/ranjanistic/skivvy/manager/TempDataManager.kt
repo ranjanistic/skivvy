@@ -16,6 +16,7 @@ class TempDataManager {
     private var contactCode: Int? = null
     private var volumePercent:Float = 40F
     private var authAttemptCount:Int = 3
+    //TODO: Retry command by adding to previous one
     private var retryCommandCount = 0
 
     fun getPackageIndex(): Int = this.packageIndex

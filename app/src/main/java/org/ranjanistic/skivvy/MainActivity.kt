@@ -48,6 +48,7 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import org.ranjanistic.skivvy.R.drawable.*
 import org.ranjanistic.skivvy.R.string.*
 import org.ranjanistic.skivvy.manager.CalculationManager
+import org.ranjanistic.skivvy.manager.InputSpeechManager
 import org.ranjanistic.skivvy.manager.TempDataManager
 import java.io.File
 import java.io.FileOutputStream
@@ -60,7 +61,9 @@ import kotlin.collections.ArrayList
 open class MainActivity : AppCompatActivity() {
 
     lateinit var skivvy: Skivvy
-//TODO: add up with last command and retry
+
+    //TODO: add up with last command and retry
+    //TODO: widget for actions (calculations first, or a calculator widget)
     private lateinit var outPut: TextView
     private lateinit var input: TextView
     private lateinit var greet: TextView
@@ -92,7 +95,7 @@ open class MainActivity : AppCompatActivity() {
 
     private lateinit var context: Context
     private lateinit var calculationManager: CalculationManager
-
+    private lateinit var inputSpeechManager: InputSpeechManager
     private lateinit var audioManager: AudioManager
 
     private var contact: ContactModel = ContactModel()
@@ -125,8 +128,8 @@ open class MainActivity : AppCompatActivity() {
         greet = findViewById(R.id.greeting)
         backfall = findViewById(R.id.backdrop)
         audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        calculationManager =
-            CalculationManager(skivvy)
+        calculationManager = CalculationManager(skivvy)
+        inputSpeechManager = InputSpeechManager(resources,skivvy)
     }
 
     private fun loadDefaultAnimations() {
@@ -227,6 +230,7 @@ open class MainActivity : AppCompatActivity() {
         super.onStop()
         skivvy.setTrainingStatus(false)
     }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -342,7 +346,7 @@ open class MainActivity : AppCompatActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
-    private fun handleTrainingInput(input:String?){
+    private fun handleTrainingInput(input: String?) {
         speakOut("Okay")
         Log.d("training", "handled $input")
     }
@@ -350,7 +354,7 @@ open class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         var result: ArrayList<String> = ArrayList(1)
-        if(!skivvy.getTrainingStatus()) {
+        if (!skivvy.getTrainingStatus()) {
             if (!skivvy.nonVocalRequestCodes.contains(requestCode)) {
                 if (data == null || data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
                         ?.get(0)
@@ -367,14 +371,14 @@ open class MainActivity : AppCompatActivity() {
             }
         }
         when (requestCode) {
-            skivvy.CODE_TRAINING_MODE->{
-                if(data!=null) {
+            skivvy.CODE_TRAINING_MODE -> {
+                if (data != null) {
                     result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)!!
                     input.text = result[0]
                     Log.d("training", result[0])
                     handleTrainingInput(result[0])
                 } else {
-                    Log.d("training","null input")
+                    Log.d("training", "null input")
                     handleTrainingInput(null)
                 }
             }
@@ -830,47 +834,20 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    var tempResponse = ""
-    var tempAns = ""
-    //well yes wait no stop yes yes don't do that
-    //TODO: extend this to other types of responses too. Check last response
+    //TODO: extend this to other types of responses too.
     private fun isCooperative(response: String): Boolean? {
-        val TAG = "cooper"
-        Log.d(TAG,"received $response with $tempAns")
-        for (k in resources.getStringArray(R.array.acceptances)) {
-            if (response.contains(k)) {
-                Log.d(TAG, "at yes")
-                tempAns = "y"
-                tempResponse =
-                    response.replace(response.substringBeforeLast(k), "").replace(k, "")
-                        .trim()
-            }
-        }
-        for (r in arrayOf(
-            resources.getStringArray(R.array.disruptions),
-            resources.getStringArray(R.array.denials)
-        )) {
-            for (k in r) {
-                if (response.contains(k)) {
-                    Log.d(TAG, "at no")
-                    tempAns = "n"
-                    tempResponse =
-                        tempResponse.replace(tempResponse.substringBeforeLast(k), "")
-                            .replace(k, "")
-                            .trim()
-                }
-            }
-        }
-        if(tempResponse != ""){
-            isCooperative(tempResponse)
-        }
-        return when (tempAns) {
-            "y" -> true
-            "n" -> false
+        return when {
+            inputSpeechManager.containsDisagreement(inputSpeechManager.removeBeforePositive(response)) ->
+                false
+            inputSpeechManager.containsAgreement(inputSpeechManager.removeBeforeNegative(response)) ->
+                true
+            inputSpeechManager.containsDisagreement(response) ->
+                false
+            inputSpeechManager.containsAgreement(response) ->
+                true
             else -> null
         }
     }
-
 
     //actions invoking quick commands
     @ExperimentalStdlibApi
@@ -888,7 +865,7 @@ open class MainActivity : AppCompatActivity() {
                 if (text == "activate training mode") {
                     if (!skivvy.getTrainingStatus()) {
                         skivvy.setTrainingStatus(true)
-                        speakOut("Activating training mode",skivvy.CODE_TRAINING_MODE)
+                        speakOut("Activating training mode", skivvy.CODE_TRAINING_MODE)
                         //trainingView()
                         //recreate()
                     } else {
@@ -1241,7 +1218,8 @@ open class MainActivity : AppCompatActivity() {
         )
             return false
 
-        var arrayOfExpression = calculationManager.segmentizeExpression(expression, 2 * totalOps + 1)!!
+        var arrayOfExpression =
+            calculationManager.segmentizeExpression(expression, 2 * totalOps + 1)!!
 
         var l = 0
         var k = 0
@@ -1548,13 +1526,16 @@ open class MainActivity : AppCompatActivity() {
     //action invoking direct intents
     private fun directActions(text: String): Boolean {
         var localTxt: String
-        val continuationOperators:Array<String> = arrayOf("add","plus","+","-","minus","subtract","divide","multiply","/","x")
+        val continuationOperators: Array<String> =
+            arrayOf("add", "plus", "+", "-", "minus", "subtract", "divide", "multiply", "/", "x")
         when {
-            continuationOperators.contains(text.substringBefore(" ").toLowerCase(skivvy.locale)) -> {
+            continuationOperators.contains(
+                text.substringBefore(" ").toLowerCase(skivvy.locale)
+            ) -> {
                 if (text.contains(skivvy.numberPattern)) {
                     computerOps(getLastCalculationResult() + text)
-                        //TODO: continued calculation
-            //        startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD,"Continue calculation")
+                    //TODO: continued calculation
+                    //        startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD,"Continue calculation")
                 } else return false
             }
             text.contains(getString(call)) -> {
@@ -2113,7 +2094,7 @@ open class MainActivity : AppCompatActivity() {
         super.onBackPressed()
     }
 
-    private fun normalView(fromTraining:Boolean = false) {
+    private fun normalView(fromTraining: Boolean = false) {
         loading.setImageDrawable(getDrawable(ic_dotsincircle))
         loading.startAnimation(zoomInOutRotate)
         input.text = null
@@ -2123,7 +2104,7 @@ open class MainActivity : AppCompatActivity() {
         contact = ContactModel()
         temp = TempDataManager()
         txt = null
-        if(fromTraining) {
+        if (fromTraining) {
             startResumeAnimate()
             receiver.isClickable = true
             setting.isClickable = true
