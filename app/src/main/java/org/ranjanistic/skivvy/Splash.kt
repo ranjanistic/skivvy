@@ -7,12 +7,11 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
-import android.view.Gravity
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
-import com.google.android.material.snackbar.Snackbar
+import org.ranjanistic.skivvy.manager.TempDataManager
 import java.util.concurrent.Executor
 
 @ExperimentalStdlibApi
@@ -23,7 +22,8 @@ class Splash : AppCompatActivity() {
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     private lateinit var mainIntent:Intent
-    private var temp:Temporary = Temporary()
+    private var temp: TempDataManager =
+        TempDataManager()
     private lateinit var context: Context
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

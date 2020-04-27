@@ -71,25 +71,6 @@
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".ResumeService"
-            android:enabled="true"
-            android:exported="true"
-            android:permission="TODO">
-            <intent-filter>
-                <action android:name="service_dead" />
-                <action android:name="finish" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name=".CallReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.PHONE_STATE" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
-            </intent-filter>
-        </receiver>
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

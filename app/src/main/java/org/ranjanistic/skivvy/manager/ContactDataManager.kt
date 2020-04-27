@@ -1,4 +1,4 @@
-package org.ranjanistic.skivvy
+package org.ranjanistic.skivvy.manager
 
 /**
  * Device contacts manager class, to hold the details of contacts
@@ -45,7 +45,7 @@ class ContactDataManager {
         this.displayName[index] = contactName
     }
 
-    fun setContactDetails(contactData:ContactData){
+    fun setContactDetails(contactData: ContactData){
         this.contactID = contactData.iDs
         this.photoID = contactData.photoIDs
         this.displayName = contactData.names

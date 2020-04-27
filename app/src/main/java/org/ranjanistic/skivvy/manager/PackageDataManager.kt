@@ -1,4 +1,4 @@
-package org.ranjanistic.skivvy
+package org.ranjanistic.skivvy.manager
 
 import android.content.Intent
 import android.graphics.drawable.Drawable

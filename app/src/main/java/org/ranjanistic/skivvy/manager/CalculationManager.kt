@@ -1,9 +1,10 @@
-package org.ranjanistic.skivvy
+package org.ranjanistic.skivvy.manager
 
+import org.ranjanistic.skivvy.Skivvy
 import kotlin.math.*
 
 @ExperimentalStdlibApi
-class Calculator(var skivvy: Skivvy) {
+class CalculationManager(var skivvy: Skivvy) {
     fun expressionize(expression: String): String {
         var finalExpression = expression
         val toBeRemoved = arrayOf(

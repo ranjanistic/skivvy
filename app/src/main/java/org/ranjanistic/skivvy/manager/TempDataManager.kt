@@ -1,6 +1,6 @@
-package org.ranjanistic.skivvy
+package org.ranjanistic.skivvy.manager
 
-class Temporary {
+class TempDataManager {
 
     private var packageIndex: Int = 0
     private var phoneIndex: Int = 0

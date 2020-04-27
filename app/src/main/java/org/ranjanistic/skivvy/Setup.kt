@@ -1,18 +1,14 @@
 package org.ranjanistic.skivvy
 
-import android.R.id.message
 import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
-import android.view.LayoutInflater
 import android.view.View
-import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -20,11 +16,8 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.delay
-import org.ranjanistic.skivvy.databinding.ActivityMainBinding.inflate
-import java.util.*
+import org.ranjanistic.skivvy.manager.TempDataManager
 import java.util.concurrent.Executor
-import kotlin.concurrent.schedule
 
 
 @ExperimentalStdlibApi
@@ -45,7 +38,7 @@ class Setup : AppCompatActivity() {
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     private lateinit var context: Context
-    private var temp = Temporary()
+    private var temp = TempDataManager()
     private lateinit var recognitionIntent:Intent
     override fun onBackPressed() {
         super.onBackPressed()

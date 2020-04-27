@@ -48,11 +48,6 @@ class CommandService : Service(){
     override fun onDestroy() {
         super.onDestroy()
         speakOut("Death")
-        val broadcastIntent = Intent(this, ResumeService::class.java)
-            .apply {
-                action = "service_dead"
-            }
-        sendBroadcast(broadcastIntent)
     }
 
     @ExperimentalStdlibApi
@@ -61,13 +56,13 @@ class CommandService : Service(){
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
-        val snoozeIntent = Intent(this, ResumeService::class.java)
-            .apply { 
-                action = skivvy.FINISH_ACTION
-            putExtra(EXTRA_NOTIFICATION_ID, 69)
-        }
-        val snoozePendingIntent: PendingIntent =
-            PendingIntent.getBroadcast(this, 0, snoozeIntent, 0)
+//        val snoozeIntent = Intent(this, ResumeService::class.java)
+            //.apply {
+//                action = skivvy.FINISH_ACTION
+//            putExtra(EXTRA_NOTIFICATION_ID, 69)
+     //   }
+        //val snoozePendingIntent: PendingIntent =
+            //PendingIntent.getBroadcast(this, 0, snoozeIntent, 0)
         val builder = NotificationCompat.Builder(this,
             resources.getStringArray(R.array.notification_channel)[0])
             .setSmallIcon(drawable.ic_yellow_dotsincircle)
@@ -78,8 +73,8 @@ class CommandService : Service(){
             .setColorized(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
-            .addAction(drawable.ic_yellow_dotsincircle, "Stop",
-                snoozePendingIntent)
+            //.addAction(drawable.ic_yellow_dotsincircle, "Stop",
+                //snoozePendingIntent)
         val notificationManager: NotificationManagerCompat =
             NotificationManagerCompat.from(this)
         notificationManager.notify(69, builder.build())

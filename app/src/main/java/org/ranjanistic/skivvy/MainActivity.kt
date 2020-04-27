@@ -47,6 +47,8 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import org.ranjanistic.skivvy.R.drawable.*
 import org.ranjanistic.skivvy.R.string.*
+import org.ranjanistic.skivvy.manager.CalculationManager
+import org.ranjanistic.skivvy.manager.TempDataManager
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URLEncoder
@@ -89,12 +91,13 @@ open class MainActivity : AppCompatActivity() {
     private var txt: String? = null
 
     private lateinit var context: Context
-    private lateinit var calculator: Calculator
+    private lateinit var calculationManager: CalculationManager
 
     private lateinit var audioManager: AudioManager
 
     private var contact: ContactModel = ContactModel()
-    private var temp: Temporary = Temporary()
+    private var temp: TempDataManager =
+        TempDataManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,7 +125,8 @@ open class MainActivity : AppCompatActivity() {
         greet = findViewById(R.id.greeting)
         backfall = findViewById(R.id.backdrop)
         audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        calculator = Calculator(skivvy)
+        calculationManager =
+            CalculationManager(skivvy)
     }
 
     private fun loadDefaultAnimations() {
@@ -826,11 +830,20 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    //TODO: extend this to other types of responses too
+    var tempResponse = ""
+    var tempAns = ""
+    //well yes wait no stop yes yes don't do that
+    //TODO: extend this to other types of responses too. Check last response
     private fun isCooperative(response: String): Boolean? {
+        val TAG = "cooper"
+        Log.d(TAG,"received $response with $tempAns")
         for (k in resources.getStringArray(R.array.acceptances)) {
             if (response.contains(k)) {
-                return true
+                Log.d(TAG, "at yes")
+                tempAns = "y"
+                tempResponse =
+                    response.replace(response.substringBeforeLast(k), "").replace(k, "")
+                        .trim()
             }
         }
         for (r in arrayOf(
@@ -839,12 +852,25 @@ open class MainActivity : AppCompatActivity() {
         )) {
             for (k in r) {
                 if (response.contains(k)) {
-                    return false
+                    Log.d(TAG, "at no")
+                    tempAns = "n"
+                    tempResponse =
+                        tempResponse.replace(tempResponse.substringBeforeLast(k), "")
+                            .replace(k, "")
+                            .trim()
                 }
             }
         }
-        return null
+        if(tempResponse != ""){
+            isCooperative(tempResponse)
+        }
+        return when (tempAns) {
+            "y" -> true
+            "n" -> false
+            else -> null
+        }
     }
+
 
     //actions invoking quick commands
     @ExperimentalStdlibApi
@@ -1174,7 +1200,7 @@ open class MainActivity : AppCompatActivity() {
     }
      */
     private fun computerOps(rawExpression: String): Boolean {
-        val expression = calculator.expressionize(rawExpression)
+        val expression = calculationManager.expressionize(rawExpression)
 
         /**
          * Storing availability of all operators and functions in given expression,
@@ -1199,23 +1225,23 @@ open class MainActivity : AppCompatActivity() {
             if (operatorsAndFunctionsBoolean[1].contains(true)) {       //has a mathematical function
                 if (expression.contains(skivvy.numberPattern)) {
                     setFeedback(expression)
-                    saveCalculationResult(calculator.functionOperate(expression)!!)
-                    speakOut(calculator.formatToProperValue(getLastCalculationResult()!!))
+                    saveCalculationResult(calculationManager.functionOperate(expression)!!)
+                    speakOut(calculationManager.formatToProperValue(getLastCalculationResult()!!))
                     return true
                 }
             }
             return false
         }
 
-        val totalOps = calculator.totalOperatorsInExpression(expression)
-        if (totalOps == 0 || !calculator.isExpressionOperatable(expression) || calculator.segmentizeExpression(
+        val totalOps = calculationManager.totalOperatorsInExpression(expression)
+        if (totalOps == 0 || !calculationManager.isExpressionOperatable(expression) || calculationManager.segmentizeExpression(
                 expression,
                 2 * totalOps + 1
             ) == null
         )
             return false
 
-        var arrayOfExpression = calculator.segmentizeExpression(expression, 2 * totalOps + 1)!!
+        var arrayOfExpression = calculationManager.segmentizeExpression(expression, 2 * totalOps + 1)!!
 
         var l = 0
         var k = 0
@@ -1242,7 +1268,7 @@ open class MainActivity : AppCompatActivity() {
 
         if (operatorsAndFunctionsBoolean[1].contains(true)) {      //If expression has mathematical functions
             val temp =
-                calculator.evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression)
+                calculationManager.evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression)
             if (temp == null) {
                 return false
             } else {
@@ -1250,10 +1276,10 @@ open class MainActivity : AppCompatActivity() {
             }
         }
 
-        if (!calculator.isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression))     //if array contains invalid values
+        if (!calculationManager.isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression))     //if array contains invalid values
             return false
         else {
-            saveCalculationResult(calculator.expressionCalculation(arrayOfExpression))
+            saveCalculationResult(calculationManager.expressionCalculation(arrayOfExpression))
             speakOut(getLastCalculationResult()!!)
         }
         return true
@@ -1398,7 +1424,6 @@ open class MainActivity : AppCompatActivity() {
                     speakOut(
                         "Volume decreased",
                         null,
-                        parallelReceiver = false,
                         isFeedback = true
                     )
                 }
@@ -2081,6 +2106,10 @@ open class MainActivity : AppCompatActivity() {
     override fun onBackPressed() {
         speakOut(getString(exit_msg))
         loading.startAnimation(zoomInRotate)
+        if (skivvy.tts != null) {
+            skivvy.tts!!.stop()
+            skivvy.tts!!.shutdown()
+        }
         super.onBackPressed()
     }
 
@@ -2092,7 +2121,7 @@ open class MainActivity : AppCompatActivity() {
         feedback.text = null
         icon.setImageDrawable(null)
         contact = ContactModel()
-        temp = Temporary()
+        temp = TempDataManager()
         txt = null
         if(fromTraining) {
             startResumeAnimate()
@@ -2167,7 +2196,7 @@ open class MainActivity : AppCompatActivity() {
             text,
             TextToSpeech.QUEUE_FLUSH,
             null,
-            ""
+            "$taskCode"
         )
         else
             taskCode?.let { startVoiceRecIntent(it, text) }

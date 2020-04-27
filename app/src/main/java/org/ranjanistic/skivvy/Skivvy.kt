@@ -22,6 +22,8 @@ import androidx.biometric.BiometricManager
 import androidx.core.app.ActivityCompat
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.ranjanistic.skivvy.manager.ContactDataManager
+import org.ranjanistic.skivvy.manager.PackageDataManager
 import java.util.*
 
 open class Skivvy : Application() {
@@ -94,8 +96,10 @@ open class Skivvy : Application() {
 
     //default objects
     var tts: TextToSpeech? = null
-    var packageDataManager:PackageDataManager = PackageDataManager()
-    var contactDataManager:ContactDataManager = ContactDataManager()
+    var packageDataManager: PackageDataManager =
+        PackageDataManager()
+    var contactDataManager: ContactDataManager =
+        ContactDataManager()
     lateinit var deviceManager: DevicePolicyManager
     lateinit var compName: ComponentName
     @ExperimentalStdlibApi
@@ -144,7 +148,7 @@ open class Skivvy : Application() {
 
     private fun getLocalContacts(){
         var contactCount = 0
-        lateinit var contactData:ContactDataManager.ContactData
+        lateinit var contactData: ContactDataManager.ContactData
         val cr: ContentResolver = contentResolver
         val cur: Cursor? = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
         if (cur!!.count > 0) {
