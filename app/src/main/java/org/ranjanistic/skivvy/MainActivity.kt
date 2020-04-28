@@ -1,7 +1,6 @@
 package org.ranjanistic.skivvy
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.bluetooth.BluetoothAdapter
@@ -97,7 +96,7 @@ open class MainActivity : AppCompatActivity() {
     private lateinit var calculationManager: CalculationManager
     private lateinit var inputSpeechManager: InputSpeechManager
     private lateinit var audioManager: AudioManager
-
+    private lateinit var recognitionIntent: Intent
     private var contact: ContactModel = ContactModel()
     private var temp: TempDataManager =
         TempDataManager()
@@ -114,6 +113,13 @@ open class MainActivity : AppCompatActivity() {
         setListeners()
         outPut.text = getString(im_ready)
         input.text = getString(tap_the_button)
+
+        recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
     }
 
     private fun setViewAndDefaults() {
@@ -129,7 +135,7 @@ open class MainActivity : AppCompatActivity() {
         backfall = findViewById(R.id.backdrop)
         audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         calculationManager = CalculationManager(skivvy)
-        inputSpeechManager = InputSpeechManager(resources,skivvy)
+        inputSpeechManager = InputSpeechManager(resources, skivvy)
     }
 
     private fun loadDefaultAnimations() {
@@ -229,6 +235,7 @@ open class MainActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         skivvy.setTrainingStatus(false)
+
     }
 
     override fun onRequestPermissionsResult(
@@ -834,21 +841,6 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    //TODO: extend this to other types of responses too.
-    private fun isCooperative(response: String): Boolean? {
-        return when {
-            inputSpeechManager.containsDisagreement(inputSpeechManager.removeBeforePositive(response)) ->
-                false
-            inputSpeechManager.containsAgreement(inputSpeechManager.removeBeforeNegative(response)) ->
-                true
-            inputSpeechManager.containsDisagreement(response) ->
-                false
-            inputSpeechManager.containsAgreement(response) ->
-                true
-            else -> null
-        }
-    }
-
     //actions invoking quick commands
     @ExperimentalStdlibApi
     private fun respondToCommand(text: String): Boolean {
@@ -1012,22 +1004,22 @@ open class MainActivity : AppCompatActivity() {
                         if (!skivvy.getPhraseKeyStatus()) {
                             if (skivvy.getVoiceKeyPhrase() != null) {
                                 skivvy.setPhraseKeyStatus(true)
-                                speakOut("Vocal authentication enabled")
+                                speakOut(getString(vocal_auth_enabled))
                             } else {
-                                speakOut("You need to physically set up vocal authentication")
+                                speakOut(getString(vocal_auth_unset))
                                 startActivity(Intent(context, Setup::class.java))
                             }
                         } else {
-                            speakOut("Vocal authentication already enabled")
+                            speakOut(getString(vocal_auth_already_on))
                         }
                         true
                     }
                     text.contains("disable") -> {
                         if (!skivvy.getPhraseKeyStatus()) {
-                            speakOut("Vocal authentication already disabled")
+                            speakOut(getString(vocal_auth_already_off))
                         } else {
                             speakOut(
-                                "Tell me your secret passphrase",
+                                getString(get_passphrase_text),
                                 skivvy.CODE_VOICE_AUTH_CONFIRM
                             )
                         }
@@ -1044,7 +1036,7 @@ open class MainActivity : AppCompatActivity() {
             }
             text.contains("biometric") -> {
                 if (!skivvy.checkBioMetrics()) {
-                    speakOut("Your device doesn't support biometric authentication.")
+                    speakOut(getString(biometric_unsupported))
                 } else {
                     return when {
                         text.contains("enable") && text.contains("disable") -> {
@@ -1069,7 +1061,7 @@ open class MainActivity : AppCompatActivity() {
                             } else {
                                 if (skivvy.getPhraseKeyStatus()) {
                                     speakOut(
-                                        "Tell me your secret passphrase",
+                                        getString(get_passphrase_text),
                                         skivvy.CODE_BIOMETRIC_CONFIRM
                                     )
                                 } else {
@@ -1090,51 +1082,6 @@ open class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            /*
-            text.contains("uninstall") -> {
-                if (text.replace("uninstall", "").trim().isNullOrBlank()) {
-                    txt = text
-                    speakOut("Uninstall what?", skivvy.CODE_SPEECH_RECORD)
-                    return true
-                }
-                deviceManager =
-                    applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-                compName = ComponentName(context, Administrator::class.java)
-                if (!deviceManager!!.isAdminActive(compName!!)) {
-                    waitingView(null)
-                    speakOut(getString(device_admin_request))
-                    startActivityForResult(
-                        Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
-                            .putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, compName)
-                            .putExtra(
-                                DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                                getString(device_admin_persuation)
-                            ), skivvy.CODE_DEVICE_ADMIN
-                    )
-                } else {
-                    val pData = skivvy.packageDataManager
-                    var i = 0
-                    while (i < pData.getTotalPackages()) {
-                        if (pData.getPackageAppName(i)!!
-                                .toLowerCase(skivvy.locale) == text.replace("uninstall", "").trim()
-                        ) {
-                            waitingView(pData.getPackageIcon(i))
-                            val intentSender = PendingIntent.getBroadcast(
-                                this,
-                                101,
-                                Intent(ACTION_UNINSTALL_RESULT),
-                                0
-                            ).intentSender
-                            val pi = packageManager.packageInstaller
-                            pi.uninstall(pData.getPackageName(i)!!, intentSender)
-                            return true
-                        }
-                        ++i
-                    }
-                }
-                return false
-            }
-             */
             text == "get permission" -> {
                 if (!skivvy.hasPermissions(context)) {
                     ActivityCompat.requestPermissions(
@@ -1152,32 +1099,8 @@ open class MainActivity : AppCompatActivity() {
         return true
     }
 
-    /*
-    private val ACTION_UNINSTALL_RESULT = "uninstall"
-    private val receiverBroad = object : BroadcastReceiver() {
-        override fun onReceive(p0: Context?, intent: Intent?) {
-            if (intent?.action == ACTION_UNINSTALL_RESULT) {
-                Log.d(
-                    "NIGGA",
-                    "requested to uninstall " + intent.getStringExtra(PackageInstaller.EXTRA_PACKAGE_NAME)
-                            + "(result=" + intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) + ")"
-                )
-            }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        registerReceiver(receiverBroad, IntentFilter(ACTION_UNINSTALL_RESULT))
-    }
-
-    override fun onPause() {
-        super.onPause()
-        unregisterReceiver(receiverBroad)
-    }
-     */
     private fun computerOps(rawExpression: String): Boolean {
-        val expression = calculationManager.expressionize(rawExpression)
+        val expression = inputSpeechManager.expressionize(rawExpression)
 
         /**
          * Storing availability of all operators and functions in given expression,
@@ -1202,7 +1125,7 @@ open class MainActivity : AppCompatActivity() {
             if (operatorsAndFunctionsBoolean[1].contains(true)) {       //has a mathematical function
                 if (expression.contains(skivvy.numberPattern)) {
                     setFeedback(expression)
-                    saveCalculationResult(calculationManager.functionOperate(expression)!!)
+                    saveCalculationResult(calculationManager.operateFuncWithConstant(expression)!!)
                     speakOut(calculationManager.formatToProperValue(getLastCalculationResult()!!))
                     return true
                 }
@@ -1236,17 +1159,14 @@ open class MainActivity : AppCompatActivity() {
             k += 2
         }
 
-        var midOutput = String()
-        var bb = 0
-        while (bb < arrayOfExpression.size) {
-            midOutput += arrayOfExpression[bb]
-            ++bb
-        }
-        setFeedback(midOutput)      //segmentized expression to user
+        val midOutput = arrayOfExpression.contentToString().replace("[", "")
+            .replace("]", "").replace(",", "").replace(" ", "")
+        if (midOutput != rawExpression.replace(" ", ""))
+            setFeedback(midOutput)      //segmentized expression to user
 
         if (operatorsAndFunctionsBoolean[1].contains(true)) {      //If expression has mathematical functions
             val temp =
-                calculationManager.evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression)
+                calculationManager.evaluateFunctionsInExpressionArray(arrayOfExpression)
             if (temp == null) {
                 return false
             } else {
@@ -1368,7 +1288,7 @@ open class MainActivity : AppCompatActivity() {
                 if (audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) ==
                     audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
                 ) {
-                    speakOut("Maximum volume achieved")
+                    speakOut(getString(volume_highest))
                 } else {
                     audioManager.adjustStreamVolume(
                         AudioManager.STREAM_MUSIC,
@@ -1376,7 +1296,7 @@ open class MainActivity : AppCompatActivity() {
                         AudioManager.FLAG_SHOW_UI
                     )
                     speakOut(
-                        "Volume increased",
+                        getString(R.string.volume_increased),
                         null,
                         parallelReceiver = false,
                         isFeedback = true
@@ -1392,7 +1312,7 @@ open class MainActivity : AppCompatActivity() {
                         audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) == 0
                     }
                 ) {
-                    speakOut("Minimum volume achieved")
+                    speakOut(getString(R.string.volume_lowest))
                 } else {
                     audioManager.adjustStreamVolume(
                         AudioManager.STREAM_MUSIC,
@@ -1400,7 +1320,7 @@ open class MainActivity : AppCompatActivity() {
                         AudioManager.FLAG_SHOW_UI
                     )
                     speakOut(
-                        "Volume decreased",
+                        getString(volume_decreased),
                         null,
                         isFeedback = true
                     )
@@ -1413,7 +1333,7 @@ open class MainActivity : AppCompatActivity() {
                     audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC),
                     AudioManager.FLAG_SHOW_UI
                 )
-                speakOut("Maximum volume achieved")
+                speakOut(getString(volume_highest))
             }
             action.contains("min") || action.contains("lowest") -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -1427,21 +1347,21 @@ open class MainActivity : AppCompatActivity() {
                         AudioManager.ADJUST_RAISE,
                         AudioManager.FLAG_SHOW_UI
                     )
-                    speakOut("Minimum audible volume achieved")
+                    speakOut(getString(min_audible_volume))
                 } else {
                     volumeOps("10%")
                 }
             }
-            action.contains("silence") || action.contains("zero") -> {
+            action.contains("silence") || action.contains("zero") || action.contains("zero") -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     audioManager.setStreamVolume(
                         AudioManager.STREAM_MUSIC,
                         audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC),
                         AudioManager.FLAG_SHOW_UI
                     )
-                    speakOut("Volume silenced")
+                    speakOut(getString(R.string.volume_off))
                 } else {
-                    volumeOps("0%")
+                    volumeOps(getString(zero_percent))
                 }
             }
             else -> {
@@ -1450,7 +1370,7 @@ open class MainActivity : AppCompatActivity() {
                     AudioManager.ADJUST_SAME,
                     AudioManager.FLAG_SHOW_UI
                 )
-                speakOut("I'm showing you the volume controls.")
+                speakOut(getString(showing_volume_controls))
             }
         }
     }
@@ -1517,7 +1437,7 @@ open class MainActivity : AppCompatActivity() {
                     }
                 }
             } else {
-                speakOut("No applications installed on your device")
+                speakOut(getString(no_apps_installed))
             }
         } else speakOut(getString(null_variable_error))
         return false
@@ -1616,6 +1536,7 @@ open class MainActivity : AppCompatActivity() {
                     temp.getPhone()!!.contains(skivvy.numberPattern) -> {
                         speakOut(getString(what_is_message), skivvy.CODE_TEXT_MESSAGE_BODY)
                     }
+                    /*
                     localTxt.contains("whatsapp") -> {
                         localTxt = localTxt.replace("whatsapp", "")
                         localTxt = localTxt.replace("via", "")
@@ -1623,6 +1544,7 @@ open class MainActivity : AppCompatActivity() {
                         localTxt.replace(" ", "")
                         contactOps(localTxt, skivvy.CODE_WHATSAPP_ACTION)
                     }
+                    */
                     localTxt.length > 1 -> {
                         contactOps(localTxt, skivvy.CODE_SMS_CONF)
                     }
@@ -1644,7 +1566,6 @@ open class MainActivity : AppCompatActivity() {
                 val sms: SmsManager = SmsManager.getDefault()
                 sms.sendTextMessage(target, null, payLoad, null, null)
             } catch (e: Exception) {
-                Log.d("BITCH", e.toString())
                 speakOut("Failed to send SMS")
             }
         } else {
@@ -1652,11 +1573,20 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("MissingPermission")
     private fun callingOps(number: String?, name: String? = null) {
         if (number != null) {
-            name?.let { speakOut(getString(calling) + name) }
-            startActivity(Intent(Intent.ACTION_CALL, Uri.parse("tel:$number")))
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                name?.let { speakOut(getString(calling) + name) }
+                startActivity(Intent(Intent.ACTION_CALL, Uri.parse("tel:$number")))
+            } else {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.CALL_PHONE),
+                    skivvy.CODE_CALL_REQUEST
+                )
+            }
         } else {
             errorView()
             speakOut(getString(null_variable_error))
@@ -1999,11 +1929,9 @@ open class MainActivity : AppCompatActivity() {
         try {
             val mCameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
             val mCameraId = mCameraManager.cameraIdList[0]
-            Log.d("Flash", mCameraId)
             mCameraManager.setTorchMode(mCameraId, status)
         } catch (e: CameraAccessException) {
-            speakOut("Can't access your flashlight")
-            e.printStackTrace()
+            speakOut(getString(flash_access_error))
         }
     }
 
@@ -2034,9 +1962,9 @@ open class MainActivity : AppCompatActivity() {
                 when (state) {
                     lastState -> return
                     TelephonyManager.CALL_STATE_RINGING -> {
+                        speakOut("Incoming call from $number")
                         successView(getDrawable(ic_glossyphone))
                         setVolume(50F)
-                        speakOut("Incoming call from $number")
                     }
                     TelephonyManager.CALL_STATE_OFFHOOK -> {
                         if (lastState == TelephonyManager.CALL_STATE_RINGING) {
@@ -2066,8 +1994,6 @@ open class MainActivity : AppCompatActivity() {
                 lastState = state
             }
         }
-        // Register the listener with the telephony manager
-        // Listen for changes to the device call state.
         telephonyManager!!.listen(
             phoneStateListener,
             PhoneStateListener.LISTEN_CALL_STATE
@@ -2092,6 +2018,21 @@ open class MainActivity : AppCompatActivity() {
             skivvy.tts!!.shutdown()
         }
         super.onBackPressed()
+    }
+
+    //TODO: extend this to other types of responses too.
+    private fun isCooperative(response: String): Boolean? {
+        return when {
+            inputSpeechManager.containsDisagreement(inputSpeechManager.removeBeforePositive(response)) ->
+                false
+            inputSpeechManager.containsAgreement(inputSpeechManager.removeBeforeNegative(response)) ->
+                true
+            inputSpeechManager.containsDisagreement(response) ->
+                false
+            inputSpeechManager.containsAgreement(response) ->
+                true
+            else -> null
+        }
     }
 
     private fun normalView(fromTraining: Boolean = false) {
@@ -2188,19 +2129,9 @@ open class MainActivity : AppCompatActivity() {
         code: Int,
         message: String = getString(generic_voice_rec_text)
     ) {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            .putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
-            .putExtra(RecognizerIntent.EXTRA_PROMPT, message)
-        if (intent.resolveActivity(packageManager) != null)
-            startActivityForResult(intent, code)
-        else {
-            errorView()
-            speakOut(getString(internal_error))
-        }
+        recognitionIntent.putExtra(RecognizerIntent.EXTRA_PROMPT, message)
+        recognitionIntent.resolveActivity(packageManager)
+            ?.let { startActivityForResult(recognitionIntent, code) }
     }
 
     private lateinit var executor: Executor
@@ -2228,7 +2159,7 @@ open class MainActivity : AppCompatActivity() {
                         }
                         skivvy.CODE_VOICE_AUTH_CONFIRM -> {
                             skivvy.setPhraseKeyStatus(false)
-                            speakOut("Vocal authentication disabled")
+                            speakOut(getString(voice_auth_disabled))
                         }
                     }
                 }

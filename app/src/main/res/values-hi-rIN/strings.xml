@@ -103,5 +103,7 @@
     <string name="calling">मैं कॉल कर रही हूँ&#160;</string>
     <string name="app_tag_line">प्रियांशु रंजन का एक प्रयोग</string>
     <string name="call">कॉल</string>
+    <string name="infinity">1000000000000000000000000000000000000000000000</string>
+    <string name="zero_percent">0%</string>
 
 </resources>

@@ -191,4 +191,31 @@
         <item>Skivvy is active</item>
         <item>To notify you that Skivvy is active in background.</item>
     </string-array>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="configure">Configure</string>
+    <string name="add_widget">Add widget</string>
+    <string name="infinity">1000000000000000000000000000000000000000000000</string>
+    <string name="passphrase_text">Passphrase</string>
+    <string name="auth_failed">Authentication failed</string>
+    <string name="welcome">Welcome</string>
+    <string name="last_chance">Last chance</string>
+    <string name="chances_left">&#160;chances left</string>
+    <string name="vocal_auth_failed">Vocal authentication failed.&#160;</string>
+    <string name="need_physical_verification">I need your physical verification.</string>
+    <string name="vocal_auth_enabled">Vocal authentication enabled</string>
+    <string name="vocal_auth_unset">You need to physically set up vocal authentication</string>
+    <string name="vocal_auth_already_on">Vocal authentication already enabled</string>
+    <string name="vocal_auth_already_off">Vocal authentication already disabled</string>
+    <string name="get_passphrase_text">Tell me your secret passphrase</string>
+    <string name="biometric_unsupported">Your device doesn\'t support biometric authentication.</string>
+    <string name="volume_highest">Maximum volume achieved</string>
+    <string name="volume_increased">Volume increased</string>
+    <string name="volume_lowest">Minimum volume achieved</string>
+    <string name="volume_decreased">Volume decreased</string>
+    <string name="min_audible_volume">Minimum audible volume achieved</string>
+    <string name="volume_off">Volume silenced</string>
+    <string name="zero_percent">0%</string>
+    <string name="showing_volume_controls">I\'m showing you the volume controls.</string>
+    <string name="no_apps_installed">No applications installed on your device</string>
+    <string name="flash_access_error">Can\'t access your flashlight</string>
 </resources>

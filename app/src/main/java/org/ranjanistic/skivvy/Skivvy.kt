@@ -82,9 +82,10 @@ open class Skivvy : Application() {
     val PREF_HEAD_SECURITY = "security"
     val PREF_KEY_BIOMETRIC = "fingerprint"
     val PREF_KEY_VOCAL_AUTH = "voiceAuth"
-    val PREF_HEAD_APP_MODE = "appMode"
+    val PREF_KEY_VOCAL_PHRASE  = "voicePhrase"
     val PREF_HEAD_VOICE = "voice"
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
+    val PREF_HEAD_APP_MODE = "appMode"
     val PREF_KEY_TRAINING = "training"
     val PREF_KEY_THEME = "theme"
     val PREF_KEY_PARLLEL_TALK = "paralledResponse"
@@ -280,24 +281,15 @@ open class Skivvy : Application() {
         this.contactDataManager.setContactDetails(contactData)
     }
 
+
+    //Security prefs
     fun getBiometricStatus(): Boolean {
         return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_BIOMETRIC, false)
     }
-
     fun setBiometricsStatus(isEnabled: Boolean) {
         getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_BIOMETRIC, isEnabled).apply()
-    }
-
-    fun getMuteStatus(): Boolean {
-        return getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE)
-            .getBoolean(this.PREF_KEY_MUTE_UNMUTE, false)
-    }
-
-    fun saveMuteStatus(isMuted: Boolean) {
-        getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
     }
     fun getPhraseKeyStatus():Boolean{
         return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
@@ -309,12 +301,14 @@ open class Skivvy : Application() {
     }
     fun getVoiceKeyPhrase():String?{
         return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
-            .getString(this.PREF_KEY_TRAINING,null)
+            .getString(this.PREF_KEY_VOCAL_PHRASE,null)
     }
     fun setVoiceKeyPhrase(phrase: String?){
         getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
-            .putString(this.PREF_KEY_TRAINING, phrase).apply()
+            .putString(this.PREF_KEY_VOCAL_PHRASE, phrase).apply()
     }
+
+    //custom prefs
     fun getTrainingStatus(): Boolean {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_TRAINING, false)
@@ -322,6 +316,14 @@ open class Skivvy : Application() {
     fun setTrainingStatus(isTraining: Boolean) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_TRAINING, isTraining).apply()
+    }
+    fun getMuteStatus(): Boolean {
+        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_MUTE_UNMUTE, false)
+    }
+    fun saveMuteStatus(isMuted: Boolean) {
+        getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
+            .putBoolean(this.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
     }
     fun setThemeState(themeCode:Int){
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
@@ -339,6 +341,7 @@ open class Skivvy : Application() {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_PARLLEL_TALK, false)
     }
+
     fun checkBioMetrics(): Boolean {
         val biometricManager = BiometricManager.from(this)
         return when (biometricManager.canAuthenticate()) {
@@ -358,8 +361,7 @@ open class Skivvy : Application() {
             notificationManager.createNotificationChannel(mChannel)
         }
     }
-    fun hasPermissions(context: Context): Boolean =
-        this.permissions.all {
+    fun hasPermissions(context: Context): Boolean = this.permissions.all {
             ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-        }
+    }
 }

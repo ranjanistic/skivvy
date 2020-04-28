@@ -1,58 +1,11 @@
 package org.ranjanistic.skivvy.manager
 
+import org.ranjanistic.skivvy.R
 import org.ranjanistic.skivvy.Skivvy
 import kotlin.math.*
 
 @ExperimentalStdlibApi
 class CalculationManager(var skivvy: Skivvy) {
-    fun expressionize(expression: String): String {
-        var finalExpression = expression
-        val toBeRemoved = arrayOf(
-            " ", "calculate", "compute", "solve", "whatis",
-            "what's", "tellme", "thevalueof", "valueof"
-        )
-        val toBePercented = arrayOf("%of", "percentof")
-        val toBeModded = arrayOf("%", "mod")
-        val toBeLogged = arrayOf("naturallogof", "naturallog")
-        val toBeLog = arrayOf("logof")
-        val toBeMultiplied = arrayOf("x", "multipliedby", "into", "and")
-        val toBeDivided = arrayOf("dividedby", "by", "upon", "over", "÷", "divideby", "divide")
-        val toBeAdded = arrayOf("add", "plus", "or")
-        val toBeSubtracted = arrayOf("minus", "negative", "subtract")
-        val toBeNumerized = arrayOf("hundred")
-        val toBePowered = arrayOf(
-            "raisedtothepowerof", "raisetothepowerof", "raisedtothepower", "raisetothepower",
-            "tothepowerof", "tothepower", "raisedto", "raiseto", "raised", "raise", "kipower"
-        )
-        val toBeCuberooted = arrayOf("cuberoot", "thirdroot")
-        val toBeRooted = arrayOf("squareroot", "root", "secondroot")
-        val toBeSquared = arrayOf("square")
-        val toBeCubed = arrayOf("cube")
-        val toBeZeroed = arrayOf("zero")
-        val formatArrays = arrayOf(
-            toBeRemoved, toBePercented, toBeModded, toBeLogged, toBeLog,
-            toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBeNumerized
-            , toBePowered, toBeCuberooted, toBeRooted, toBeSquared, toBeCubed, toBeZeroed
-        )
-        val replacingArray =
-            arrayOf(
-                "", "p", "m", "ln", "log", "*", "/", "+",
-                "-", "100", "^", "cbrt", "sqrt", "^2", "^3","0"
-            )
-        var formatIndex = 0
-        while (formatIndex < formatArrays.size) {
-            var formatArrayIndex = 0
-            while (formatArrayIndex < formatArrays[formatIndex].size) {
-                finalExpression = finalExpression.replace(
-                    formatArrays[formatIndex][formatArrayIndex],
-                    replacingArray[formatIndex]
-                )
-                ++formatArrayIndex
-            }
-            ++formatIndex
-        }
-        return finalExpression
-    }
 
     fun totalOperatorsInExpression(expression: String): Int {
         var expIndex = 0
@@ -154,7 +107,7 @@ class CalculationManager(var skivvy: Skivvy) {
         return arrayOfExpression
     }
 
-    fun evaluateFunctionsInSegmentedArrayOfExpression(arrayOfExpression: Array<String?>): Array<String?>? {
+    fun evaluateFunctionsInExpressionArray(arrayOfExpression: Array<String?>): Array<String?>? {
         var fin = 0
         while (fin < arrayOfExpression.size) {
             if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {
@@ -190,17 +143,17 @@ class CalculationManager(var skivvy: Skivvy) {
                         } else return null
                     } else return null
                 }
-                //TODO: numbers before functions at same index to be multiplied(like '12cos60' to '12*cos60')
-                arrayOfExpression[fin] = this.functionOperate(arrayOfExpression[fin]!!)
+                arrayOfExpression[fin] = operateFuncWithConstant(arrayOfExpression[fin]!!)
                 if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {
-                    if(arrayOfExpression[fin]!!.contains('E',false)){
-                        val indexE = arrayOfExpression[fin]!!.indexOf('E')
-                        if(arrayOfExpression[fin]?.get(indexE+1) == '-'){
-                            arrayOfExpression[fin]!!.replace(skivvy.numberPattern,"0")
-                        } else {
-                            arrayOfExpression[fin]!!.replace(skivvy.numberPattern,"1/0")
+                    when {
+                        arrayOfExpression[fin]!!.contains("E-",false) -> {
+                            arrayOfExpression[fin] = "0"
                         }
-                    } else return null
+                        arrayOfExpression[fin]!!.contains("E",false) -> {
+                            arrayOfExpression[fin] = skivvy.getString(R.string.infinity)
+                        }
+                        else -> return null
+                    }
                 } else if(!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)){
                     return null
                 }
@@ -210,6 +163,20 @@ class CalculationManager(var skivvy: Skivvy) {
         return arrayOfExpression
     }
 
+    fun operateFuncWithConstant(func: String):String?{
+        val tempp = func.replace(skivvy.textPattern,"|")
+        val numBefore = tempp.substringBefore("|")
+        return if(numBefore.contains(skivvy.numberPattern)){
+            this.functionOperate(func.replace(skivvy.numberPattern,"").replace(".","")
+                    + tempp.substringAfterLast("|"))?.toFloat()?.let {
+                this.operate(numBefore.toFloat(),'*',
+                    it
+                ).toString()
+            }
+        } else {
+            this.functionOperate(func)
+        }
+    }
     /**
      * Checks if expression doesn't have any illegal characters,
      * and returns true if operatable.
@@ -273,11 +240,15 @@ class CalculationManager(var skivvy: Skivvy) {
                             (0 - arrayOfExpression[opPos + 1]!!.toFloat()).toString()
                         arrayOfExpression[opPos] = "+"
                     }
-                    arrayOfExpression[opPos - 1] = this.operate(
-                        arrayOfExpression[opPos - 1]!!.toFloat(),
-                        arrayOfExpression[opPos]!!.toCharArray()[0],
-                        arrayOfExpression[opPos + 1]!!.toFloat()
-                    ).toString()
+                    try {
+                        arrayOfExpression[opPos - 1] = this.operate(
+                            arrayOfExpression[opPos - 1]!!.toFloat(),
+                            arrayOfExpression[opPos]!!.toCharArray()[0],
+                            arrayOfExpression[opPos + 1]!!.toFloat()
+                        ).toString()
+                    } catch (e: Exception) {
+                        arrayOfExpression[opPos - 1] = "point"
+                    }
                     var j = opPos
                     while (j + 2 < arrayOfExpression.size) {
                         arrayOfExpression[j] = arrayOfExpression[j + 2]
@@ -294,20 +265,24 @@ class CalculationManager(var skivvy: Skivvy) {
             }
             ++opIndex       //next operator
         }
-        if(arrayOfExpression[0].toString().contains("NaN"))
-            return "Undefined result in my logic"
-        return formatToProperValue(arrayOfExpression[0].toString())     //final result stored at index = 0
+        return when {
+            arrayOfExpression.contentDeepToString().contains("point")->
+                "Invalid expression"
+            arrayOfExpression.contentDeepToString().contains("NaN")->
+                "Undefined result in my logic"
+            else-> formatToProperValue(arrayOfExpression[0].toString())     //final result stored at index = 0
+        }
     }
 
-    fun operate(a: Float, operator: Char, b: Float): Float? {
+    fun operate(operand1: Float, operator: Char, operand2: Float): Float? {
         return when (operator) {
-            '/' -> a / b
-            '*' -> a * b
-            '+' -> a + b
-            '-' -> a - b
-            'p' -> (a / 100) * b
-            'm' -> a % b
-            '^' -> a.toDouble().pow(b.toDouble()).toFloat()
+            '/' -> operand1 / operand2
+            '*' -> operand1 * operand2
+            '+' -> operand1 + operand2
+            '-' -> operand1 - operand2
+            'p' -> (operand1 / 100) * operand2
+            'm' -> operand1 % operand2
+            '^' -> operand1.toDouble().pow(operand2.toDouble()).toFloat()
             else -> null
         }
     }
