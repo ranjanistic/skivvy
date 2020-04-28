@@ -35,13 +35,34 @@
             android:paddingVertical="14dp">
 
             <include
+                android:id="@+id/permissionBtn"
+                layout="@layout/text_button_setting_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <include
+                android:id="@+id/deviceAdminBtn"
+                layout="@layout/text_button_setting_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/permissionBtn" />
+
+            <include
                 android:id="@+id/trainingModeBtn"
                 layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginVertical="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/deviceAdminBtn"/>
 
             <include
                 android:id="@+id/muteUnmuteBtn"
@@ -74,7 +95,7 @@
                 app:layout_constraintTop_toBottomOf="@id/themeSwitch" />
 
             <include
-                android:id="@+id/biometricsBtn"
+                android:id="@+id/angleUnitBtn"
                 layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -82,6 +103,16 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/parallelResponseBtn" />
+
+            <include
+                android:id="@+id/biometricsBtn"
+                layout="@layout/switch_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/angleUnitBtn" />
 
             <LinearLayout
                 android:id="@+id/voice_setup"
@@ -116,26 +147,6 @@
                     android:textColor="?attr/warning_button_color_text"
                     android:textSize="@dimen/normal_text_size" />
             </LinearLayout>
-
-            <include
-                android:id="@+id/permissionBtn"
-                layout="@layout/text_button_setting_layout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/base_separation"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/voice_setup" />
-
-            <include
-                android:id="@+id/deviceAdminBtn"
-                layout="@layout/text_button_setting_layout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/base_separation"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/permissionBtn" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 

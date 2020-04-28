@@ -89,6 +89,7 @@ open class Skivvy : Application() {
     val PREF_KEY_TRAINING = "training"
     val PREF_KEY_THEME = "theme"
     val PREF_KEY_PARLLEL_TALK = "paralledResponse"
+    val PREF_KEY_ANGLE_UNIT = "angleUnit"
     val PREF_HEAD_CALC = "calculator"
     val PREF_KEY_LAST_CALC = "lastResult"
     val FINISH_ACTION = "finish"
@@ -341,7 +342,14 @@ open class Skivvy : Application() {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_PARLLEL_TALK, false)
     }
-
+    fun setAngleUnit(unit:String){
+        getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
+            .putString(this.PREF_KEY_ANGLE_UNIT, unit).apply()
+    }
+    fun getAngleUnit():String{
+        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+            .getString(this.PREF_KEY_ANGLE_UNIT, "deg")!!
+    }
     fun checkBioMetrics(): Boolean {
         val biometricManager = BiometricManager.from(this)
         return when (biometricManager.canAuthenticate()) {

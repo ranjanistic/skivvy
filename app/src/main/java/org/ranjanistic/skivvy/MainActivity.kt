@@ -1099,9 +1099,25 @@ open class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun computerOps(rawExpression: String): Boolean {
+    private fun computerOps(rawExpression: String,reusing:Boolean = false): Boolean {
         val expression = inputSpeechManager.expressionize(rawExpression)
-
+        if(expression.length == 3 && !reusing){
+            try {
+                val res = calculationManager.operate(
+                    expression[0].toString().toFloat(),
+                    expression[1],
+                    expression[2].toString().toFloat()
+                )
+                if (res != null){
+                    speakOut(calculationManager.returnValidResult(arrayOf(res.toString())))
+                    return true
+                } else {
+                    computerOps(rawExpression,true)
+                }
+            } catch(e:Exception){
+                computerOps(rawExpression,true)
+            }
+        }
         /**
          * Storing availability of all operators and functions in given expression,
          * to arrays of booleans as true.
@@ -1126,7 +1142,13 @@ open class MainActivity : AppCompatActivity() {
                 if (expression.contains(skivvy.numberPattern)) {
                     setFeedback(expression)
                     saveCalculationResult(calculationManager.operateFuncWithConstant(expression)!!)
-                    speakOut(calculationManager.formatToProperValue(getLastCalculationResult()!!))
+                    if(getLastCalculationResult()?.let {
+                            calculationManager.convertExponentialTerm(
+                                it
+                            )
+                        } == "")
+                        return false
+                    speakOut(calculationManager.formatToProperValue(calculationManager.convertExponentialTerm(getLastCalculationResult()!!)))
                     return true
                 }
             }

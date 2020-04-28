@@ -144,23 +144,27 @@ class CalculationManager(var skivvy: Skivvy) {
                     } else return null
                 }
                 arrayOfExpression[fin] = operateFuncWithConstant(arrayOfExpression[fin]!!)
-                if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {
-                    when {
-                        arrayOfExpression[fin]!!.contains("E-",false) -> {
-                            arrayOfExpression[fin] = "0"
-                        }
-                        arrayOfExpression[fin]!!.contains("E",false) -> {
-                            arrayOfExpression[fin] = skivvy.getString(R.string.infinity)
-                        }
-                        else -> return null
-                    }
-                } else if(!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)){
+                arrayOfExpression[fin] = convertExponentialTerm(arrayOfExpression[fin]!!)
+                if (arrayOfExpression[fin]!! == "" || !arrayOfExpression[fin]!!.contains(skivvy.numberPattern))
                     return null
-                }
             }
             ++fin
         }
         return arrayOfExpression
+    }
+
+    fun convertExponentialTerm(value:String):String{
+        return if(value.contains(skivvy.textPattern)) {
+            when {
+                value.contains("E-", false) -> {
+                    "0"
+                }
+                value.contains("E", false) -> {
+                    skivvy.getString(R.string.infinity)
+                }
+                else -> ""
+            }
+        } else value
     }
 
     fun operateFuncWithConstant(func: String):String?{
@@ -265,47 +269,55 @@ class CalculationManager(var skivvy: Skivvy) {
             }
             ++opIndex       //next operator
         }
-        return when {
-            arrayOfExpression.contentDeepToString().contains("point")->
-                "Invalid expression"
-            arrayOfExpression.contentDeepToString().contains("NaN")->
-                "Undefined result in my logic"
-            else-> formatToProperValue(arrayOfExpression[0].toString())     //final result stored at index = 0
-        }
+        return returnValidResult(arrayOfExpression)
     }
+    fun returnValidResult(result: Array<String?>):String{
+        return when {
+            result.contentDeepToString().contains("point")->
+                skivvy.getString(R.string.invalid_expression)
+            result.contentDeepToString().contains("NaN")->
+                skivvy.getString(R.string.undefined_result)
+            else-> formatToProperValue(result[0].toString())     //final result stored at index = 0
+        }
 
+    }
     fun operate(operand1: Float, operator: Char, operand2: Float): Float? {
         return when (operator) {
-            '/' -> operand1 / operand2
-            '*' -> operand1 * operand2
-            '+' -> operand1 + operand2
-            '-' -> operand1 - operand2
-            'p' -> (operand1 / 100) * operand2
-            'm' -> operand1 % operand2
+            '/' -> operand1.div(operand2)
+            '*' -> operand1.times(operand2)
+            '+' -> operand1.plus(operand2)
+            '-' -> operand1.minus(operand2)
+            'p' -> (operand1.div(100)).times(operand2)
+            'm' -> operand1.rem(operand2)
             '^' -> operand1.toDouble().pow(operand2.toDouble()).toFloat()
             else -> null
         }
     }
-
-    fun functionOperate(func: String): String? {
+    private fun radianConverter():Float{
+        return when(skivvy.getAngleUnit()){
+            "rad"->1F
+            else->PI.div(180).toFloat()
+        }
+    }
+    private fun functionOperate(func: String): String? {
         return when {
             func.contains("sin") -> sin(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
             ).toString()
             func.contains("cos") -> cos(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
             ).toString()
             func.contains("tan") -> tan(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
             ).toString()
             func.contains("cot") -> (1 / tan(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
             )).toString()
             func.contains("sec") -> (1 / cos(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
             )).toString()
             func.contains("cosec") -> (1 / sin(
-                func.replace(skivvy.textPattern, "").toFloat() * (PI / 180)
+                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
             )).toString()
             func.contains("log") -> {
                 log(func.replace(skivvy.textPattern, "").toFloat(), 10F).toString()
@@ -322,7 +334,7 @@ class CalculationManager(var skivvy: Skivvy) {
             func.contains("exp") -> {
                 (exp(func.replace(skivvy.textPattern, "").toFloat())).toString()
             }
-            else -> "Invalid expression"
+            else -> skivvy.getString(R.string.invalid_expression)
         }
     }
 

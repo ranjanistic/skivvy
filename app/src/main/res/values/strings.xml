@@ -218,4 +218,20 @@
     <string name="showing_volume_controls">I\'m showing you the volume controls.</string>
     <string name="no_apps_installed">No applications installed on your device</string>
     <string name="flash_access_error">Can\'t access your flashlight</string>
+    <string name="unit_degree_text">Angle unit is degree</string>
+    <string name="unit_radian_text">Angle unit is radian</string>
+    <string name="fingerprint_off">Fingerprint disabled</string>
+    <string name="secret_phrase_deleted">Your secret phrase was deleted</string>
+    <string name="enable">Enable</string>
+    <string name="angles_in_radians">I\'ll treat angles in radians</string>
+    <string name="angles_in_degrees">I\'ll treat angles in degrees</string>
+    <string name="passphrase_to_be_deleted">This will delete your existing passphrase.</string>
+    <string name="need_all_permissions">I need these permissions to work perfectly.</string>
+    <string name="grant_all_permissions">Grant me some permissions for later use</string>
+    <string name="make_me_admin_persuation">Make me your device admin for better performance</string>
+    <string name="all_permissions_not_granted">I still don\'t have all the permissions.</string>
+    <string name="phrase_too_short">Try something longer</string>
+    <string name="confirm_phrase">Say that again to confirm</string>
+    <string name="try_again">Try again</string>
+    <string name="undefined_result">Undefined result in my logic</string>
 </resources>
