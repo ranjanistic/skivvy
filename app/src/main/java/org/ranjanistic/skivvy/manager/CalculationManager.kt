@@ -334,10 +334,18 @@ class CalculationManager(var skivvy: Skivvy) {
             func.contains("exp") -> {
                 (exp(func.replace(skivvy.textPattern, "").toFloat())).toString()
             }
+            func.contains("factorial")->{
+                factorial(func.replace(skivvy.textPattern, "").toInt()).toString()
+            }
             else -> skivvy.getString(R.string.invalid_expression)
         }
     }
-
+//TODO: this factorial thing
+    fun factorial(num: Int): Long {
+        var result = 1L
+        for (i in 2..num) result *= i
+        return result
+    }
     private fun isFloat(value: String): Boolean {
         return value.toFloat() - value.toFloat().toInt() != 0F
     }

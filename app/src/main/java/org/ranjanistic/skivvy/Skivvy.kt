@@ -93,7 +93,7 @@ open class Skivvy : Application() {
     val PREF_HEAD_CALC = "calculator"
     val PREF_KEY_LAST_CALC = "lastResult"
     val FINISH_ACTION = "finish"
-    val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","sqrt","cbrt","exp")
+    val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","sqrt","cbrt","exp","factorial")
     val operators = arrayOf("^", "p", "/", "*", "m", "-", "+")
 
     //default objects
