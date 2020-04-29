@@ -113,13 +113,6 @@ open class MainActivity : AppCompatActivity() {
         setListeners()
         outPut.text = getString(im_ready)
         input.text = getString(tap_the_button)
-
-        recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            .putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
     }
 
     private fun setViewAndDefaults() {
@@ -208,6 +201,12 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
         skivvy.tts = TextToSpeech(applicationContext, TextToSpeech.OnInitListener {
             when (it) {
                 TextToSpeech.SUCCESS -> {
@@ -427,15 +426,15 @@ open class MainActivity : AppCompatActivity() {
                     .toLowerCase(skivvy.locale)
                 if (txt != skivvy.getVoiceKeyPhrase()) {
                     if (skivvy.getBiometricStatus()) {
-                        speakOut("Vocal authentication failed. I need your physical verification")
+                        speakOut(getString(vocal_auth_failed)+ getString(need_physical_verification))
                         authStateAction(skivvy.CODE_VOICE_AUTH_CONFIRM)
                         biometricPrompt.authenticate(promptInfo)
                     } else {
-                        speakOut("Vocal authentication failed")
+                        speakOut(getString(vocal_auth_failed))
                     }
                 } else {
                     skivvy.setPhraseKeyStatus(false)
-                    speakOut("Vocal authentication disabled")
+                    speakOut(getString(R.string.vocal_auth_disabled))
                 }
             }
             skivvy.CODE_BIOMETRIC_CONFIRM -> {
@@ -443,11 +442,11 @@ open class MainActivity : AppCompatActivity() {
                     .toLowerCase(skivvy.locale)
                 if (txt != skivvy.getVoiceKeyPhrase()) {
                     if (skivvy.getBiometricStatus()) {
-                        speakOut("Vocal authentication failed. I need your physical verification")
+                        speakOut(getString(vocal_auth_failed)+ getString(need_physical_verification))
                         authStateAction(skivvy.CODE_BIOMETRIC_CONFIRM)
                         biometricPrompt.authenticate(promptInfo)
                     } else {
-                        speakOut("Vocal authentication failed")
+                        speakOut(getString(vocal_auth_failed))
                     }
                 } else {
                     skivvy.setBiometricsStatus(false)
@@ -941,10 +940,10 @@ open class MainActivity : AppCompatActivity() {
             text.contains("flash") -> {
                 if (isFlashAvailable()) {
                     if (text.contains("off")) {
-                        speakOut("Flashlight is off")
+                        speakOut(getString(flash_off))
                         setFlashLight(false)
                     } else {
-                        speakOut("Flashlight is on")
+                        speakOut(getString(flash_on))
                         setFlashLight(true)
                     }
                 } else {
@@ -952,16 +951,27 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             text.contains("search") -> {
-                var query = text.replace("search for", "").trim()
-                query = query.replace("search", "").trim()
+                var query = text.replace("search for", "").replace("search", "").trim()
                 if (query != "") {
-                    speakOut("Searching for $query via Google")
-                    startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse("https://google.com/#q=$query")
-                        )
-                    )
+                    if(query.contains("via")) {
+                        query = query.replace("via", "").trim()
+                        if (query != "") {
+                            speakOut("Searching for "+ getLastCalculationResult() +" via $query")
+                            startActivity(
+                                Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://$query.com/search?q="+getLastCalculationResult())
+                                )
+                            )
+                        } else {
+                            txt = "search via"
+                            speakOut("Which search engine should I go for?",skivvy.CODE_SPEECH_RECORD)
+                        }
+                    } else {
+                        txt = "search via"
+                        saveCalculationResult(query)
+                        speakOut("Which search engine should I go for?",skivvy.CODE_SPEECH_RECORD)
+                    }
                 } else {
                     if (text.replace("search for", "").trim() == "" || text.replace(
                             "search",
@@ -1099,23 +1109,23 @@ open class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun computerOps(rawExpression: String,reusing:Boolean = false): Boolean {
+    private fun computerOps(rawExpression: String, reusing: Boolean = false): Boolean {
         val expression = inputSpeechManager.expressionize(rawExpression)
-        if(expression.length == 3 && !reusing){
+        if (expression.length == 3 && !reusing) {
             try {
                 val res = calculationManager.operate(
                     expression[0].toString().toFloat(),
                     expression[1],
                     expression[2].toString().toFloat()
                 )
-                if (res != null){
+                if (res != null) {
                     speakOut(calculationManager.returnValidResult(arrayOf(res.toString())))
                     return true
                 } else {
-                    computerOps(rawExpression,true)
+                    computerOps(rawExpression, true)
                 }
-            } catch(e:Exception){
-                computerOps(rawExpression,true)
+            } catch (e: Exception) {
+                computerOps(rawExpression, true)
             }
         }
         /**
@@ -1142,13 +1152,19 @@ open class MainActivity : AppCompatActivity() {
                 if (expression.contains(skivvy.numberPattern)) {
                     setFeedback(expression)
                     saveCalculationResult(calculationManager.operateFuncWithConstant(expression)!!)
-                    if(getLastCalculationResult()?.let {
-                            calculationManager.convertExponentialTerm(
+                    if (getLastCalculationResult()?.let {
+                            calculationManager.handleExponentialTerm(
                                 it
                             )
                         } == "")
                         return false
-                    speakOut(calculationManager.formatToProperValue(calculationManager.convertExponentialTerm(getLastCalculationResult()!!)))
+                    speakOut(
+                        calculationManager.formatToProperValue(
+                            calculationManager.handleExponentialTerm(
+                                getLastCalculationResult()!!
+                            )
+                        )
+                    )
                     return true
                 }
             }
@@ -1967,9 +1983,9 @@ open class MainActivity : AppCompatActivity() {
             .putString(skivvy.PREF_KEY_LAST_CALC, result).apply()
     }
 
-    private fun getLastCalculationResult(): String? {
+    private fun getLastCalculationResult(): String {
         return getSharedPreferences(skivvy.PREF_HEAD_CALC, Context.MODE_PRIVATE)
-            .getString(skivvy.PREF_KEY_LAST_CALC, "0")
+            .getString(skivvy.PREF_KEY_LAST_CALC, "0")!!
     }
 
     //Handle incoming phone calls

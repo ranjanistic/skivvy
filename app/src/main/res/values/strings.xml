@@ -168,8 +168,8 @@
     <string name="generic_voice_rec_text">I\'m listening</string>
     <string name="switch_to_dark">Switch to dark theme</string>
     <string name="switch_to_light">Switch to light theme</string>
-    <string name="grant_permissions">Grant permissions</string>
-    <string name="make_device_admin">Make device admin</string>
+    <string name="grant_permissions">Grant\npermissions</string>
+    <string name="make_device_admin">Device\nadmin</string>
     <string name="device_admin_success">Thanks for making me your device admin.</string>
     <string name="reset_voice_auth_confirm">Confirm to reset and disable vocal authentication?</string>
     <string name="traning_title">Training</string>
@@ -234,4 +234,8 @@
     <string name="confirm_phrase">Say that again to confirm</string>
     <string name="try_again">Try again</string>
     <string name="undefined_result">Undefined result in my logic</string>
+    <string name="contact_file_name">people.json</string>
+    <string name="vocal_auth_disabled">Vocal authentication disabled</string>
+    <string name="flash_on">Flashlight is on</string>
+    <string name="flash_off">Flashlight is off</string>
 </resources>

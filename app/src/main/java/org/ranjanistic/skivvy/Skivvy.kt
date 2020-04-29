@@ -14,6 +14,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.os.Build
+import android.os.Environment
 import android.provider.ContactsContract
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
@@ -22,9 +23,16 @@ import androidx.biometric.BiometricManager
 import androidx.core.app.ActivityCompat
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 import org.ranjanistic.skivvy.manager.ContactDataManager
 import org.ranjanistic.skivvy.manager.PackageDataManager
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.nio.charset.Charset
 import java.util.*
+import kotlin.collections.ArrayList
 
 open class Skivvy : Application() {
     //permission codes
@@ -93,15 +101,16 @@ open class Skivvy : Application() {
     val PREF_HEAD_CALC = "calculator"
     val PREF_KEY_LAST_CALC = "lastResult"
     val FINISH_ACTION = "finish"
-    val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","sqrt","cbrt","exp","factorial")
+    val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","sqrt","cbrt","exp","fact")
     val operators = arrayOf("^", "p", "/", "*", "m", "-", "+")
+    var pathToFile = ""
 
     //default objects
     var tts: TextToSpeech? = null
     var packageDataManager: PackageDataManager =
         PackageDataManager()
     var contactDataManager: ContactDataManager =
-        ContactDataManager()
+        ContactDataManager(this)
     lateinit var deviceManager: DevicePolicyManager
     lateinit var compName: ComponentName
     @ExperimentalStdlibApi
@@ -109,6 +118,18 @@ open class Skivvy : Application() {
         super.onCreate()
         deviceManager = applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         compName = ComponentName(this, Administrator::class.java)
+        if(this.hasPermissions(applicationContext)) {
+            this.pathToFile = Environment.getExternalStorageDirectory().toString() + "/.Skivvy"
+            try {
+                val file  = File(this.pathToFile,getString(R.string.contact_file_name))
+                if(!file.exists()) {
+                    file.mkdir()
+                    contactDataManager.saveContactsToJson()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalPackages()
         }
@@ -116,7 +137,7 @@ open class Skivvy : Application() {
             if (it == TextToSpeech.SUCCESS) {
                 this.tts!!.language = this.locale
             } else
-                Toast.makeText(this, "Error in speaking", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.output_error), Toast.LENGTH_SHORT).show()
         })
         /*
         GlobalScope.launch {    //Long running task, getting all contacts
@@ -148,6 +169,28 @@ open class Skivvy : Application() {
         this.packageDataManager.setPackagesDetail(packageData)
     }
 
+    private fun saveContacts(){
+        val file = File(this.pathToFile, "people_data.json")
+        var json: String? = null
+        json = try {
+            val iStream = assets.open("users_list.json")
+            val size = iStream.available()
+            val buffer = ByteArray(size)
+            iStream.read(buffer)
+            iStream.close()
+            String(buffer, Charset.forName("UTF-8"))
+        } catch (ex: IOException) {
+            ex.printStackTrace()
+        }.toString()
+        val obj:JSONObject = JSONObject(json)
+        val contacts:JSONArray = obj.getJSONArray("contacts")
+        var i = 0
+        while(i<contacts.length()){
+            val user:JSONObject = contacts.getJSONObject(i)
+            contactDataManager.names.add(user.getString("name"))
+            ++i
+        }
+    }
     private fun getLocalContacts(){
         var contactCount = 0
         lateinit var contactData: ContactDataManager.ContactData

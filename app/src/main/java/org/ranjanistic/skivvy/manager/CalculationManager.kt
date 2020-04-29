@@ -144,7 +144,7 @@ class CalculationManager(var skivvy: Skivvy) {
                     } else return null
                 }
                 arrayOfExpression[fin] = operateFuncWithConstant(arrayOfExpression[fin]!!)
-                arrayOfExpression[fin] = convertExponentialTerm(arrayOfExpression[fin]!!)
+                arrayOfExpression[fin] = handleExponentialTerm(arrayOfExpression[fin]!!)
                 if (arrayOfExpression[fin]!! == "" || !arrayOfExpression[fin]!!.contains(skivvy.numberPattern))
                     return null
             }
@@ -153,7 +153,7 @@ class CalculationManager(var skivvy: Skivvy) {
         return arrayOfExpression
     }
 
-    fun convertExponentialTerm(value:String):String{
+    fun handleExponentialTerm(value:String):String{
         return if(value.contains(skivvy.textPattern)) {
             when {
                 value.contains("E-", false) -> {
@@ -300,52 +300,62 @@ class CalculationManager(var skivvy: Skivvy) {
         }
     }
     private fun functionOperate(func: String): String? {
-        return when {
-            func.contains("sin") -> sin(
-                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
-            ).toString()
-            func.contains("cos") -> cos(
-                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
-            ).toString()
-            func.contains("tan") -> tan(
-                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
-            ).toString()
-            func.contains("cot") -> (1 / tan(
-                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
-            )).toString()
-            func.contains("sec") -> (1 / cos(
-                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
-            )).toString()
-            func.contains("cosec") -> (1 / sin(
-                func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
-            )).toString()
-            func.contains("log") -> {
-                log(func.replace(skivvy.textPattern, "").toFloat(), 10F).toString()
+        try {
+            return when {
+                func.contains("sin") -> sin(
+                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                ).toString()
+                func.contains("cos") -> cos(
+                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                ).toString()
+                func.contains("tan") -> tan(
+                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                ).toString()
+                func.contains("cot") -> (1.div(tan(
+                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                ))).toString()
+                func.contains("sec") -> (1.div(cos(
+                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                ))).toString()
+                func.contains("cosec") -> (1.div(sin(
+                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                ))).toString()
+                func.contains("log") -> {
+                    log(func.replace(skivvy.textPattern, "").toFloat(), 10F).toString()
+                }
+                func.contains("ln") -> {
+                    ln1p(func.replace(skivvy.textPattern, "").toFloat()).toString()
+                }
+                func.contains("sqrt") -> {
+                    (func.replace(skivvy.textPattern, "").toFloat().pow(0.5F)).toString()
+                }
+                func.contains("cbrt") -> {
+                    (func.replace(skivvy.textPattern, "").toDouble()
+                        .pow(1 / 3.toDouble())).toString()
+                }
+                func.contains("exp") -> {
+                    (exp(func.replace(skivvy.textPattern, "").toFloat())).toString()
+                }
+                func.contains("fact") -> {
+                    factorial(func.replace(skivvy.textPattern, "").toInt()).toString()
+                }
+                else -> skivvy.getString(R.string.invalid_expression)
             }
-            func.contains("ln") -> {
-                ln1p(func.replace(skivvy.textPattern, "").toFloat()).toString()
-            }
-            func.contains("sqrt") -> {
-                (func.replace(skivvy.textPattern, "").toFloat().pow(0.5F)).toString()
-            }
-            func.contains("cbrt") -> {
-                (func.replace(skivvy.textPattern, "").toDouble().pow(1 / 3.toDouble())).toString()
-            }
-            func.contains("exp") -> {
-                (exp(func.replace(skivvy.textPattern, "").toFloat())).toString()
-            }
-            func.contains("factorial")->{
-                factorial(func.replace(skivvy.textPattern, "").toInt()).toString()
-            }
-            else -> skivvy.getString(R.string.invalid_expression)
+        } catch(e:Exception){
+            return skivvy.getString(R.string.invalid_expression)
         }
     }
 //TODO: this factorial thing
     fun factorial(num: Int): Long {
-        var result = 1L
-        for (i in 2..num) result *= i
+    var result = 1L
+    var i = 1
+    while (i<=num){
+        result *= i
+        ++i
+    }
         return result
     }
+
     private fun isFloat(value: String): Boolean {
         return value.toFloat() - value.toFloat().toInt() != 0F
     }

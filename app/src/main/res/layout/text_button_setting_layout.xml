@@ -9,6 +9,5 @@
     android:textColor="?attr/base_text_color"
     android:textSize="@dimen/normal_text_size"
     android:fontFamily="@font/varela_round_regular"
-    android:gravity="center_vertical"
-    android:paddingHorizontal="@dimen/base_separation"
-    android:paddingVertical="@dimen/secondary_separation"/>
+    android:gravity="center"
+    android:padding="@dimen/secondary_separation"/>

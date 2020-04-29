@@ -4,11 +4,13 @@ import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.view.View
+import android.view.WindowManager
 import android.view.animation.AnimationUtils
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -39,8 +41,10 @@ class Setup : AppCompatActivity() {
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     private lateinit var context: Context
+    private lateinit var scrollView: ScrollView
     private var temp = TempDataManager()
     private lateinit var recognitionIntent: Intent
+
     override fun onBackPressed() {
         super.onBackPressed()
         overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
@@ -52,6 +56,11 @@ class Setup : AppCompatActivity() {
         context = this
         setTheme(skivvy.getThemeState())
         setContentView(R.layout.activity_setup)
+        window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
         setViewAndInitials()
         setListeners()
         recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -63,6 +72,7 @@ class Setup : AppCompatActivity() {
     }
 
     private fun setViewAndInitials() {
+        scrollView = findViewById(R.id.settingScrollView)
         settingIcon = findViewById(R.id.settingIcon)
         training = findViewById(R.id.trainingModeBtn)
         mute = findViewById(R.id.muteUnmuteBtn)
@@ -75,10 +85,10 @@ class Setup : AppCompatActivity() {
         deleteVoiceSetup = findViewById(R.id.delete_voice_key)
         permissions = findViewById(R.id.permissionBtn)
         permissions.text = getString(R.string.grant_permissions)
-        permissions.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_keyfillteal, 0)
+        permissions.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_keyfillteal, 0, 0)
         deviceAdmin = findViewById(R.id.deviceAdminBtn)
         deviceAdmin.text = getString(R.string.make_device_admin)
-        deviceAdmin.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_locknkey, 0)
+        deviceAdmin.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_locknkey, 0, 0)
         findViewById<TextView>(R.id.version).text = BuildConfig.VERSION_NAME
         setThumbAttrs(
             training,
@@ -163,6 +173,14 @@ class Setup : AppCompatActivity() {
             finish()
             overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
         }
+        scrollView.viewTreeObserver
+            .addOnScrollChangedListener {
+                val alpha: Float = scrollView.scrollY.toFloat() / window.decorView.height
+                settingIcon.alpha = (1 - alpha * 5F)
+                settingIcon.translationY = alpha*500
+                settingIcon.translationZ = 0- alpha*500
+            }
+
         training.setOnCheckedChangeListener { view, isChecked ->
             skivvy.setTrainingStatus(isChecked)
             setThumbAttrs(

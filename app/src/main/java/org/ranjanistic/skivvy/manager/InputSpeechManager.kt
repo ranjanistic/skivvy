@@ -73,13 +73,12 @@ class InputSpeechManager(val resources: Resources,val skivvy: Skivvy) {
         val toBeFactorial = arrayOf("factorialof","factorial")
         val toBePercented = arrayOf("%of", "percentof")
         val toBeModded = arrayOf("%", "mod")
-        val toBeLogged = arrayOf("naturallogof", "naturallog","naturallogarithmof","naturallogarithm")
-        val toBeLog = arrayOf("logof","logarithmof","logarithm")
+        val toBeLogged = arrayOf("naturallogarithmof","naturallogarithm","naturallogof", "naturallog")
+        val toBeLog = arrayOf("logarithmof","logarithm","logof")
         val toBeMultiplied = arrayOf("x", "multipliedby", "times","into", "and")
         val toBeDivided = arrayOf("dividedby", "by", "upon", "over", "÷", "divideby", "divide")
         val toBeAdded = arrayOf("add", "plus", "or")
         val toBeSubtracted = arrayOf("minus", "negative", "subtract")
-        val toBeNumerized = arrayOf("hundred")
         val toBePowered = arrayOf(
             "raisedtothepowerof", "raisetothepowerof", "raisedtothepower", "raisetothepower",
             "tothepowerof", "tothepower", "raisedto", "raiseto", "raised", "raise", "kipower"
@@ -88,20 +87,18 @@ class InputSpeechManager(val resources: Resources,val skivvy: Skivvy) {
         val toBeRooted = arrayOf("squareroot", "root", "secondroot")
         val toBeSquared = arrayOf("square")
         val toBeCubed = arrayOf("cube")
-        val toBeZeroed = arrayOf("zero")
         val toBePI = arrayOf("pi")
 
         val formatArrays = arrayOf(
-            toBeRemoved, toBePercented, toBeModded, toBeLogged, toBeLog,
-            toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBeNumerized
-            , toBePowered, toBeCuberooted, toBeRooted, toBeSquared, toBeCubed, toBeZeroed,
-            toBePI, toBeFactorial
+            toBeRemoved, toBeFactorial, toBePercented, toBeModded, toBeLogged, toBeLog,
+            toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBePowered,
+            toBeCuberooted, toBeRooted, toBeSquared, toBeCubed, toBePI
         )
         val replacingArray =
             arrayOf(
-                "", "p", "m", "ln", "log", "*", "/", "+",
-                "-", "100", "^", "cbrt", "sqrt", "^2", "^3","0",
-                PI.toString(), "factorial"
+                "", "fact","p", "m", "ln", "log", "*", "/", "+",
+                "-", "100", "^", "cbrt", "sqrt", "^2", "^3",
+                PI.toString()
             )
         var formatIndex = 0
         while (formatIndex < formatArrays.size) {
@@ -113,6 +110,14 @@ class InputSpeechManager(val resources: Resources,val skivvy: Skivvy) {
                 )
                 ++formatArrayIndex
             }
+            ++formatIndex
+        }
+        val toBeNumbered = arrayOf("zero","one","two","hundred","thousand")
+        val numbers = arrayOf("0","1","2","100","1000")
+        formatIndex = 0
+        while(formatIndex<numbers.size) {
+            finalExpression =
+                finalExpression.replace(toBeNumbered[formatIndex], numbers[formatIndex])
             ++formatIndex
         }
         return finalExpression
