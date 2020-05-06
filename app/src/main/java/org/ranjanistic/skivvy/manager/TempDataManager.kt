@@ -18,6 +18,7 @@ class TempDataManager {
     private var authAttemptCount:Int = 3
     //TODO: Retry command by adding to previous one
     private var retryCommandCount = 0
+    private var lastCommand:String? = null
 
     fun getPackageIndex(): Int = this.packageIndex
     fun getPhoneIndex(): Int = this.phoneIndex
@@ -34,6 +35,7 @@ class TempDataManager {
     fun getVolumePercent():Float = this.volumePercent
     fun getAuthAttemptCount():Int = this.authAttemptCount
     fun getRetryCommandCount():Int = this.retryCommandCount
+    fun getLastCommand():String? = this.lastCommand
 
     fun setPackageIndex(packageIndex: Int) {
         this.packageIndex = packageIndex
@@ -90,6 +92,9 @@ class TempDataManager {
     }
     fun setRetryCommandCount(count:Int){
         this.retryCommandCount = count
+    }
+    fun setLastCommand(cmd:String?){
+        this.lastCommand = cmd
     }
 
 }

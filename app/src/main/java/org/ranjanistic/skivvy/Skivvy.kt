@@ -85,7 +85,8 @@ open class Skivvy : Application() {
 
     val CODE_LOCATION_SERVICE = 100
     val CODE_DEVICE_ADMIN = 102
-    val nonVocalRequestCodes = intArrayOf(CODE_LOCATION_SERVICE,CODE_DEVICE_ADMIN)
+    val CODE_SYSTEM_SETTINGS = 103
+    val nonVocalRequestCodes = intArrayOf(CODE_LOCATION_SERVICE,CODE_DEVICE_ADMIN, CODE_SYSTEM_SETTINGS)
     //default strings and arrays
     val PREF_HEAD_SECURITY = "security"
     val PREF_KEY_BIOMETRIC = "fingerprint"
@@ -375,7 +376,7 @@ open class Skivvy : Application() {
     }
     fun getThemeState():Int{
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
-            .getInt(this.PREF_KEY_THEME, R.style.DarkTheme)
+            .getInt(this.PREF_KEY_THEME, R.style.BlackTheme)
     }
     fun setParallelResponseStatus(isParallel:Boolean){
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()

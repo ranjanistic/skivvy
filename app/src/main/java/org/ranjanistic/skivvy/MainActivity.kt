@@ -17,6 +17,7 @@ import android.location.LocationManager
 import android.media.AudioManager
 import android.net.Uri
 import android.net.wifi.WifiManager
+import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -33,6 +34,7 @@ import android.text.format.DateFormat
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
+import android.view.WindowManager
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.ImageButton
@@ -61,7 +63,6 @@ open class MainActivity : AppCompatActivity() {
 
     lateinit var skivvy: Skivvy
 
-    //TODO: add up with last command and retry
     //TODO: widget for actions (calculations first, or a calculator widget)
     private lateinit var outPut: TextView
     private lateinit var input: TextView
@@ -76,13 +77,12 @@ open class MainActivity : AppCompatActivity() {
     private lateinit var waveDamped: Animation
     private lateinit var fallDown: Animation
     private lateinit var riseUp: Animation
-    private lateinit var extendDown: Animation
     private lateinit var extendDownStartSetup: Animation
     private lateinit var rotateRevolveToRight: Animation
     private lateinit var revolveRotateToLeft: Animation
     private lateinit var fadeOff: Animation
     private lateinit var fadeOn: Animation
-
+    private lateinit var fadeOnFast: Animation
     private lateinit var receiver: ImageButton
     private lateinit var setting: ImageButton
     private lateinit var settingBack: ImageView
@@ -106,12 +106,19 @@ open class MainActivity : AppCompatActivity() {
         skivvy = this.application as Skivvy
         context = this
         setTheme(skivvy.getThemeState())
-        setContentView(R.layout.activity_main)
+        if (skivvy.getThemeState() == R.style.BlackTheme) {
+            setContentView(R.layout.activity_main_black)
+        } else {
+            setContentView(R.layout.activity_main)
+        }
+        window.statusBarColor = ContextCompat.getColor(context, android.R.color.transparent)
+        window.navigationBarColor = ContextCompat.getColor(context, android.R.color.transparent)
+        hideSysUI()
         setViewAndDefaults()
         loadDefaultAnimations()
         normalView()
         setListeners()
-        outPut.text = getString(im_ready)
+        setOutput(getString(im_ready))
         input.text = getString(tap_the_button)
     }
 
@@ -145,10 +152,10 @@ open class MainActivity : AppCompatActivity() {
         zoomInRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_exit)
         fadeOff = AnimationUtils.loadAnimation(context, R.anim.fade_off)
         fadeOn = AnimationUtils.loadAnimation(context, R.anim.fade_on)
+        fadeOnFast = AnimationUtils.loadAnimation(context, R.anim.fade_on_quick)
         revolveRotateToLeft = AnimationUtils.loadAnimation(context, R.anim.pill_slide_left)
         setting.startAnimation(revolveRotateToLeft)
         rotateRevolveToRight = AnimationUtils.loadAnimation(context, R.anim.pill_slide_right)
-        extendDown = AnimationUtils.loadAnimation(context, R.anim.extend_back)
         extendDownStartSetup = AnimationUtils.loadAnimation(context, R.anim.extend_back)
     }
 
@@ -174,8 +181,8 @@ open class MainActivity : AppCompatActivity() {
         outPut.startAnimation(fadeOn)
         input.startAnimation(fadeOn)
         settingBack.startAnimation(fadeOn)
-        loading.setImageDrawable(getDrawable(ic_dotsincircle))
-        loading.startAnimation(zoomInOutRotate)
+        //loading.setImageDrawable(getDrawable(ic_dotsincircle))
+        //loading.startAnimation(zoomInOutRotate)
     }
 
     private fun setListeners() {
@@ -199,6 +206,17 @@ open class MainActivity : AppCompatActivity() {
         })
     }
 
+    override fun onResume() {
+        super.onResume()
+        hideSysUI()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus)
+            hideSysUI()
+    }
+
     override fun onStart() {
         super.onStart()
         recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -212,18 +230,39 @@ open class MainActivity : AppCompatActivity() {
                 TextToSpeech.SUCCESS -> {
                     when (skivvy.tts!!.setLanguage(skivvy.locale)) {
                         TextToSpeech.LANG_MISSING_DATA,
-                        TextToSpeech.LANG_NOT_SUPPORTED -> outPut.text = getString(
-                            language_not_supported
+                        TextToSpeech.LANG_NOT_SUPPORTED -> setOutput(
+                            getString(
+                                language_not_supported
+                            )
                         )
                     }
                 }
-                else -> outPut.text = getString(output_error)
+                else -> setOutput(getString(output_error))
             }
         })
     }
 
+    private fun hideSysUI() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+        window.decorView.apply {
+            systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
+                    // Set the content to appear under the system bars so that the
+                    // content doesn't resize when the system bars hide and show.
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    // Hide the nav bar and status bar
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN)
+        }
+    }
+
     override fun onRestart() {
         super.onRestart()
+        hideSysUI()
         if (!skivvy.getTrainingStatus()) {
             startResumeAnimate()
         } else {
@@ -322,6 +361,7 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun setFeedback(text: String?) {
+        feedback.startAnimation(fadeOnFast)
         feedback.text = text
     }
 
@@ -355,6 +395,28 @@ open class MainActivity : AppCompatActivity() {
     private fun handleTrainingInput(input: String?) {
         speakOut("Okay")
         Log.d("training", "handled $input")
+    }
+
+    //TODO: recursion of command for last command continuation not working, maybe because of sentence containing both agreement and disagreement.
+    private fun isAnyCommand(text: String?): Boolean {
+        if (!respondToCommand(text!!)) {
+            if (!directActions(text)) {
+                if (!computerOps(text)) {
+                    if (!appOptions(text)) {
+                        if (this.temp.getRetryCommandCount() < 2) {
+                            if (this.temp.getLastCommand() != null) {
+                                this.temp.setRetryCommandCount(this.temp.getRetryCommandCount() + 1)
+                                isAnyCommand(text + " " + this.temp.getLastCommand())
+                            }
+                        } else {
+                            speakOut(getString(recognize_error))
+                            return false
+                        }
+                    }
+                }
+            }
+        }
+        return true
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -409,15 +471,12 @@ open class MainActivity : AppCompatActivity() {
                 }
                 if (txt != null) {
                     input.text = txt
-                    if (!respondToCommand(txt!!)) {
-                        if (!directActions(txt!!)) {
-                            if (!computerOps(txt!!)) {
-                                if (!appOptions(txt)) {
-                                    errorView()
-                                    speakOut(getString(recognize_error))
-                                }
-                            }
-                        }
+                    if (!isAnyCommand(txt)) {
+                        errorView()
+                        speakOut(getString(recognize_error))
+                    } else {
+                        this.temp.setRetryCommandCount(0)
+                        this.temp.setLastCommand(txt)
                     }
                 }
             }
@@ -426,7 +485,7 @@ open class MainActivity : AppCompatActivity() {
                     .toLowerCase(skivvy.locale)
                 if (txt != skivvy.getVoiceKeyPhrase()) {
                     if (skivvy.getBiometricStatus()) {
-                        speakOut(getString(vocal_auth_failed)+ getString(need_physical_verification))
+                        speakOut(getString(vocal_auth_failed) + getString(need_physical_verification))
                         authStateAction(skivvy.CODE_VOICE_AUTH_CONFIRM)
                         biometricPrompt.authenticate(promptInfo)
                     } else {
@@ -442,7 +501,7 @@ open class MainActivity : AppCompatActivity() {
                     .toLowerCase(skivvy.locale)
                 if (txt != skivvy.getVoiceKeyPhrase()) {
                     if (skivvy.getBiometricStatus()) {
-                        speakOut(getString(vocal_auth_failed)+ getString(need_physical_verification))
+                        speakOut(getString(vocal_auth_failed) + getString(need_physical_verification))
                         authStateAction(skivvy.CODE_BIOMETRIC_CONFIRM)
                         biometricPrompt.authenticate(promptInfo)
                     } else {
@@ -466,7 +525,7 @@ open class MainActivity : AppCompatActivity() {
                             speakOut("Volume at ${temp.getVolumePercent().toInt()}%")
                         }
                         false -> {
-                            outPut.text = getString(okay)
+                            setOutput(getString(okay))
                             volumeOps(getString(optimal_volume))
                         }
                     }
@@ -516,6 +575,14 @@ open class MainActivity : AppCompatActivity() {
                 } else {
                     errorView()
                     speakOut(getString(device_admin_failure))
+                }
+            }
+            skivvy.CODE_SYSTEM_SETTINGS -> {
+                if (!Settings.System.canWrite(context)) {
+                    speakOut(getString(write_settings_permit_denied))
+                    errorView()
+                } else {
+                    speakOut("Come again?", skivvy.CODE_SPEECH_RECORD)
                 }
             }
             skivvy.CODE_CALL_CONF -> {
@@ -852,6 +919,11 @@ open class MainActivity : AppCompatActivity() {
             R.array.snap_list
         )
         when {
+            text.contains("last command") -> {
+                temp.getLastCommand()?.let {
+                    speakOut("You told me to " + temp.getLastCommand())
+                }
+            }
             text.contains("training mode") -> {
                 if (text == "activate training mode") {
                     if (!skivvy.getTrainingStatus()) {
@@ -921,19 +993,19 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             text.contains("airplane") -> {
-                if (isAirplaneModeEnabled()) {
-                    if (text.contains("on") || text.contains("enable")) {
-                        speakOut("Already on airplane mode")
+                if (text.contains("on") || text.contains("enable")) {
+                    if (isAirplaneModeEnabled()) {
+                        speakOut("Already on airplane mode.")
                     } else {
-                        speakOut("Airplane mode on")
-                        setAirplaneMode(false)
-                    }
-                } else {
-                    if (text.contains("off") || text.contains("disable")) {
-                        speakOut("Airplane mode already off")
-                    } else {
-                        speakOut("Airplane mode off")
+                        speakOut("Airplane mode on.")
                         setAirplaneMode(true)
+                    }
+                } else if (text.contains("off") || text.contains("disable")) {
+                    if (!isAirplaneModeEnabled()) {
+                        speakOut("Airplane mode is already off.")
+                    } else {
+                        speakOut("Airplane mode off.")
+                        setAirplaneMode(false)
                     }
                 }
             }
@@ -953,24 +1025,27 @@ open class MainActivity : AppCompatActivity() {
             text.contains("search") -> {
                 var query = text.replace("search for", "").replace("search", "").trim()
                 if (query != "") {
-                    if(query.contains("via")) {
+                    if (query.contains("via")) {
                         query = query.replace("via", "").trim()
                         if (query != "") {
-                            speakOut("Searching for "+ getLastCalculationResult() +" via $query")
+                            speakOut("Searching for " + getLastCalculationResult() + " via $query")
                             startActivity(
                                 Intent(
                                     Intent.ACTION_VIEW,
-                                    Uri.parse("https://$query.com/search?q="+getLastCalculationResult())
+                                    Uri.parse("https://$query.com/search?q=" + getLastCalculationResult())
                                 )
                             )
                         } else {
                             txt = "search via"
-                            speakOut("Which search engine should I go for?",skivvy.CODE_SPEECH_RECORD)
+                            speakOut(
+                                "Which search engine should I go for?",
+                                skivvy.CODE_SPEECH_RECORD
+                            )
                         }
                     } else {
                         txt = "search via"
                         saveCalculationResult(query)
-                        speakOut("Which search engine should I go for?",skivvy.CODE_SPEECH_RECORD)
+                        speakOut("Which search engine should I go for?", skivvy.CODE_SPEECH_RECORD)
                     }
                 } else {
                     if (text.replace("search for", "").trim() == "" || text.replace(
@@ -1484,18 +1559,8 @@ open class MainActivity : AppCompatActivity() {
     //action invoking direct intents
     private fun directActions(text: String): Boolean {
         var localTxt: String
-        val continuationOperators: Array<String> =
-            arrayOf("add", "plus", "+", "-", "minus", "subtract", "divide", "multiply", "/", "x")
         when {
-            continuationOperators.contains(
-                text.substringBefore(" ").toLowerCase(skivvy.locale)
-            ) -> {
-                if (text.contains(skivvy.numberPattern)) {
-                    computerOps(getLastCalculationResult() + text)
-                    //TODO: continued calculation
-                    //        startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD,"Continue calculation")
-                } else return false
-            }
+            //TODO: continued calculation
             text.contains(getString(call)) -> {
                 waitingView(getDrawable(ic_glossyphone))
                 localTxt = text.replace(getString(call), "", true).trim()
@@ -1640,7 +1705,7 @@ open class MainActivity : AppCompatActivity() {
         )
     }
 
-    //TODO: Either create contact list data class and use that here, or do direct lookup faster in background.
+    //TODO: Either create contact list data class (created) and use that here, or do direct lookup faster in background.
     private fun contactOps(name: String, code: Int) {
         temp.setContactCode(code)
         temp.setPhoneIndex(0)
@@ -1946,6 +2011,7 @@ open class MainActivity : AppCompatActivity() {
         return Settings.System.getInt(contentResolver, Settings.System.AIRPLANE_MODE_ON, 0) == 1
     }
 
+    //TODO: Airplane mode not turning on
     private fun setAirplaneMode(status: Boolean) {
         Settings.System.putInt(
             contentResolver, Settings.System.AIRPLANE_MODE_ON,
@@ -1959,7 +2025,13 @@ open class MainActivity : AppCompatActivity() {
                 )
             )
         } catch (e: SecurityException) {
-            speakOut("I'm not allowed to do that")
+            if (!Settings.System.canWrite(context)) {
+                speakOut(getString(request_settings_write_permit))
+                startActivityForResult(
+                    Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS),
+                    skivvy.CODE_SYSTEM_SETTINGS
+                )
+            }
         }
     }
 
@@ -2065,20 +2137,20 @@ open class MainActivity : AppCompatActivity() {
                 false
             inputSpeechManager.containsAgreement(inputSpeechManager.removeBeforeNegative(response)) ->
                 true
-            inputSpeechManager.containsDisagreement(response) ->
+            inputSpeechManager.containsDisagreement(" $response ", isSingle = true) ->
                 false
-            inputSpeechManager.containsAgreement(response) ->
+            inputSpeechManager.containsAgreement(" $response ", isSingle = true) ->
                 true
             else -> null
         }
     }
 
     private fun normalView(fromTraining: Boolean = false) {
-        loading.setImageDrawable(getDrawable(ic_dotsincircle))
         loading.startAnimation(zoomInOutRotate)
+        loading.setImageDrawable(getDrawable(ic_dotsincircle))
         input.text = null
-        outPut.text = null
-        feedback.text = null
+        setOutput(null)
+        setFeedback(null)
         icon.setImageDrawable(null)
         contact = ContactModel()
         temp = TempDataManager()
@@ -2091,7 +2163,7 @@ open class MainActivity : AppCompatActivity() {
             greet.visibility = View.VISIBLE
             setting.visibility = View.VISIBLE
             settingBack.visibility = View.VISIBLE
-            outPut.text = getString(im_ready)
+            setOutput(getString(im_ready))
             input.text = getString(tap_the_button)
         }
     }
@@ -2132,6 +2204,11 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setOutput(text: String?) {
+        outPut.startAnimation(fadeOnFast)
+        outPut.text = text
+    }
+
     private fun speakOut(
         text: String,
         taskCode: Int? = null,
@@ -2139,7 +2216,7 @@ open class MainActivity : AppCompatActivity() {
         isFeedback: Boolean = false
     ) {
         if (isFeedback) setFeedback(text)
-        else outPut.text = text
+        else setOutput(text)
         skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onDone(utteranceId: String) {
                 if (!parallelReceiver)
@@ -2153,7 +2230,7 @@ open class MainActivity : AppCompatActivity() {
             }
         })
         if (!skivvy.getMuteStatus()) skivvy.tts!!.speak(
-            text,
+            text.replace("\n", ""),
             TextToSpeech.QUEUE_FLUSH,
             null,
             "$taskCode"

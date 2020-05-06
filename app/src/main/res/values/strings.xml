@@ -3,7 +3,7 @@
     <string name="hello">Hello</string>
     <string name="mic_open_caption">Command</string>
     <string name="recognize_error">I didn\'t get it.&#160;</string>
-    <string name="no_input">You didn\'t say anything</string>
+    <string name="no_input">You didn\'t say anything.</string>
     <string name="theme">Theme</string>
     <string name="bottom_sheet_behavior" translatable="false">com.google.android.material.bottomsheet.BottomSheetBehavior</string>
     <string-array name="acceptances">
@@ -75,7 +75,7 @@
     <string name="device_admin_persuation">Activate Skivvy as a device admin to lock screen on your command. Don\'t worry, Skivvy is safe and will never harm your device in any way.</string>
     <string name="speech_activation_button" translatable="false">button</string>
     <string name="do_u_want_open">Do you want me to open&#160;</string>
-    <string name="opening">Opening&#160;</string>
+    <string name="opening">Opening&#160;\n</string>
     <string name="gps_enabled">All satellites on you now</string>
     <string name="gps_is_off">GPS not enabled</string>
     <string name="bt_off">Bluetooth is off</string>
@@ -85,17 +85,17 @@
     <string name="screen_locked">Locked</string>
     <string name="internal_error">Internal error</string>
     <string name="snap_success">Screenshot taken</string>
-    <string name="snap_failed">Can\'t take screenshot</string>
+    <string name="snap_failed">Can\'t take screenshot.</string>
     <string name="exit_msg">Bye!</string>
     <string name="okay">Okay</string>
     <string name="null_variable_error">Sorry, I forgot your command</string>
     <string name="error">Error</string>
-    <string name="language_not_supported">The Language specified is not supported</string>
-    <string name="output_error">Error in speaking</string>
+    <string name="language_not_supported">The Language specified is not supported.</string>
+    <string name="output_error">Error in speaking.</string>
     <string name="call_permit_denied">You didn\'t allow me to make calls.</string>
     <string name="should_i_call">Should I call&#160;</string>
-    <string name="storage_permission_denied">You didn\'t allow me to store screenshots on device</string>
-    <string name="contact_permission_denied">You didn\'t allow me to access your contacts</string>
+    <string name="storage_permission_denied">You didn\'t allow me to store screenshots on device.</string>
+    <string name="contact_permission_denied">You didn\'t allow me to access your contacts.</string>
     <string name="unmute_text">Un-mute speech output</string>
     <string name="mute_text">Mute speech output</string>
     <string name="activate_training_text">Activate training mode</string>
@@ -112,11 +112,11 @@
     <string name="app_tag_line">An experiment of Priyanshu Ranjan</string>
     <string name="call">call</string>
     <string name="device_admin_failure">You didn\'t activate me as a device admin.</string>
-    <string name="contact_not_found">No such contact</string>
+    <string name="contact_not_found">No such contact.</string>
     <string name="no_contacts_available">You seem to have no contacts.</string>
     <string name="should_i_email">Should I email&#160;</string>
-    <string name="invalid_call_request">Invalid call request</string>
-    <string name="invalid_email_request">Invalid email address</string>
+    <string name="invalid_call_request">Invalid call request.</string>
+    <string name="invalid_email_request">Invalid email address.</string>
     <string name="you_dont_seem_having">You don\'t seem to have&#160;</string>
     <string name="someone_email_address">\'s email address.</string>
     <string name="someones_phone_number">\'s phone number.</string>
@@ -126,8 +126,9 @@
     <string name="what_is_body">What\'s the body?</string>
     <string name="body_added">Body added.&#160;</string>
     <string name="preparing_email">Preparing email to send</string>
-    <string name="biometric_auth_explanation">Authenticate yourself to proceed further. This is required when you are about to perform a sensitive action directly affecting Skivvy\'s functions, or your real life.</string>
-    <string name="invalid_expression">Invalid expression</string>
+    <string name="biometric_auth_explanation">Authenticate yourself to proceed further.
+        This is required when you are about to perform a sensitive action directly affecting Skivvy\'s functions, or your real life.</string>
+    <string name="invalid_expression">Invalid expression.</string>
     <string name="what_is_message">What\'s the message?</string>
     <string name="should_i_text">Should I text&#160;</string>
     <string name="via_sms">&#160;via SMS?</string>
@@ -178,13 +179,13 @@
     <string name="queued_receive_text">I\'ll receive after speaking</string>
     <string name="set_parallel_receive">Set receive while speaking</string>
     <string name="set_queued_receive">Set receive after speaking</string>
-    <string name="muted">Muted</string>
-    <string name="speaking">Speaking</string>
-    <string name="voice_auth_enabled">Voice auth enabled</string>
-    <string name="voice_auth_disabled">Voice auth disabled</string>
+    <string name="muted">Muted.</string>
+    <string name="speaking">Speaking.</string>
+    <string name="voice_auth_enabled">Voice auth enabled.</string>
+    <string name="voice_auth_disabled">Voice auth disabled.</string>
     <string name="light_theme_set">This is light theme</string>
     <string name="dark_theme_set">This is dark theme</string>
-    <string name="fingerprint_is_on">Fingerprint enabled</string>
+    <string name="fingerprint_is_on">Fingerprint enabled.</string>
     <string name="recognition_service_error">Error in speech recognition.</string>
     <string-array name="notification_channel">
         <item>SKIVVY_MAIN_NOTIFICATION</item>
@@ -202,10 +203,10 @@
     <string name="chances_left">&#160;chances left</string>
     <string name="vocal_auth_failed">Vocal authentication failed.&#160;</string>
     <string name="need_physical_verification">I need your physical verification.</string>
-    <string name="vocal_auth_enabled">Vocal authentication enabled</string>
-    <string name="vocal_auth_unset">You need to physically set up vocal authentication</string>
-    <string name="vocal_auth_already_on">Vocal authentication already enabled</string>
-    <string name="vocal_auth_already_off">Vocal authentication already disabled</string>
+    <string name="vocal_auth_enabled">Vocal authentication enabled.</string>
+    <string name="vocal_auth_unset">You need to physically set up vocal authentication.</string>
+    <string name="vocal_auth_already_on">Vocal authentication already enabled.</string>
+    <string name="vocal_auth_already_off">Vocal authentication already disabled.</string>
     <string name="get_passphrase_text">Tell me your secret passphrase</string>
     <string name="biometric_unsupported">Your device doesn\'t support biometric authentication.</string>
     <string name="volume_highest">Maximum volume achieved</string>
@@ -236,6 +237,8 @@
     <string name="undefined_result">Undefined result in my logic</string>
     <string name="contact_file_name">people.json</string>
     <string name="vocal_auth_disabled">Vocal authentication disabled</string>
-    <string name="flash_on">Flashlight is on</string>
-    <string name="flash_off">Flashlight is off</string>
+    <string name="flash_on">Flashlight is on.</string>
+    <string name="flash_off">Flashlight is off.</string>
+    <string name="request_settings_write_permit">Find me in the list and allow me to write your system settings.</string>
+    <string name="write_settings_permit_denied">You didn\'t allow me to modify your system settings.</string>
 </resources>

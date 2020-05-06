@@ -7,6 +7,7 @@ import kotlin.math.PI
 
 class InputSpeechManager(val resources: Resources,val skivvy: Skivvy) {
 
+    //removes everything before last disagreement word comes in a string
     fun removeBeforeNegative(line: String): String {
         var l = String()
         for (r in arrayOf(
@@ -22,6 +23,7 @@ class InputSpeechManager(val resources: Resources,val skivvy: Skivvy) {
         return l
     }
 
+    //removes everything before last agreement word comes in string
     fun removeBeforePositive(line: String): String {
         var l = String()
         for (k in resources.getStringArray(R.array.acceptances)) {
@@ -32,21 +34,14 @@ class InputSpeechManager(val resources: Resources,val skivvy: Skivvy) {
         return l
     }
 
-    fun containsAgreement(line: String): Boolean {
+    //if given string contains accepting word or phrase, return true
+    fun containsAgreement(line: String, isSingle:Boolean = false): Boolean {
         for (k in resources.getStringArray(R.array.acceptances)) {
-            if (line.contains(k)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    fun containsDisagreement(line: String): Boolean {
-        for (r in arrayOf(
-            resources.getStringArray(R.array.disruptions),
-            resources.getStringArray(R.array.denials)
-        )) {
-            for (k in r) {
+            if(isSingle){
+                if (line.contains(" $k ")) {
+                    return true
+                }
+            } else {
                 if (line.contains(k)) {
                     return true
                 }
@@ -55,6 +50,28 @@ class InputSpeechManager(val resources: Resources,val skivvy: Skivvy) {
         return false
     }
 
+    //if given string contains denying word or phrase, return true
+    fun containsDisagreement(line: String, isSingle: Boolean = false): Boolean {
+        for (r in arrayOf(
+            resources.getStringArray(R.array.disruptions),
+            resources.getStringArray(R.array.denials)
+        )) {
+            for (k in r) {
+                if(isSingle){
+                    if (line.contains(" $k ")) {
+                        return true
+                    }
+                } else {
+                    if (line.contains(k)) {
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
+
+    //if string contains disruptions or cancellation phrase or word, return true
     fun containsDisruption(line:String):Boolean{
         for (k in resources.getStringArray(R.array.disruptions)) {
             if (line.contains(k)) {
@@ -64,6 +81,7 @@ class InputSpeechManager(val resources: Resources,val skivvy: Skivvy) {
         return false
     }
 
+    //formats given string to expression form, irrespective of it is mathematical expression or not
     fun expressionize(expression: String): String {
         var finalExpression = expression
         val toBeRemoved = arrayOf(
@@ -75,9 +93,9 @@ class InputSpeechManager(val resources: Resources,val skivvy: Skivvy) {
         val toBeModded = arrayOf("%", "mod")
         val toBeLogged = arrayOf("naturallogarithmof","naturallogarithm","naturallogof", "naturallog")
         val toBeLog = arrayOf("logarithmof","logarithm","logof")
-        val toBeMultiplied = arrayOf("x", "multipliedby", "times","into", "and")
+        val toBeMultiplied = arrayOf("x", "multipliedby", "times","into")
         val toBeDivided = arrayOf("dividedby", "by", "upon", "over", "÷", "divideby", "divide")
-        val toBeAdded = arrayOf("add", "plus", "or")
+        val toBeAdded = arrayOf("add", "plus")
         val toBeSubtracted = arrayOf("minus", "negative", "subtract")
         val toBePowered = arrayOf(
             "raisedtothepowerof", "raisetothepowerof", "raisedtothepower", "raisetothepower",
@@ -97,7 +115,7 @@ class InputSpeechManager(val resources: Resources,val skivvy: Skivvy) {
         val replacingArray =
             arrayOf(
                 "", "fact","p", "m", "ln", "log", "*", "/", "+",
-                "-", "100", "^", "cbrt", "sqrt", "^2", "^3",
+                "-", "^", "cbrt", "sqrt", "^2", "^3",
                 PI.toString()
             )
         var formatIndex = 0

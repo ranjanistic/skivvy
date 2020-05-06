@@ -32,6 +32,7 @@ class Setup : AppCompatActivity() {
     private lateinit var theme: Switch
     private lateinit var response: Switch
     private lateinit var angleUnit: Switch
+    private lateinit var darkVer: Switch
     private lateinit var biometrics: Switch
     private lateinit var voiceAuth: Switch
     private lateinit var deleteVoiceSetup: TextView
@@ -42,9 +43,9 @@ class Setup : AppCompatActivity() {
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     private lateinit var context: Context
     private lateinit var scrollView: ScrollView
+    private lateinit var noteView:TextView
     private var temp = TempDataManager()
     private lateinit var recognitionIntent: Intent
-
     override fun onBackPressed() {
         super.onBackPressed()
         overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
@@ -60,6 +61,16 @@ class Setup : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+        if(skivvy.getThemeState() == R.style.LightTheme) {
+            window.statusBarColor = ContextCompat.getColor(context, R.color.dull_white)
+            window.navigationBarColor = ContextCompat.getColor(context, R.color.dull_white)
+        } else if(skivvy.getThemeState() == R.style.BlackTheme){
+            window.statusBarColor = ContextCompat.getColor(context, R.color.pitch_black)
+            window.navigationBarColor = ContextCompat.getColor(context, R.color.pitch_black)
+        } else {
+            window.statusBarColor = ContextCompat.getColor(context, R.color.dead_blue)
+            window.navigationBarColor = ContextCompat.getColor(context, R.color.dead_blue)
         }
         setViewAndInitials()
         setListeners()
@@ -79,6 +90,7 @@ class Setup : AppCompatActivity() {
         theme = findViewById(R.id.themeSwitch)
         response = findViewById(R.id.parallelResponseBtn)
         angleUnit = findViewById(R.id.angleUnitBtn)
+        darkVer = findViewById(R.id.darkVersion)
         biometrics = findViewById(R.id.biometricsBtn)
         vocalLayout = findViewById(R.id.voice_setup)
         voiceAuth = findViewById(R.id.voice_auth_switch)
@@ -89,7 +101,9 @@ class Setup : AppCompatActivity() {
         deviceAdmin = findViewById(R.id.deviceAdminBtn)
         deviceAdmin.text = getString(R.string.make_device_admin)
         deviceAdmin.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_locknkey, 0, 0)
-        findViewById<TextView>(R.id.version).text = BuildConfig.VERSION_NAME
+        noteView = findViewById(R.id.end_note)
+        val note = BuildConfig.VERSION_NAME + "\n" + getString(R.string.app_tag_line)
+        noteView.text = note
         setThumbAttrs(
             training,
             skivvy.getTrainingStatus(),
@@ -119,6 +133,12 @@ class Setup : AppCompatActivity() {
             skivvy.getAngleUnit() == "rad",
             getString(R.string.unit_radian_text),
             getString(R.string.unit_degree_text)
+        )
+        setThumbAttrs(
+            darkVer,
+            skivvy.getThemeState() == R.style.BlackTheme,
+            "Deactivate hybrid view",
+            "Activate hybrid view"
         )
         if (skivvy.checkBioMetrics()) {
             biometrics.visibility = View.VISIBLE
@@ -156,6 +176,7 @@ class Setup : AppCompatActivity() {
             theme,
             response,
             angleUnit,
+            darkVer,
             biometrics,
             vocalLayout,
             permissions,
@@ -176,9 +197,11 @@ class Setup : AppCompatActivity() {
         scrollView.viewTreeObserver
             .addOnScrollChangedListener {
                 val alpha: Float = scrollView.scrollY.toFloat() / window.decorView.height
-                settingIcon.alpha = (1 - alpha * 5F)
+                settingIcon.alpha = (1 - alpha * 8F)
                 settingIcon.translationY = alpha*500
                 settingIcon.translationZ = 0- alpha*500
+                noteView.alpha = alpha * 8F
+                noteView.translationY = alpha*100
             }
 
         training.setOnCheckedChangeListener { view, isChecked ->
@@ -268,6 +291,31 @@ class Setup : AppCompatActivity() {
                     else -> getString(R.string.angles_in_degrees)
                 }
             )
+        }
+        darkVer.setOnCheckedChangeListener { view, isChecked ->
+            view.text = when (isChecked) {
+                true -> {
+                    skivvy.setThemeState(R.style.BlackTheme)
+                    startActivity(
+                        Intent(
+                            context,
+                            MainActivity::class.java
+                        ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    )
+                    "Deactivate hybrid view"
+                }
+                else -> {
+                    skivvy.setThemeState(R.style.DarkTheme)
+                    startActivity(
+                        Intent(
+                            context,
+                            MainActivity::class.java
+                        ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    )
+                    "Activate hybrid view"
+                }
+            }
+            finish()
         }
         biometrics.setOnCheckedChangeListener { view, isChecked ->
             if (isChecked) {

@@ -36,6 +36,7 @@
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
 
     <uses-feature android:name="android.hardware.camera.flash" />
 
@@ -47,7 +48,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/DarkTheme">
+        android:theme="@style/BlackTheme">
         <receiver android:name=".DirectCommand">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

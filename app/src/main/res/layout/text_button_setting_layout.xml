@@ -6,7 +6,7 @@
     android:background="@drawable/spruce_square_round_button"
     android:clickable="true"
     android:focusable="true"
-    android:textColor="?attr/base_text_color"
+    android:textColor="?attr/secondary_text_color"
     android:textSize="@dimen/normal_text_size"
     android:fontFamily="@font/varela_round_regular"
     android:gravity="center"

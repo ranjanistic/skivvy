@@ -14,7 +14,7 @@
     </style>
 
     <style name="LightTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="fontFamily">@font/varela_round_regular</item>
+        <item name="fontFamily">@font/jost_light</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">@color/dull_white</item>
         <item name="android:navigationBarColor">@color/pitch_white</item>
@@ -35,7 +35,7 @@
     </style>
 
     <style name="DarkTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="fontFamily">@font/varela_round_regular</item>
+        <item name="fontFamily">@font/jost_light</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:statusBarColor">@color/dead_blue</item>
         <item name="android:navigationBarColor">@color/charcoal</item>
@@ -53,6 +53,17 @@
         <item name="warning_button_color">@color/dull_red</item>
         <item name="warning_button_color_text">@color/pitch_white</item>
         <item name="action_button_color_text">@color/dull_white</item>
+    </style>
+
+    <style name="BlackTheme" parent="DarkTheme">
+        <item name="colorPrimary">@android:color/transparent</item>
+        <item name="colorPrimaryDark">@android:color/transparent</item>
+        <item name="fontFamily">@font/jost_light</item>
+        <item name="base_background_color">@color/pitch_white</item>
+        <item name="secondary_background_color">@color/pitch_black</item>
+        <item name="tertiary_background_color">@color/almost_black</item>
+        <item name="base_text_color">@color/pitch_black</item>
+        <item name="secondary_text_color">@color/pitch_white</item>
     </style>
 
     <style name="TrainingTheme" parent="DarkTheme">
