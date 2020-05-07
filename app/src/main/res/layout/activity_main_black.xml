@@ -14,13 +14,12 @@
         android:layout_height="0dp"
         android:layout_marginBottom="18dp"
         android:contentDescription="@string/back_drop"
-        android:background="@drawable/drop_shadow"
         android:elevation="16dp"
         app:layout_constraintBottom_toTopOf="@id/textInput"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/bottom_round_view" />
+        app:srcCompat="@drawable/view_bottom_round" />
 
     <TextView
         android:id="@+id/greeting"
@@ -54,7 +53,7 @@
         app:layout_constraintStart_toStartOf="@id/setting_icon_back"
         app:layout_constraintTop_toTopOf="@id/setting_icon_back"
         app:layout_constraintVertical_bias="0.5"
-        app:srcCompat="@drawable/ic_settings_icon" />
+        app:srcCompat="@drawable/ic_setting" />
 
     <ImageView
         android:id="@+id/setting_icon_back"
@@ -71,7 +70,7 @@
         app:layout_constraintHorizontal_bias="1"
         app:layout_constraintStart_toEndOf="@id/greeting"
         app:layout_constraintTop_toTopOf="@id/greeting"
-        app:srcCompat="@drawable/left_round_button" />
+        app:srcCompat="@drawable/button_left_round" />
 
     <TextView
         android:id="@+id/textOutput"
@@ -111,7 +110,7 @@
         app:layout_constraintVertical_bias="0"
         app:layout_constraintHorizontal_bias="1"
         app:layout_constraintStart_toEndOf="@id/receiverBtn"
-        app:srcCompat="@drawable/ic_dotsincircle" />
+        app:srcCompat="@drawable/dots_in_circle" />
 
     <TextView
         android:id="@+id/feedbackOutput"
@@ -152,7 +151,7 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_margin="12dp"
-        android:background="@drawable/circle_button"
+        android:background="@drawable/button_circle"
         android:contentDescription="@string/command_button"
         android:elevation="22dp"
         android:paddingTop="12dp"
@@ -163,6 +162,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/backdrop"
         app:layout_constraintVertical_bias="0.5"
-        app:srcCompat="@drawable/ic_skivvycommandicon" />
+        app:srcCompat="@drawable/ic_mic" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

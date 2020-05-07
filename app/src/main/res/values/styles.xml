@@ -12,7 +12,12 @@
         <item name="android:statusBarColor">@color/dull_white</item>
         <item name="android:background">@drawable/splash_light</item>
     </style>
-
+    <style name="SplashBlack" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/pitch_black</item>
+        <item name="android:statusBarColor">@color/pitch_black</item>
+        <item name="android:background">@drawable/splash_black</item>
+    </style>
     <style name="LightTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="fontFamily">@font/jost_light</item>
         <item name="android:windowLightStatusBar">true</item>

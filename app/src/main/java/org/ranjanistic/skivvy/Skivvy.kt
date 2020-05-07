@@ -67,7 +67,6 @@ open class Skivvy : Application() {
     val textPattern = "[a-zA-Z]".toRegex()
     val emailPattern = "[a-zA-Z0-9._-]+@[a-z.]+\\.+[a-z]+".toRegex()
     val nonNumeralPattern = "[^0-9]".toRegex()
-
     //action codes
     val CODE_TRAINING_MODE = 9
     val CODE_SPEECH_RECORD = 10

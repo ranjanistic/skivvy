@@ -1,24 +1,15 @@
 package org.ranjanistic.skivvy
 
 
-import android.app.Notification.EXTRA_NOTIFICATION_ID
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
-import android.os.Bundle
 import android.os.IBinder
-import android.speech.RecognitionListener
-import android.speech.RecognizerIntent
-import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import org.ranjanistic.skivvy.R.color
 import org.ranjanistic.skivvy.R.drawable
-import java.util.*
 
 
 class CommandService : Service(){
@@ -65,7 +56,7 @@ class CommandService : Service(){
             //PendingIntent.getBroadcast(this, 0, snoozeIntent, 0)
         val builder = NotificationCompat.Builder(this,
             resources.getStringArray(R.array.notification_channel)[0])
-            .setSmallIcon(drawable.ic_yellow_dotsincircle)
+            .setSmallIcon(drawable.dots_in_circle_yellow)
             .setContentTitle("Skivvy is running")
             .setContentText("Skivvy is running in background as a service, and is listening to your commands.")
             .setOngoing(true)
@@ -73,7 +64,7 @@ class CommandService : Service(){
             .setColorized(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
-            //.addAction(drawable.ic_yellow_dotsincircle, "Stop",
+            //.addAction(drawable.dots_in_circle_yellow, "Stop",
                 //snoozePendingIntent)
         val notificationManager: NotificationManagerCompat =
             NotificationManagerCompat.from(this)

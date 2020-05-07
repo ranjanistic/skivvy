@@ -226,6 +226,7 @@ class ContactDataManager(val skivvy: Skivvy) {
         output.close()
     }
 
+    //TODO:  contact management
     fun readContactsFromJson() {
         val file =
             File(Environment.getExternalStorageDirectory().toString() + "/.Skivvy", skivvy.getString(R.string.contact_file_name))

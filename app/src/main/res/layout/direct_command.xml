@@ -9,10 +9,10 @@
         android:id="@+id/widgetBtn"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:background="@drawable/circle_button"
+        android:background="@drawable/button_circle"
         android:paddingTop="@dimen/secondary_separation"
         android:scaleType="fitCenter"
-        app:srcCompat ="@drawable/ic_skivvycommandicon"
+        app:srcCompat ="@drawable/ic_mic"
         android:layout_centerInParent="true"
         />
 </RelativeLayout>

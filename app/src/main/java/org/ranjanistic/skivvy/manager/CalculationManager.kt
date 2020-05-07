@@ -6,7 +6,7 @@ import kotlin.math.*
 
 @ExperimentalStdlibApi
 class CalculationManager(var skivvy: Skivvy) {
-
+    private val nothing = ""
     fun totalOperatorsInExpression(expression: String): Int {
         var expIndex = 0
         var totalOps = 0
@@ -113,7 +113,7 @@ class CalculationManager(var skivvy: Skivvy) {
             if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {
                 if (!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)) {
                     if (arrayOfExpression[fin + 1]!! == "+") {
-                        arrayOfExpression[fin + 1] = ""
+                        arrayOfExpression[fin + 1] = nothing
                         var lk = fin + 2
                         while (lk < arrayOfExpression.size) {
                             if (lk == fin + 2) {
@@ -123,8 +123,8 @@ class CalculationManager(var skivvy: Skivvy) {
                             }
                             ++lk
                         }
-                        arrayOfExpression[arrayOfExpression.size - 1] = ""
-                        arrayOfExpression[arrayOfExpression.size - 2] = ""
+                        arrayOfExpression[arrayOfExpression.size - 1] = nothing
+                        arrayOfExpression[arrayOfExpression.size - 2] = nothing
                     } else if (arrayOfExpression[fin + 1]!! == "-") {
                         if (arrayOfExpression[fin + 2]!!.contains(skivvy.numberPattern)) {
                             arrayOfExpression[fin + 2] =
@@ -138,14 +138,14 @@ class CalculationManager(var skivvy: Skivvy) {
                                 }
                                 ++lk
                             }
-                            arrayOfExpression[arrayOfExpression.size - 1] = ""
-                            arrayOfExpression[arrayOfExpression.size - 2] = ""
+                            arrayOfExpression[arrayOfExpression.size - 1] = nothing
+                            arrayOfExpression[arrayOfExpression.size - 2] = nothing
                         } else return null
                     } else return null
                 }
                 arrayOfExpression[fin] = operateFuncWithConstant(arrayOfExpression[fin]!!)
                 arrayOfExpression[fin] = handleExponentialTerm(arrayOfExpression[fin]!!)
-                if (arrayOfExpression[fin]!! == "" || !arrayOfExpression[fin]!!.contains(skivvy.numberPattern))
+                if (arrayOfExpression[fin]!! == nothing || !arrayOfExpression[fin]!!.contains(skivvy.numberPattern))
                     return null
             }
             ++fin
@@ -162,23 +162,28 @@ class CalculationManager(var skivvy: Skivvy) {
                 value.contains("E", false) -> {
                     skivvy.getString(R.string.infinity)
                 }
-                else -> ""
+                else -> nothing
             }
         } else value
     }
 
+    //To operate function with a constant in beginning (to be multiplied)
     fun operateFuncWithConstant(func: String):String?{
         val tempp = func.replace(skivvy.textPattern,"|")
         val numBefore = tempp.substringBefore("|")
-        return if(numBefore.contains(skivvy.numberPattern)){
-            this.functionOperate(func.replace(skivvy.numberPattern,"").replace(".","")
+        val numAfter = tempp.substringAfterLast("|")
+        return if(numBefore.contains(skivvy.numberPattern) && numAfter.contains(skivvy.numberPattern)){
+            this.functionOperate(
+                func.replace(skivvy.numberPattern,nothing).replace(".",nothing)
                     + tempp.substringAfterLast("|"))?.toFloat()?.let {
                 this.operate(numBefore.toFloat(),'*',
                     it
                 ).toString()
             }
-        } else {
+        } else if(numAfter.contains(skivvy.numberPattern)){
             this.functionOperate(func)
+        } else{
+          nothing  
         }
     }
     /**
@@ -190,7 +195,7 @@ class CalculationManager(var skivvy: Skivvy) {
         if (!localExp.contains(skivvy.numberPattern)) {
             return false
         } else {
-            localExp = localExp.replace(skivvy.numberPattern, "")
+            localExp = localExp.replace(skivvy.numberPattern, nothing)
         }
         val validCharsOfExpression = arrayOf(".")
         val operatorsFunctionsNumbers =
@@ -199,12 +204,12 @@ class CalculationManager(var skivvy: Skivvy) {
         while (kkk < operatorsFunctionsNumbers.size) {
             var kk = 0
             while (kk < operatorsFunctionsNumbers[kkk].size) {
-                localExp = localExp.replace(operatorsFunctionsNumbers[kkk][kk], "")
+                localExp = localExp.replace(operatorsFunctionsNumbers[kkk][kk], nothing)
                 ++kk
             }
             ++kkk
         }
-        return localExp == ""
+        return localExp == nothing
     }
 
     fun isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression: Array<String?>): Boolean {
@@ -281,6 +286,14 @@ class CalculationManager(var skivvy: Skivvy) {
         }
 
     }
+
+    /**
+     * This performs mathematical operations between two operands with given operator
+     * @param operand1 : The first operand
+     * @param operand2: The next operand
+     * @param operator: The mathematical operator according to which operation will be performed on [operand1] and [operand2]
+     * @return : Returns solved operation result if valid [operator] is provided, else returns null.
+     */
     fun operate(operand1: Float, operator: Char, operand2: Float): Float? {
         return when (operator) {
             '/' -> operand1.div(operand2)
@@ -293,51 +306,45 @@ class CalculationManager(var skivvy: Skivvy) {
             else -> null
         }
     }
-    private fun radianConverter():Float{
-        return when(skivvy.getAngleUnit()){
-            "rad"->1F
-            else->PI.div(180).toFloat()
-        }
-    }
     private fun functionOperate(func: String): String? {
         try {
             return when {
                 func.contains("sin") -> sin(
-                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                    func.replace(skivvy.textPattern, nothing).toFloat().toRadian(skivvy.getAngleUnit())
                 ).toString()
                 func.contains("cos") -> cos(
-                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                    func.replace(skivvy.textPattern, nothing).toFloat().toRadian(skivvy.getAngleUnit())
                 ).toString()
                 func.contains("tan") -> tan(
-                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                    func.replace(skivvy.textPattern, nothing).toFloat().toRadian(skivvy.getAngleUnit())
                 ).toString()
                 func.contains("cot") -> (1.div(tan(
-                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                    func.replace(skivvy.textPattern, nothing).toFloat().toRadian(skivvy.getAngleUnit())
                 ))).toString()
                 func.contains("sec") -> (1.div(cos(
-                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                    func.replace(skivvy.textPattern, nothing).toFloat().toRadian(skivvy.getAngleUnit())
                 ))).toString()
                 func.contains("cosec") -> (1.div(sin(
-                    func.replace(skivvy.textPattern, "").toFloat() * radianConverter()
+                    func.replace(skivvy.textPattern, nothing).toFloat().toRadian(skivvy.getAngleUnit())
                 ))).toString()
                 func.contains("log") -> {
-                    log(func.replace(skivvy.textPattern, "").toFloat(), 10F).toString()
+                    log(func.replace(skivvy.textPattern, nothing).toFloat(), 10F).toString()
                 }
                 func.contains("ln") -> {
-                    ln1p(func.replace(skivvy.textPattern, "").toFloat()).toString()
+                    ln1p(func.replace(skivvy.textPattern, nothing).toFloat()).toString()
                 }
                 func.contains("sqrt") -> {
-                    (func.replace(skivvy.textPattern, "").toFloat().pow(0.5F)).toString()
+                    (func.replace(skivvy.textPattern, nothing).toFloat().pow(0.5F)).toString()
                 }
                 func.contains("cbrt") -> {
-                    (func.replace(skivvy.textPattern, "").toDouble()
+                    (func.replace(skivvy.textPattern, nothing).toDouble()
                         .pow(1 / 3.toDouble())).toString()
                 }
                 func.contains("exp") -> {
-                    (exp(func.replace(skivvy.textPattern, "").toFloat())).toString()
+                    (exp(func.replace(skivvy.textPattern, nothing).toFloat())).toString()
                 }
                 func.contains("fact") -> {
-                    factorial(func.replace(skivvy.textPattern, "").toInt()).toString()
+                    factorialOf(func.replace(skivvy.textPattern, nothing).toInt()).toString()
                 }
                 else -> skivvy.getString(R.string.invalid_expression)
             }
@@ -345,8 +352,8 @@ class CalculationManager(var skivvy: Skivvy) {
             return skivvy.getString(R.string.invalid_expression)
         }
     }
-//TODO: this factorial thing
-    fun factorial(num: Int): Long {
+
+    private fun factorialOf(num: Int): Long {
     var result = 1L
     var i = 1
     while (i<=num){
@@ -365,4 +372,11 @@ class CalculationManager(var skivvy: Skivvy) {
             value.toFloat().toString()
         } else value.toFloat().toInt().toString()
     }
+    private fun Number.toRadian(angle:String): Float {
+        return when(angle){
+            "rad"->this.toFloat()*1F
+            else-> this.toFloat()*PI.div(180).toFloat()
+        }
+    }
 }
+

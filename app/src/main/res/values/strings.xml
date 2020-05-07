@@ -13,8 +13,14 @@
         <item>yups</item>
         <item>yeah</item>
         <item>yo</item>
-        <item>sure</item>
+    </string-array>
+    <string-array name="allowances">
+        <item>start</item>
+        <item>open</item>
         <item>do it</item>
+        <item>sure</item>
+        <item>proceed</item>
+        <item>allowed</item>
     </string-array>
     <string-array name="denials">
         <item>no</item>
@@ -241,4 +247,8 @@
     <string name="flash_off">Flashlight is off.</string>
     <string name="request_settings_write_permit">Find me in the list and allow me to write your system settings.</string>
     <string name="write_settings_permit_denied">You didn\'t allow me to modify your system settings.</string>
+    <string name="bt_already_off">Bluetooth already off</string>
+    <string name="wifi_already_on">Wi-Fi already on</string>
+    <string name="wifi_already_off">Wi-Fi already off</string>
+    <string name="bt_already_on">Bluetooth already on</string>
 </resources>

@@ -31,6 +31,8 @@ class Splash : AppCompatActivity() {
         skivvy = this.application as Skivvy
         if (skivvy.getThemeState() == R.style.LightTheme) {
             setTheme(R.style.SplashLight)
+        } else if(skivvy.getThemeState() == R.style.BlackTheme){
+            setTheme(R.style.SplashBlack)
         } else {
             setTheme(R.style.Splash)
         }

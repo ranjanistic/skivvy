@@ -2,8 +2,7 @@
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="92.753624"
-    android:viewportHeight="92.753624"
-    android:autoMirrored="true">
+    android:viewportHeight="92.753624">
   <group android:translateX="22.376812"
       android:translateY="22.376812">
       <path android:fillAlpha="1" android:fillColor="#5081d3"

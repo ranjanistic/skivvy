@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
-        <color android:color="@color/dull_white" />
+        <color android:color="@color/pitch_black" />
     </item>
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@drawable/dots_in_circle_light_view" />
+            android:src="@drawable/dots_in_circle_black_view" />
     </item>
 </layer-list>

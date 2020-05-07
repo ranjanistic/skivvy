@@ -18,7 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_settings_icon" />
+        app:srcCompat="@drawable/ic_setting" />
 
     <ScrollView
         android:id="@+id/settingScrollView"
@@ -149,7 +149,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginVertical="@dimen/base_separation"
-                android:background="@drawable/spruce_square_round_button"
+                android:background="@drawable/button_square_round_spruce"
                 android:orientation="vertical"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -167,7 +167,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/minimum_separation"
                     android:layout_marginBottom="@dimen/minimum_separation"
-                    android:background="@drawable/red_square_round_button"
+                    android:background="@drawable/button_square_round_red"
                     android:clickable="true"
                     android:elevation="@dimen/base_separation"
                     android:focusable="true"

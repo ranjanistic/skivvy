@@ -3,8 +3,7 @@
     android:height="24dp"
     android:viewportWidth="71.37392"
     android:viewportHeight="71.37392"
-    android:tint="#FFFFFF"
-    android:autoMirrored="true">
+    android:tint="#5081d3">
   <group android:translateX="11.686956"
       android:translateY="11.686956">
       <path android:fillAlpha="1" android:fillColor="#5081d3"

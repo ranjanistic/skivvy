@@ -97,10 +97,10 @@ class Setup : AppCompatActivity() {
         deleteVoiceSetup = findViewById(R.id.delete_voice_key)
         permissions = findViewById(R.id.permissionBtn)
         permissions.text = getString(R.string.grant_permissions)
-        permissions.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_keyfillteal, 0, 0)
+        permissions.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_key_abstract, 0, 0)
         deviceAdmin = findViewById(R.id.deviceAdminBtn)
         deviceAdmin.text = getString(R.string.make_device_admin)
-        deviceAdmin.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_locknkey, 0, 0)
+        deviceAdmin.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_key_locked, 0, 0)
         noteView = findViewById(R.id.end_note)
         val note = BuildConfig.VERSION_NAME + "\n" + getString(R.string.app_tag_line)
         noteView.text = note
