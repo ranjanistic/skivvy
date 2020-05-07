@@ -2,6 +2,7 @@ package org.ranjanistic.skivvy.manager
 
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
+import android.media.AudioManager
 import android.net.wifi.WifiManager
 
 class SystemFeatureManager {
@@ -21,9 +22,7 @@ class SystemFeatureManager {
     }
 
     //wifi toggle function
-    fun wirelessFidelity(on: Boolean?, context: Context): Boolean? {
-        val wifiManager: WifiManager =
-            context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    fun wirelessFidelity(on: Boolean?, wifiManager: WifiManager): Boolean? {
         if (on == null)
             return wifiManager.isWifiEnabled
         if (on) {
@@ -39,4 +38,15 @@ class SystemFeatureManager {
         }
         return null
     }
+
+    //set media volume
+    fun setMediaVolume(percent: Float, audioManager:AudioManager) {
+        audioManager.setStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            (audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) * (percent / 100)).toInt(),
+            AudioManager.FLAG_SHOW_UI
+        )
+    }
+
+    //TODO: brightness function
 }
