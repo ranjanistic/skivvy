@@ -28,13 +28,11 @@ import org.json.JSONObject
 import org.ranjanistic.skivvy.manager.ContactDataManager
 import org.ranjanistic.skivvy.manager.PackageDataManager
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.charset.Charset
 import java.util.*
-import kotlin.collections.ArrayList
 
-open class Skivvy : Application() {
+class Skivvy : Application() {
     //permission codes
     val CODE_ALL_PERMISSIONS = 999
     val CODE_CALL_REQUEST = 1000
@@ -67,6 +65,7 @@ open class Skivvy : Application() {
     val textPattern = "[a-zA-Z]".toRegex()
     val emailPattern = "[a-zA-Z0-9._-]+@[a-z.]+\\.+[a-z]+".toRegex()
     val nonNumeralPattern = "[^0-9]".toRegex()
+
     //action codes
     val CODE_TRAINING_MODE = 9
     val CODE_SPEECH_RECORD = 10
@@ -85,12 +84,14 @@ open class Skivvy : Application() {
     val CODE_LOCATION_SERVICE = 100
     val CODE_DEVICE_ADMIN = 102
     val CODE_SYSTEM_SETTINGS = 103
-    val nonVocalRequestCodes = intArrayOf(CODE_LOCATION_SERVICE,CODE_DEVICE_ADMIN, CODE_SYSTEM_SETTINGS)
+    val nonVocalRequestCodes =
+        intArrayOf(CODE_LOCATION_SERVICE, CODE_DEVICE_ADMIN, CODE_SYSTEM_SETTINGS)
+
     //default strings and arrays
     val PREF_HEAD_SECURITY = "security"
     val PREF_KEY_BIOMETRIC = "fingerprint"
     val PREF_KEY_VOCAL_AUTH = "voiceAuth"
-    val PREF_KEY_VOCAL_PHRASE  = "voicePhrase"
+    val PREF_KEY_VOCAL_PHRASE = "voicePhrase"
     val PREF_HEAD_VOICE = "voice"
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
     val PREF_HEAD_APP_MODE = "appMode"
@@ -101,28 +102,43 @@ open class Skivvy : Application() {
     val PREF_HEAD_CALC = "calculator"
     val PREF_KEY_LAST_CALC = "lastResult"
     val FINISH_ACTION = "finish"
-    val mathFunctions = arrayOf("sin", "cos", "tan", "cot", "sec", "cosec", "log", "ln","sqrt","cbrt","exp","fact")
+    val mathFunctions = arrayOf(
+        "sin",
+        "cos",
+        "tan",
+        "cot",
+        "sec",
+        "cosec",
+        "log",
+        "ln",
+        "sqrt",
+        "cbrt",
+        "exp",
+        "fact"
+    )
     val operators = arrayOf("^", "p", "/", "*", "m", "-", "+")
     var pathToFile = ""
 
     //default objects
     var tts: TextToSpeech? = null
     var packageDataManager: PackageDataManager =
-        PackageDataManager()
+        PackageDataManager(this)
     var contactDataManager: ContactDataManager =
         ContactDataManager(this)
     lateinit var deviceManager: DevicePolicyManager
     lateinit var compName: ComponentName
+
     @ExperimentalStdlibApi
     override fun onCreate() {
         super.onCreate()
-        deviceManager = applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        deviceManager =
+            applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         compName = ComponentName(this, Administrator::class.java)
-        if(this.hasPermissions(applicationContext)) {
+        if (this.hasPermissions(applicationContext)) {
             this.pathToFile = Environment.getExternalStorageDirectory().toString() + "/.Skivvy"
             try {
-                val file  = File(this.pathToFile,getString(R.string.contact_file_name))
-                if(!file.exists()) {
+                val file = File(this.pathToFile, getString(R.string.contact_file_name))
+                if (!file.exists()) {
                     file.mkdir()
                     contactDataManager.saveContactsToJson()
                 }
@@ -157,19 +173,21 @@ open class Skivvy : Application() {
         val packageData = PackageDataManager.PackageData(this.packageDataManager.getTotalPackages())
         for (packageInfo in packages) {
             if (pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
-                packageData.appName[count] = pm.getApplicationLabel(packageInfo).toString().toLowerCase(this.locale)
+                packageData.appName[count] =
+                    pm.getApplicationLabel(packageInfo).toString().toLowerCase(this.locale)
                 packageData.appPackage[count] = packageInfo.packageName.toLowerCase(this.locale)
-                packageData.appIntent[count] = pm.getLaunchIntentForPackage(packageInfo.packageName)!!
+                packageData.appIntent[count] =
+                    pm.getLaunchIntentForPackage(packageInfo.packageName)!!
                 packageData.appIcon[count] = pm.getApplicationIcon(packageInfo)
                 ++count
             } else {                    //removing un-launchable packages
-                this.packageDataManager.setTotalPackages(this.packageDataManager.getTotalPackages()-1)
+                this.packageDataManager.setTotalPackages(this.packageDataManager.getTotalPackages() - 1)
             }
         }
         this.packageDataManager.setPackagesDetail(packageData)
     }
 
-    private fun saveContacts(){
+    private fun saveContacts() {
         val file = File(this.pathToFile, "people_data.json")
         var json: String? = null
         json = try {
@@ -182,16 +200,17 @@ open class Skivvy : Application() {
         } catch (ex: IOException) {
             ex.printStackTrace()
         }.toString()
-        val obj:JSONObject = JSONObject(json)
-        val contacts:JSONArray = obj.getJSONArray("contacts")
+        val obj: JSONObject = JSONObject(json)
+        val contacts: JSONArray = obj.getJSONArray("contacts")
         var i = 0
-        while(i<contacts.length()){
-            val user:JSONObject = contacts.getJSONObject(i)
+        while (i < contacts.length()) {
+            val user: JSONObject = contacts.getJSONObject(i)
             contactDataManager.names.add(user.getString("name"))
             ++i
         }
     }
-    private fun getLocalContacts(){
+
+    private fun getLocalContacts() {
         var contactCount = 0
         lateinit var contactData: ContactDataManager.ContactData
         val cr: ContentResolver = contentResolver
@@ -210,9 +229,12 @@ open class Skivvy : Application() {
             )
              */
             while (cur.moveToNext()) {
-                contactData.iDs[contactCount] = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID))
-                contactData.photoIDs[contactCount] = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
-                contactData.names[contactCount] = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
+                contactData.iDs[contactCount] =
+                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID))
+                contactData.photoIDs[contactCount] =
+                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
+                contactData.names[contactCount] =
+                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
                 /*
                 this.contactDataManager.setContactSoloData(contactCount,
                     cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID)),
@@ -223,18 +245,24 @@ open class Skivvy : Application() {
                  */
 
                 //for nicknames
-                var deepCur:Cursor? = cr.query(ContactsContract.Data.CONTENT_URI,
+                var deepCur: Cursor? = cr.query(
+                    ContactsContract.Data.CONTENT_URI,
                     null,
                     ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
-                    arrayOf(contactData.iDs[contactCount], ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE),
+                    arrayOf(
+                        contactData.iDs[contactCount],
+                        ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE
+                    ),
                     null
                 )
-                if(deepCur!!.count>0) {
+                if (deepCur!!.count > 0) {
 //                    this.contactDataManager.setContactNicknameInitials(contactCount, arrayOfNulls(deepCur.count))
                     contactData.nickNames[contactCount] = arrayOfNulls(deepCur.count)
                     var nickCount = 0
                     while (deepCur.moveToNext()) {
-                        val nicknameName = deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Nickname.NAME))?.toLowerCase(this.locale)
+                        val nicknameName =
+                            deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Nickname.NAME))
+                                ?.toLowerCase(this.locale)
                         contactData.nickNames[contactCount]?.set(nickCount, nicknameName)
 //                        this.contactDataManager.setContactNicknameData(contactCount,nickCount,nicknameName)
                         ++nickCount
@@ -249,56 +277,58 @@ open class Skivvy : Application() {
                     arrayOf(contactDataManager.getContactIDs()[contactCount]),
                     null
                 )
-                    var size = 0
-                    while(deepCur!!.moveToNext()){
-                        ++size
-                    }
+                var size = 0
+                while (deepCur!!.moveToNext()) {
+                    ++size
+                }
                 contactData.phones[contactCount] = arrayOfNulls(size)
                 val localPhone = arrayOfNulls<String>(size)
-                    var pCount = 0
-                    deepCur.moveToFirst()
-                    while (pCount<size) {
-                        localPhone[pCount] = deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                        //TODO: Check this too if using this method
-                        var tempPhone = ""
-                        if(localPhone[pCount]!=null) {
-                            localPhone[pCount] = localPhone[pCount]!!.replace("+", "")
-                            if (!(localPhone[pCount]!!.toCharArray()[0] == '0' && localPhone[pCount]!!.toCharArray()[1] == '1'
-                                        && localPhone[pCount]!!.toCharArray()[2] == '2' && localPhone[pCount]!!.toCharArray()[3] =='0') ){
-                                localPhone[pCount]!!.replace(" ", "")
-                                if (localPhone[pCount]!!.toCharArray()[0] == '0') {
-                                    var k = 1
-                                    while (k < localPhone[pCount]!!.length) {
-                                        localPhone[pCount]!!.toCharArray()[k-1] =
-                                            localPhone[pCount]!!.toCharArray()[k]
-                                        ++k
-                                    }
-                                }
-                                if(localPhone[pCount].toString().length==10){
-                                    var x = 0
-                                    while(x<5) {
-                                        if(tempPhone == ""){
-                                            tempPhone = localPhone[pCount]!!.toCharArray()[x].toString()
-                                        } else {
-                                            tempPhone += localPhone[pCount]!!.toCharArray()[x].toString()
-                                        }
-                                        ++x
-                                    }
-                                    tempPhone+=" "
-                                    while(x<10) {
-                                        tempPhone+= localPhone[pCount]!!.toCharArray()[x].toString()
-                                        ++x
-                                    }
+                var pCount = 0
+                deepCur.moveToFirst()
+                while (pCount < size) {
+                    localPhone[pCount] =
+                        deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                    //TODO: Check this too if using this method
+                    var tempPhone = ""
+                    if (localPhone[pCount] != null) {
+                        localPhone[pCount] = localPhone[pCount]!!.replace("+", "")
+                        if (!(localPhone[pCount]!!.toCharArray()[0] == '0' && localPhone[pCount]!!.toCharArray()[1] == '1'
+                                    && localPhone[pCount]!!.toCharArray()[2] == '2' && localPhone[pCount]!!.toCharArray()[3] == '0')
+                        ) {
+                            localPhone[pCount]!!.replace(" ", "")
+                            if (localPhone[pCount]!!.toCharArray()[0] == '0') {
+                                var k = 1
+                                while (k < localPhone[pCount]!!.length) {
+                                    localPhone[pCount]!!.toCharArray()[k - 1] =
+                                        localPhone[pCount]!!.toCharArray()[k]
+                                    ++k
                                 }
                             }
-                            contactData.phones[contactCount]?.set(pCount, tempPhone)
+                            if (localPhone[pCount].toString().length == 10) {
+                                var x = 0
+                                while (x < 5) {
+                                    if (tempPhone == "") {
+                                        tempPhone = localPhone[pCount]!!.toCharArray()[x].toString()
+                                    } else {
+                                        tempPhone += localPhone[pCount]!!.toCharArray()[x].toString()
+                                    }
+                                    ++x
+                                }
+                                tempPhone += " "
+                                while (x < 10) {
+                                    tempPhone += localPhone[pCount]!!.toCharArray()[x].toString()
+                                    ++x
+                                }
+                            }
+                        }
+                        contactData.phones[contactCount]?.set(pCount, tempPhone)
 //                            this.contactDataManager.setContactPhoneData(contactCount, pCount, tempPhone)
-                        }
-                        deepCur.moveToNext()
-                        if(tempPhone!=" ") {
-                            ++pCount
-                        }
                     }
+                    deepCur.moveToNext()
+                    if (tempPhone != " ") {
+                        ++pCount
+                    }
+                }
 
                 //for email IDs
                 deepCur = cr.query(
@@ -308,11 +338,17 @@ open class Skivvy : Application() {
                     arrayOf(contactDataManager.getContactIDs()[contactCount]),
                     null
                 )
-                if(deepCur!!.count>0) {
-                    this.contactDataManager.setContactEmailsInitials(contactCount, arrayOfNulls(deepCur.count))
+                if (deepCur!!.count > 0) {
+                    this.contactDataManager.setContactEmailsInitials(
+                        contactCount,
+                        arrayOfNulls(deepCur.count)
+                    )
                     var eCount = 0
-                    while(deepCur.moveToNext()) {
-                        contactData.emails[contactCount]?.set(eCount,deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA)))
+                    while (deepCur.moveToNext()) {
+                        contactData.emails[contactCount]?.set(
+                            eCount,
+                            deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA))
+                        )
 //                        this.contactDataManager.setContactEmailData(contactCount,eCount, deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA)))
                         ++eCount
                     }
@@ -331,23 +367,28 @@ open class Skivvy : Application() {
         return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_BIOMETRIC, false)
     }
+
     fun setBiometricsStatus(isEnabled: Boolean) {
         getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_BIOMETRIC, isEnabled).apply()
     }
-    fun getPhraseKeyStatus():Boolean{
+
+    fun getPhraseKeyStatus(): Boolean {
         return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_VOCAL_AUTH, false)
     }
-    fun setPhraseKeyStatus(voiceAuthStatus:Boolean){
+
+    fun setPhraseKeyStatus(voiceAuthStatus: Boolean) {
         getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_VOCAL_AUTH, voiceAuthStatus).apply()
     }
-    fun getVoiceKeyPhrase():String?{
+
+    fun getVoiceKeyPhrase(): String? {
         return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
-            .getString(this.PREF_KEY_VOCAL_PHRASE,null)
+            .getString(this.PREF_KEY_VOCAL_PHRASE, null)
     }
-    fun setVoiceKeyPhrase(phrase: String?){
+
+    fun setVoiceKeyPhrase(phrase: String?) {
         getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
             .putString(this.PREF_KEY_VOCAL_PHRASE, phrase).apply()
     }
@@ -357,42 +398,52 @@ open class Skivvy : Application() {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_TRAINING, false)
     }
+
     fun setTrainingStatus(isTraining: Boolean) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_TRAINING, isTraining).apply()
     }
+
     fun getMuteStatus(): Boolean {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_MUTE_UNMUTE, false)
     }
+
     fun saveMuteStatus(isMuted: Boolean) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
     }
-    fun setThemeState(themeCode:Int){
+
+    fun setThemeState(themeCode: Int) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putInt(this.PREF_KEY_THEME, themeCode).apply()
     }
-    fun getThemeState():Int{
+
+    fun getThemeState(): Int {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getInt(this.PREF_KEY_THEME, R.style.BlackTheme)
     }
-    fun setParallelResponseStatus(isParallel:Boolean){
+
+    fun setParallelResponseStatus(isParallel: Boolean) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_PARLLEL_TALK, isParallel).apply()
     }
-    fun getParallelResponseStatus():Boolean{
+
+    fun getParallelResponseStatus(): Boolean {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_PARLLEL_TALK, false)
     }
-    fun setAngleUnit(unit:String){
+
+    fun setAngleUnit(unit: String) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putString(this.PREF_KEY_ANGLE_UNIT, unit).apply()
     }
-    fun getAngleUnit():String{
+
+    fun getAngleUnit(): String {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getString(this.PREF_KEY_ANGLE_UNIT, "deg")!!
     }
+
     fun checkBioMetrics(): Boolean {
         val biometricManager = BiometricManager.from(this)
         return when (biometricManager.canAuthenticate()) {
@@ -400,6 +451,7 @@ open class Skivvy : Application() {
             else -> false
         }
     }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelID = resources.getStringArray(R.array.notification_channel)[0]
@@ -412,7 +464,8 @@ open class Skivvy : Application() {
             notificationManager.createNotificationChannel(mChannel)
         }
     }
+
     fun hasPermissions(context: Context): Boolean = this.permissions.all {
-            ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
 }

@@ -15,8 +15,6 @@
         <item>yo</item>
     </string-array>
     <string-array name="allowances">
-        <item>start</item>
-        <item>open</item>
         <item>do it</item>
         <item>sure</item>
         <item>proceed</item>
@@ -31,7 +29,11 @@
         <item>stop</item>
         <item>do not</item>
     </string-array>
-
+    <string-array name="initiators">
+        <item>start</item>
+        <item>open</item>
+        <item>initiate</item>
+    </string-array>
     <string-array name="disruptions">
         <item>cancel</item>
         <item>discard</item>
@@ -251,4 +253,5 @@
     <string name="wifi_already_on">Wi-Fi already on</string>
     <string name="wifi_already_off">Wi-Fi already off</string>
     <string name="bt_already_on">Bluetooth already on</string>
+    <string name="ten_percent">10%</string>
 </resources>

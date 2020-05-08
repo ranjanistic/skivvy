@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.graphics.drawable.Drawable
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
@@ -43,14 +44,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.decodeBitmap
 import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import org.ranjanistic.skivvy.R.drawable.*
 import org.ranjanistic.skivvy.R.string.*
-import org.ranjanistic.skivvy.manager.CalculationManager
-import org.ranjanistic.skivvy.manager.InputSpeechManager
-import org.ranjanistic.skivvy.manager.SystemFeatureManager
-import org.ranjanistic.skivvy.manager.TempDataManager
+import org.ranjanistic.skivvy.manager.*
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URLEncoder
@@ -66,8 +65,8 @@ open class MainActivity : AppCompatActivity() {
     //TODO: lock screen activity, its brightness, battery level, charging status, incoming notifications on lock screen view, charging view
     //TODO:
     //TODO: widget for actions (calculations first, or a calculator widget)
-    private lateinit var outPut: TextView
-    private lateinit var input: TextView
+    private lateinit var outputText: TextView
+    private lateinit var inputText: TextView
     private lateinit var greet: TextView
     private lateinit var feedback: TextView
 
@@ -98,7 +97,8 @@ open class MainActivity : AppCompatActivity() {
     private val space = " "
     private lateinit var context: Context
     private lateinit var calculationManager: CalculationManager
-    private lateinit var inputSpeechManager: InputSpeechManager
+    private lateinit var input: InputSpeechManager
+    private lateinit var packages:PackageDataManager
     private lateinit var audioManager: AudioManager
     private lateinit var wifiManager:WifiManager
     private lateinit var recognitionIntent: Intent
@@ -124,24 +124,25 @@ open class MainActivity : AppCompatActivity() {
         normalView()
         setListeners()
         setOutput(getString(im_ready))
-        input.text = getString(tap_the_button)
+        inputText.text = getString(tap_the_button)
     }
 
     private fun setViewAndDefaults() {
         setting = findViewById(R.id.setting)
         settingBack = findViewById(R.id.setting_icon_back)
-        outPut = findViewById(R.id.textOutput)
-        input = findViewById(R.id.textInput)
+        outputText = findViewById(R.id.textOutput)
+        inputText = findViewById(R.id.textInput)
         feedback = findViewById(R.id.feedbackOutput)
         loading = findViewById(R.id.loader)
         icon = findViewById(R.id.actionIcon)
         receiver = findViewById(R.id.receiverBtn)
         greet = findViewById(R.id.greeting)
         backfall = findViewById(R.id.backdrop)
+        packages = skivvy.packageDataManager
         audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         calculationManager = CalculationManager(skivvy)
-        inputSpeechManager = InputSpeechManager()
+        input = InputSpeechManager()
     }
 
     private fun loadDefaultAnimations() {
@@ -169,9 +170,9 @@ open class MainActivity : AppCompatActivity() {
         setting.startAnimation(rotateRevolveToRight)
         backfall.startAnimation(extendDownStartSetup)
         greet.startAnimation(fadeOff)
-        outPut.startAnimation(fadeOff)
+        outputText.startAnimation(fadeOff)
         receiver.startAnimation(fadeOff)
-        input.startAnimation(fadeOff)
+        inputText.startAnimation(fadeOff)
         settingBack.startAnimation(fadeOff)
     }
 
@@ -184,8 +185,8 @@ open class MainActivity : AppCompatActivity() {
         receiver.startAnimation(waveDamped)
         setting.startAnimation(revolveRotateToLeft)
         backfall.startAnimation(riseUp)
-        outPut.startAnimation(fadeOn)
-        input.startAnimation(fadeOn)
+        outputText.startAnimation(fadeOn)
+        inputText.startAnimation(fadeOn)
         settingBack.startAnimation(fadeOn)
         //loading.setImageDrawable(getDrawable(dots_in_circle))
         //loading.startAnimation(zoomInOutRotate)
@@ -384,14 +385,12 @@ open class MainActivity : AppCompatActivity() {
             }
             KeyEvent.KEYCODE_VOLUME_UP -> {
                 setFeedback(
-                    "Volume raised to ${(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) * 100)
-                            / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}%"
+                    "Volume raised to ${feature.getMediaVolume(audioManager)}%"
                 )
             }
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
                 setFeedback(
-                    "Volume lowered to ${(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) * 100)
-                            / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}%"
+                    "Volume lowered to ${feature.getMediaVolume(audioManager)}%"
                 )
             }
         }
@@ -404,24 +403,27 @@ open class MainActivity : AppCompatActivity() {
     }
 
     //TODO: recursion of command for last command continuation not working, maybe because of sentence containing both agreement and disagreement.
-    private fun isAnyCommand(text: String?): Boolean {
+    private fun inGlobalCommands(text: String?): Boolean {
         if (!respondToCommand(text!!)) {
             if (!directActions(text)) {
                 if (!computerOps(text)) {
                     if (!appOptions(text)) {
-                        if (this.temp.getRetryCommandCount() < 2) {
-                            if (this.temp.getLastCommand() != null) {
-                                this.temp.setRetryCommandCount(this.temp.getRetryCommandCount() + 1)
-                                isAnyCommand(text + space + this.temp.getLastCommand())
+                        if (temp.getRetryCommandCount() < 2) {
+                            if (temp.getLastCommand() != null) {
+                                temp.setRetryCommandCount(temp.getRetryCommandCount() + 1)
+                                inGlobalCommands(text + space + temp.getLastCommand())
+                            } else {
+                                speakOut(getString(recognize_error))
+                                return false
                             }
                         } else {
                             speakOut(getString(recognize_error))
                             return false
                         }
-                    }
-                }
-            }
-        }
+                    } else temp.setLastCommand(text)
+                } else temp.setLastCommand(text)
+            } else temp.setLastCommand(text)
+        } else temp.setLastCommand(text)
         return true
     }
 
@@ -433,14 +435,13 @@ open class MainActivity : AppCompatActivity() {
                 if (data == null || data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
                         ?.get(0)
                         .toString()
-                        .toLowerCase(skivvy.locale) == nothing
-                ) {
+                        .toLowerCase(skivvy.locale) == nothing) {
                     normalView()
                     speakOut(getString(no_input))
                     return
                 } else {
                     result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)!!
-                    input.text = result[0]
+                    inputText.text = result[0]
                 }
             }
         }
@@ -448,7 +449,7 @@ open class MainActivity : AppCompatActivity() {
             skivvy.CODE_TRAINING_MODE -> {
                 if (data != null) {
                     result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)!!
-                    input.text = result[0]
+                    inputText.text = result[0]
                     Log.d("training", result[0])
                     handleTrainingInput(result[0])
                 } else {
@@ -476,8 +477,8 @@ open class MainActivity : AppCompatActivity() {
                     }
                 }
                 if (txt != null) {
-                    input.text = txt
-                    if (!isAnyCommand(txt)) {
+                    inputText.text = txt
+                    if (!inGlobalCommands(txt)) {
                         errorView()
                         speakOut(getString(recognize_error))
                     } else {
@@ -499,7 +500,7 @@ open class MainActivity : AppCompatActivity() {
                     }
                 } else {
                     skivvy.setPhraseKeyStatus(false)
-                    speakOut(getString(R.string.vocal_auth_disabled))
+                    speakOut(getString(vocal_auth_disabled))
                 }
             }
             skivvy.CODE_BIOMETRIC_CONFIRM -> {
@@ -540,15 +541,15 @@ open class MainActivity : AppCompatActivity() {
             skivvy.CODE_APP_CONF -> {
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
-                val pData = skivvy.packageDataManager
+                
                 when (isCooperative(txt!!)) {
                     true -> {
-                        successView(pData.getPackageIcon(temp.getPackageIndex()))
+                        successView(packages.getPackageIcon(temp.getPackageIndex()))
                         speakOut(
-                            getString(opening) + pData.getPackageAppName(temp.getPackageIndex())!!
+                            getString(opening) + packages.getPackageAppName(temp.getPackageIndex())!!
                                 .capitalize(skivvy.locale)
                         )
-                        startActivity(Intent(pData.getPackageIntent(temp.getPackageIndex())))
+                        startActivity(Intent(packages.getPackageIntent(temp.getPackageIndex())))
                     }
                     false -> {
                         normalView()
@@ -556,7 +557,7 @@ open class MainActivity : AppCompatActivity() {
                     }
                     else -> {
                         speakOut(
-                            getString(recognize_error) + "\n" + getString(do_u_want_open) + "${pData.getPackageAppName(
+                            getString(recognize_error) + "\n" + getString(do_u_want_open) + "${packages.getPackageAppName(
                                 temp.getPackageIndex()
                             )!!.capitalize(skivvy.locale)}?",
                             skivvy.CODE_APP_CONF
@@ -614,7 +615,7 @@ open class MainActivity : AppCompatActivity() {
                                 callingOps(
                                     contact.phoneList!![temp.getPhoneIndex()],
 //                                        cdata.getContactNames()[temp.getContactIndex()]!!
-                                    contact.displayName!!
+                                    contact.displayName
                                 )
                             } else {
                                 successView(getDrawable(ic_phone_dialer))
@@ -881,7 +882,7 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             skivvy.CODE_WHATSAPP_ACTION -> {
-                val pData = skivvy.packageDataManager
+                
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
                 if (txt != nothing) {
@@ -951,7 +952,7 @@ open class MainActivity : AppCompatActivity() {
                 startActivity(Intent(context, Setup::class.java))
                 overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
             }
-//TODO: use this as external function, and return special codes for commands here just like isCooperative(): inputSpeechManager.removeBeforeLastStringsIn(text, arrayOf(resources.getStringArray(R.array.bt_list)))
+//TODO: use this as external function, and return special codes for commands here just like isCooperative(): input.removeBeforeLastStringsIn(text, arrayOf(resources.getStringArray(R.array.bt_list)))
             text.contains("bluetooth") -> {
                 //the first function of Skivvy  ;-)
                 if (text.contains("on")) {
@@ -1119,6 +1120,9 @@ open class MainActivity : AppCompatActivity() {
             text.contains("volume") -> {
                 volumeOps(text.replace("volume", nothing).trim())
             }
+            text.contains("brightness")->{
+                brightnessOps(text.replace("brightness", nothing).trim())
+            }
             text == "mute" -> {
                 skivvy.saveMuteStatus(true)
                 speakOut("Muted")
@@ -1242,7 +1246,7 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun computerOps(rawExpression: String, reusing: Boolean = false): Boolean {
-        val expression = inputSpeechManager.expressionize(rawExpression)
+        val expression = input.expressionize(rawExpression)
         if (expression.length == 3 && !reusing) {
             try {
                 val res = calculationManager.operate(
@@ -1383,6 +1387,14 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
+    //TODO: This
+    private fun brightnessOps(action:String){
+        when{
+            action.contains(skivvy.numberPattern)->{
+            }
+        }
+    }
+
     private fun volumeOps(action: String) {
         when {
             action.contains(skivvy.numberPattern) -> {
@@ -1472,17 +1484,17 @@ open class MainActivity : AppCompatActivity() {
                     )
                     speakOut(getString(min_audible_volume))
                 } else {
-                    volumeOps("10%")
+                    volumeOps(getString(ten_percent))
                 }
             }
-            action.contains("silence") || action.contains("zero") || action.contains("zero") -> {
+            action.contains("silence") || action.contains("zero") -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     audioManager.setStreamVolume(
                         AudioManager.STREAM_MUSIC,
                         audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC),
                         AudioManager.FLAG_SHOW_UI
                     )
-                    speakOut(getString(R.string.volume_off))
+                    speakOut(getString(volume_off))
                 } else {
                     volumeOps(getString(zero_percent))
                 }
@@ -1493,67 +1505,62 @@ open class MainActivity : AppCompatActivity() {
                     AudioManager.ADJUST_SAME,
                     AudioManager.FLAG_SHOW_UI
                 )
-                speakOut(getString(showing_volume_controls))
+                speakOut("Volume at ${feature.getMediaVolume(audioManager)}%")
             }
         }
     }
-
-    private fun isThereAnyAppNamed(name: String, startFrom: Int = 0): Boolean {
-        val pData = skivvy.packageDataManager
-        var index = startFrom
-        while (index < pData.getTotalPackages()) {
-            if (name == pData.getPackageAppName(index)) {
-                temp.setPackageIndex(index)
-                return true
-            }
-            ++index
-        }
-        return false
-    }
-
     //TODO: specific app actions
     //actions invoking other applications
     private fun appOptions(text: String?): Boolean {
         var localText: String
-        val pData = skivvy.packageDataManager
         if (text != null) {
-            localText = text.replace("open", nothing).trim()
+            localText = input.removeBeforeLastStringsIn(text,arrayOf(resources.getStringArray(R.array.initiators)))
             if (localText == nothing) {
-                speakOut("Open what?", skivvy.CODE_SPEECH_RECORD)
-                return true
+                localText = input.removeStringsIn(text, arrayOf(resources.getStringArray(R.array.initiators)))
+                if(localText == nothing) {
+                    speakOut("Open what?", skivvy.CODE_SPEECH_RECORD)
+                    return true
+                }
             }
-            localText = localText.replace("start", nothing).trim()
-            if (localText == nothing) {
-                speakOut("Start what?", skivvy.CODE_SPEECH_RECORD)
-                return true
-            }
-            if (pData.getTotalPackages() > 0) {
+            if (packages.getTotalPackages() > 0) {
                 var i = 0
-                while (i < pData.getTotalPackages()) {
+                while (i < packages.getTotalPackages()) {
+                    if(packages.packageAppName() == null || packages.packagesName() == null || packages.packagesMain() == null){
+                        speakOut("What?", skivvy.CODE_SPEECH_RECORD, parallelReceiver = true)
+                        return true
+                    }
                     when {
                         localText == getString(app_name).toLowerCase(skivvy.locale) -> {
                             normalView()
                             speakOut(getString(i_am) + getString(app_name))
                             return true
                         }
-                        localText == pData.getPackageAppName(i) -> {
+                        localText == packages.getPackageAppName(i) -> {
                             temp.setPackageIndex(i)
-                            successView(pData.getPackageIcon(i))
+                            successView(packages.getPackageIcon(i))
                             speakOut(
-                                getString(opening) + pData.getPackageAppName(i)!!
+                                getString(opening) + packages.getPackageAppName(i)!!
                                     .capitalize(skivvy.locale)
                             )
-                            startActivity(Intent(pData.getPackageIntent(i)))
+                            startActivity(Intent(packages.getPackageIntent(i)))
                             return true
                         }
-                        pData.getPackageName(i)!!.contains(localText) -> {
+                        packages.getPackageName(i)!!.contains(localText) -> {
                             temp.setPackageIndex(i)
-                            waitingView(pData.getPackageIcon(i))
-                            speakOut(
-                                getString(do_u_want_open) + "${pData.getPackageAppName(i)!!
-                                    .capitalize(skivvy.locale)}?",
-                                skivvy.CODE_APP_CONF
-                            )
+                            waitingView(packages.getPackageIcon(i))
+                            if(packages.getPackageAppName(i)!!.contains(localText)){
+                                speakOut(
+                                  "Did you mean ${packages.getPackageAppName(i)!!
+                                        .capitalize(skivvy.locale)}?",
+                                    skivvy.CODE_APP_CONF
+                                )
+                            } else {
+                                speakOut(
+                                    getString(do_u_want_open) + "${packages.getPackageAppName(i)!!
+                                        .capitalize(skivvy.locale)}?",
+                                    skivvy.CODE_APP_CONF
+                                )
+                            }
                             return true
                         }
                         else -> ++i
@@ -1661,7 +1668,7 @@ open class MainActivity : AppCompatActivity() {
                 temp.setEmail(localTxt.replace(space, nothing).trim())
                 when {
                     temp.getEmail()!!.matches(skivvy.emailPattern) -> {
-                        input.text = temp.getEmail()
+                        inputText.text = temp.getEmail()
                         speakOut(getString(what_is_subject), skivvy.CODE_EMAIL_CONTENT)
                     }
                     localTxt.length > 1 -> {
@@ -2035,12 +2042,31 @@ open class MainActivity : AppCompatActivity() {
 
     private fun cropToCircle(uri:String):RoundedBitmapDrawable{
         val rb: RoundedBitmapDrawable =
-            RoundedBitmapDrawableFactory.create(resources,
-                MediaStore.Images.Media.getBitmap(
-                    context.contentResolver,
-                    Uri.parse(uri)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                RoundedBitmapDrawableFactory.create(resources,
+                    try {
+                        ImageDecoder.decodeBitmap(
+                            ImageDecoder.createSource(
+                                context.contentResolver,
+                                Uri.parse(uri)
+                            )
+                        )
+                    } catch (e:Exception){
+                        null
+                    }
                 )
-            )
+            } else {
+                RoundedBitmapDrawableFactory.create(resources,
+                    try {
+                        MediaStore.Images.Media.getBitmap(
+                            context.contentResolver,
+                            Uri.parse(uri)
+                        )
+                    } catch (e:Exception){
+                        null
+                    }
+                )
+            }
         rb.isCircular = true
         rb.setAntiAlias(true)
         return rb
@@ -2205,24 +2231,24 @@ open class MainActivity : AppCompatActivity() {
      */
     private fun isCooperative(response: String): Boolean? {
         return when {
-            inputSpeechManager.containsString(
-                inputSpeechManager.removeBeforeLastStringsIn(
+            input.containsString(
+                input.removeBeforeLastStringsIn(
                     response,
                     arrayOf(resources.getStringArray(R.array.acceptances))
                 ), arrayOf(resources.getStringArray(R.array.disruptions), resources.getStringArray(R.array.denials))
             ) -> false      //if denial was the last response in string
-            inputSpeechManager.containsString(
-                inputSpeechManager.removeBeforeLastStringsIn(
+            input.containsString(
+                input.removeBeforeLastStringsIn(
                     response,
                     arrayOf(resources.getStringArray(R.array.disruptions), resources.getStringArray(R.array.denials))
                 ),arrayOf(resources.getStringArray(R.array.acceptances))
             ) -> true       //if acceptance was the last response in string
-            inputSpeechManager.containsString(
+            input.containsString(
                 " $response ",
                 arrayOf(resources.getStringArray(R.array.disruptions), resources.getStringArray(R.array.denials)),
                 isSingle = true
             ) -> false      //if response contains denial
-            inputSpeechManager.containsString(
+            input.containsString(
                 " $response ",
                 arrayOf(resources.getStringArray(R.array.acceptances)),
                 isSingle = true
@@ -2234,7 +2260,7 @@ open class MainActivity : AppCompatActivity() {
     private fun normalView(fromTraining: Boolean = false) {
         loading.startAnimation(zoomInOutRotate)
         loading.setImageDrawable(getDrawable(dots_in_circle))
-        input.text = null
+        inputText.text = null
         setOutput(null)
         setFeedback(null)
         icon.setImageDrawable(null)
@@ -2250,7 +2276,7 @@ open class MainActivity : AppCompatActivity() {
             setting.visibility = View.VISIBLE
             settingBack.visibility = View.VISIBLE
             setOutput(getString(im_ready))
-            input.text = getString(tap_the_button)
+            inputText.text = getString(tap_the_button)
         }
     }
 
@@ -2292,8 +2318,8 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun setOutput(text: String?) {
-        outPut.startAnimation(fadeOnFast)
-        outPut.text = text
+        outputText.startAnimation(fadeOnFast)
+        outputText.text = text
     }
 
     private fun speakOut(

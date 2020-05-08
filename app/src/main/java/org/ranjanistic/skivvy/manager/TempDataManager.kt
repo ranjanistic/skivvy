@@ -19,6 +19,8 @@ class TempDataManager {
     //TODO: Retry command by adding to previous one
     private var retryCommandCount = 0
     private var lastCommand:String? = null
+    private var inConversation:Boolean = false
+    private var inConversationCode:Int? = null
 
     fun getPackageIndex(): Int = this.packageIndex
     fun getPhoneIndex(): Int = this.phoneIndex
@@ -36,7 +38,8 @@ class TempDataManager {
     fun getAuthAttemptCount():Int = this.authAttemptCount
     fun getRetryCommandCount():Int = this.retryCommandCount
     fun getLastCommand():String? = this.lastCommand
-
+    fun isInConversation():Boolean = this.inConversation
+    fun inConversationCode():Int? = this.inConversationCode
     fun setPackageIndex(packageIndex: Int) {
         this.packageIndex = packageIndex
     }
@@ -96,5 +99,10 @@ class TempDataManager {
     fun setLastCommand(cmd:String?){
         this.lastCommand = cmd
     }
-
+    fun setInConversation(status:Boolean){
+        this.inConversation = status
+    }
+    fun setInConversationCode(code:Int){
+        this.inConversationCode = code
+    }
 }

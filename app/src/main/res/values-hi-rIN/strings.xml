@@ -106,5 +106,6 @@
     <string name="infinity">1000000000000000000000000000000000000000000000</string>
     <string name="zero_percent">0%</string>
     <string name="contact_file_name">people.json</string>
+    <string name="ten_percent">10%</string>
 
 </resources>

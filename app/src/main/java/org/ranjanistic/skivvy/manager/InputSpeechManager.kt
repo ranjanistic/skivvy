@@ -5,7 +5,19 @@ import kotlin.math.PI
 class InputSpeechManager {
 
     private val nothing = ""
-    /**Removes everything before (and including) any word in given array of lists occurring in string at last, and returns remaining.
+    private val space = " "
+
+    fun removeStringsIn(line:String, stringListArray: Array<Array<String>>):String{
+        var l  = line
+        for(r in stringListArray){
+            for(k in r){
+                l = l.replace(k, nothing)
+            }
+        }
+        return l.replace(space, nothing)
+    }
+
+    /**Removes everything before (and including) any word  from [stringListArray] occurring in [line] at last, and returns the remaining.
      * @param line: The given string which is to be truncated according to [stringListArray].
      * @param stringListArray:The array of list of strings from which [line] will be truncated as per the last occurrence of any string from it in [line].
      * @return: The truncated string having remaining data as string or null.
@@ -19,10 +31,10 @@ class InputSpeechManager {
                 }
             }
         }
-        return l
+        return l.trim()
     }
 
-    /**If given string contains any string in given array of lists, return true, else false
+    /**If given [line] contains any string in given [stringListArray], return true, else false
      * @param line : The given string which is to be inspected.
      * @param stringListArray: The array of list of strings from which [line] will be inspected for occurrence.
      * @param isSingle: If given [line] is to be treated as single response or not (avoids possibility of multiple valid responses in string).
@@ -56,7 +68,7 @@ class InputSpeechManager {
     fun expressionize(expression: String): String {
         var finalExpression = expression
         val toBeRemoved = arrayOf(
-            " ", "calculate", "compute", "solve", "whatis",
+            space, "calculate", "compute", "solve", "whatis",
             "what's", "tellme", "thevalueof", "valueof"
         )
         val toBeFactorial = arrayOf("factorialof", "factorial")
