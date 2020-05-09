@@ -254,4 +254,11 @@
     <string name="wifi_already_off">Wi-Fi already off</string>
     <string name="bt_already_on">Bluetooth already on</string>
     <string name="ten_percent">10%</string>
+    <string name="set_default_theme">Switch back to default theme</string>
+    <string name="customize_theme">Customize theme</string>
+    <string name="default_theme">Hybrid Theme</string>
+    <string name="dark_theme">Bluish Dark Theme</string>
+    <string name="light_theme">White Light Theme</string>
+    <string name="save">Save</string>
+    <string name="save_apply">Save &amp; apply</string>
 </resources>

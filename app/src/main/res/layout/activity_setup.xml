@@ -12,26 +12,27 @@
         android:id="@+id/settingIcon"
         android:layout_width="110dp"
         android:layout_height="110dp"
-        android:alpha="1"
         android:layout_marginTop="44dp"
+        android:alpha="1"
         android:contentDescription="@string/setting_icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_setting" />
+
     <TextView
         android:id="@+id/end_note"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/secondary_separation"
-        android:gravity="center"
         android:alpha="1"
-        app:layout_constraintHorizontal_bias="0.5"
+        android:gravity="center"
         android:textColor="?attr/secondary_text_color"
         android:textSize="@dimen/smallest_text_size"
-        app:layout_constraintTop_toBottomOf="@id/settingIcon"
         app:layout_constraintEnd_toEndOf="@id/settingIcon"
-        app:layout_constraintStart_toStartOf="@id/settingIcon" />
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@id/settingIcon"
+        app:layout_constraintTop_toBottomOf="@id/settingIcon" />
 
     <ScrollView
         android:id="@+id/settingScrollView"
@@ -46,47 +47,49 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingHorizontal="@dimen/secondary_separation"
             android:paddingTop="240dp"
-            android:paddingBottom="80dp"
-            android:paddingHorizontal="@dimen/secondary_separation">
+            android:paddingBottom="80dp">
 
             <LinearLayout
                 android:id="@+id/specialSettings"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:gravity="center"
-                app:layout_constraintVertical_bias="1"
-                app:layout_constraintTop_toTopOf="parent"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1">
+
                 <View
-                    android:layout_height="0dp"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
-                    />
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
                 <include
                     android:id="@+id/permissionBtn"
                     layout="@layout/text_button_image_layout"
                     android:layout_width="155dp"
                     android:layout_height="wrap_content" />
+
                 <View
-                    android:layout_height="0dp"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
-                    />
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
                 <include
                     android:id="@+id/deviceAdminBtn"
                     layout="@layout/text_button_image_layout"
                     android:layout_width="155dp"
-                    android:layout_height="wrap_content"
-                    />
+                    android:layout_height="wrap_content" />
+
                 <View
-                    android:layout_height="0dp"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
-                    />
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
             </LinearLayout>
+
             <include
                 android:id="@+id/trainingModeBtn"
                 layout="@layout/switch_layout"
@@ -96,7 +99,7 @@
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/specialSettings"/>
+                app:layout_constraintTop_toBottomOf="@id/specialSettings" />
 
             <include
                 android:id="@+id/muteUnmuteBtn"
@@ -108,15 +111,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/trainingModeBtn" />
 
-            <include
-                android:id="@+id/themeSwitch"
-                layout="@layout/switch_layout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/base_separation"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/muteUnmuteBtn" />
 
             <LinearLayout
                 android:id="@+id/theme_setup"
@@ -125,11 +119,11 @@
                 android:layout_marginVertical="@dimen/base_separation"
                 android:background="@drawable/button_square_round"
                 android:backgroundTint="?attr/fluid_button_color"
-                android:textColor="?attr/fluid_button_text_color"
                 android:orientation="vertical"
+                android:textColor="?attr/fluid_button_text_color"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/themeSwitch">
+                app:layout_constraintTop_toBottomOf="@id/muteUnmuteBtn">
 
                 <include
                     android:id="@+id/theme_switch"
@@ -137,40 +131,52 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
 
-                <include
-                    android:id="@+id/default_theme"
-                    layout="@layout/radio_button_layout"
+                <RadioGroup
+                    android:id="@+id/themeChoices"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    />
-                <include
-                    android:id="@+id/dark_theme"
-                    layout="@layout/radio_button_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    />
-                <include
-                    android:id="@+id/light_theme"
-                    layout="@layout/radio_button_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    />
+                    android:layout_height="wrap_content"
+                    android:elevation="@dimen/base_separation"
+                    android:layout_marginHorizontal="@dimen/minimum_separation" >
+
+                    <include
+                        android:id="@+id/black_theme"
+                        layout="@layout/radio_button_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/dark_theme"
+                        layout="@layout/radio_button_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        />
+
+                    <include
+                        android:id="@+id/light_theme"
+                        layout="@layout/radio_button_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        />
+                </RadioGroup>
 
                 <TextView
                     android:id="@+id/save_theme"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="end"
                     android:layout_marginHorizontal="@dimen/minimum_separation"
                     android:layout_marginBottom="@dimen/minimum_separation"
-                    android:background="@drawable/button_square_round_red"
+                    android:paddingHorizontal="@dimen/minimum_separation"
+                    android:background="@drawable/button_square_round"
+                    android:backgroundTint="@color/colorPrimary"
                     android:clickable="true"
-                    android:elevation="@dimen/base_separation"
                     android:focusable="true"
                     android:gravity="center"
-                    android:paddingVertical="@dimen/minimum_separation"
-                    android:text="@string/reset_secret_phrase"
-                    android:textColor="?attr/warning_button_color_text"
-                    android:textSize="@dimen/normal_text_size" />
+                    android:elevation="@dimen/base_separation"
+                    android:paddingVertical="4dp"
+                    android:text="@string/save_apply"
+                    android:textColor="@color/pitch_white"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <include
@@ -194,7 +200,7 @@
                 app:layout_constraintTop_toBottomOf="@id/parallelResponseBtn" />
 
             <include
-                android:id="@+id/darkVersion"
+                android:id="@+id/biometricsBtn"
                 layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -203,16 +209,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/angleUnitBtn" />
 
-            <include
-                android:id="@+id/biometricsBtn"
-                layout="@layout/switch_layout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/base_separation"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/darkVersion" />
-
             <LinearLayout
                 android:id="@+id/voice_setup"
                 android:layout_width="0dp"
@@ -220,8 +216,8 @@
                 android:layout_marginVertical="@dimen/base_separation"
                 android:background="@drawable/button_square_round"
                 android:backgroundTint="?attr/fluid_button_color"
-                android:textColor="?attr/fluid_button_text_color"
                 android:orientation="vertical"
+                android:textColor="?attr/fluid_button_text_color"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/biometricsBtn">

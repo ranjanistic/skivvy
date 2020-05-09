@@ -30,9 +30,11 @@ class Setup : AppCompatActivity() {
     private lateinit var training: Switch
     private lateinit var mute: Switch
     private lateinit var theme: Switch
+    private lateinit var themesRadio: ArrayList<RadioButton>
+    private lateinit var themeChoices: RadioGroup
+    private lateinit var saveTheme: TextView
     private lateinit var response: Switch
     private lateinit var angleUnit: Switch
-    private lateinit var darkVer: Switch
     private lateinit var biometrics: Switch
     private lateinit var voiceAuth: Switch
     private lateinit var deleteVoiceSetup: TextView
@@ -43,7 +45,7 @@ class Setup : AppCompatActivity() {
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     private lateinit var context: Context
     private lateinit var scrollView: ScrollView
-    private lateinit var noteView:TextView
+    private lateinit var noteView: TextView
     private var temp = TempDataManager()
     private lateinit var recognitionIntent: Intent
     override fun onBackPressed() {
@@ -62,15 +64,19 @@ class Setup : AppCompatActivity() {
             window.attributes.layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
-        if(skivvy.getThemeState() == R.style.LightTheme) {
-            window.statusBarColor = ContextCompat.getColor(context, R.color.dull_white)
-            window.navigationBarColor = ContextCompat.getColor(context, R.color.dull_white)
-        } else if(skivvy.getThemeState() == R.style.BlackTheme){
-            window.statusBarColor = ContextCompat.getColor(context, R.color.pitch_black)
-            window.navigationBarColor = ContextCompat.getColor(context, R.color.pitch_black)
-        } else {
-            window.statusBarColor = ContextCompat.getColor(context, R.color.dead_blue)
-            window.navigationBarColor = ContextCompat.getColor(context, R.color.dead_blue)
+        when {
+            skivvy.getThemeState() == R.style.LightTheme -> {
+                window.statusBarColor = ContextCompat.getColor(context, R.color.dull_white)
+                window.navigationBarColor = ContextCompat.getColor(context, R.color.dull_white)
+            }
+            skivvy.getThemeState() == R.style.BlackTheme -> {
+                window.statusBarColor = ContextCompat.getColor(context, R.color.pitch_black)
+                window.navigationBarColor = ContextCompat.getColor(context, R.color.pitch_black)
+            }
+            else -> {
+                window.statusBarColor = ContextCompat.getColor(context, R.color.dead_blue)
+                window.navigationBarColor = ContextCompat.getColor(context, R.color.dead_blue)
+            }
         }
         setViewAndInitials()
         setListeners()
@@ -87,10 +93,12 @@ class Setup : AppCompatActivity() {
         settingIcon = findViewById(R.id.settingIcon)
         training = findViewById(R.id.trainingModeBtn)
         mute = findViewById(R.id.muteUnmuteBtn)
-        theme = findViewById(R.id.themeSwitch)
+        theme = findViewById(R.id.theme_switch)
+        themeChoices = findViewById(R.id.themeChoices)
+        saveTheme = findViewById(R.id.save_theme)
+        saveTheme.setBackgroundResource(R.drawable.button_square_round_spruce)
         response = findViewById(R.id.parallelResponseBtn)
         angleUnit = findViewById(R.id.angleUnitBtn)
-        darkVer = findViewById(R.id.darkVersion)
         biometrics = findViewById(R.id.biometricsBtn)
         vocalLayout = findViewById(R.id.voice_setup)
         voiceAuth = findViewById(R.id.voice_auth_switch)
@@ -118,10 +126,27 @@ class Setup : AppCompatActivity() {
         )
         setThumbAttrs(
             theme,
-            skivvy.getThemeState() == R.style.LightTheme,
-            getString(R.string.switch_to_dark),
-            getString(R.string.switch_to_light)
+            skivvy.isCustomTheme(),
+            getString(R.string.set_default_theme),
+            getString(R.string.customize_theme)
         )
+        val themeNames = arrayOf(
+            getString(R.string.default_theme), getString(R.string.dark_theme), getString(
+                R.string.light_theme
+            )
+        )
+        for (i in 0 until themeChoices.childCount) {
+            (themeChoices.getChildAt(i) as RadioButton).text = themeNames[i]
+        }
+        saveButtonStatus(false)
+        if (!skivvy.isCustomTheme()) {
+            themeChoices.visibility = View.GONE
+            saveTheme.visibility = View.GONE
+        } else {
+            themeChoices.visibility = View.VISIBLE
+            saveTheme.visibility = View.VISIBLE
+            themeChoices.check(getRadioForTheme(skivvy.getThemeState()))
+        }
         setThumbAttrs(
             response,
             skivvy.getParallelResponseStatus(),
@@ -134,12 +159,7 @@ class Setup : AppCompatActivity() {
             getString(R.string.unit_radian_text),
             getString(R.string.unit_degree_text)
         )
-        setThumbAttrs(
-            darkVer,
-            skivvy.getThemeState() == R.style.BlackTheme,
-            "Deactivate hybrid view",
-            "Activate hybrid view"
-        )
+
         if (skivvy.checkBioMetrics()) {
             biometrics.visibility = View.VISIBLE
             setThumbAttrs(
@@ -174,9 +194,10 @@ class Setup : AppCompatActivity() {
             training,
             mute,
             theme,
+            themeChoices,
+            saveTheme,
             response,
             angleUnit,
-            darkVer,
             biometrics,
             vocalLayout,
             permissions,
@@ -189,6 +210,48 @@ class Setup : AppCompatActivity() {
         view.startAnimation(AnimationUtils.loadAnimation(context, R.anim.reveal_delay))
     }
 
+
+    private fun getRadioForTheme(themeID: Int): Int {
+        return when (themeID) {
+            R.style.DarkTheme -> {
+                R.id.dark_theme
+            }
+            R.style.BlackTheme -> {
+                R.id.black_theme
+            }
+            R.style.LightTheme -> {
+                R.id.light_theme
+            }
+            else -> getRadioForTheme(skivvy.defaultTheme)
+        }
+    }
+
+    //TODO: normalize volume for important speakouts preference
+    private fun getThemeForRadio(radioID: Int): Int {
+        return when (radioID) {
+            R.id.black_theme -> {
+                R.style.BlackTheme
+            }
+            R.id.dark_theme -> {
+                R.style.DarkTheme
+            }
+            R.id.light_theme -> {
+                R.style.LightTheme
+            }
+            else -> skivvy.defaultTheme
+        }
+    }
+
+    private fun saveButtonStatus(live: Boolean) {
+        saveTheme.isClickable = live
+        saveTheme.isFocusable = live
+        if (live) {
+            saveTheme.alpha = 1F
+        } else {
+            saveTheme.alpha = 0.25F
+        }
+    }
+
     private fun setListeners() {
         settingIcon.setOnClickListener {
             finish()
@@ -198,11 +261,11 @@ class Setup : AppCompatActivity() {
             .addOnScrollChangedListener {
                 val alpha: Float = scrollView.scrollY.toFloat() / window.decorView.height
                 settingIcon.alpha = (1 - alpha * 8F)
-                settingIcon.translationY = alpha*500
-                settingIcon.translationZ = 0- alpha*500
+                settingIcon.translationY = alpha * 500
+                settingIcon.translationZ = 0 - alpha * 500
                 noteView.alpha = (1 - alpha * 8F)
-                noteView.translationY = alpha*500
-                noteView.translationZ = 0- alpha*500
+                noteView.translationY = alpha * 500
+                noteView.translationZ = 0 - alpha * 500
             }
 
         training.setOnCheckedChangeListener { view, isChecked ->
@@ -233,30 +296,63 @@ class Setup : AppCompatActivity() {
                 getString(R.string.mute_text)
             )
         }
+        var themeChosen = skivvy.getThemeState()
         theme.setOnCheckedChangeListener { view, isChecked ->
+            skivvy.customTheme(isChecked)
+            setThumbAttrs(
+                view as Switch,
+                isChecked,
+                getString(R.string.set_default_theme),
+                getString(R.string.customize_theme)
+            )
             view.text = when (isChecked) {
                 true -> {
-                    skivvy.setThemeState(R.style.LightTheme)
-                    startActivity(
-                        Intent(
-                            context,
-                            MainActivity::class.java
-                        ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    )
-                    getString(R.string.switch_to_dark)
+                    themeChoices.visibility = View.VISIBLE
+                    saveTheme.visibility = View.VISIBLE
+                    saveButtonStatus(false)
+                    themeChoices.check(getRadioForTheme(skivvy.getThemeState()))
+                    getString(R.string.set_default_theme)
                 }
                 else -> {
-                    skivvy.setThemeState(R.style.DarkTheme)
-                    startActivity(
-                        Intent(
-                            context,
-                            MainActivity::class.java
-                        ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    )
-                    getString(R.string.switch_to_light)
+                    themeChoices.visibility = View.GONE
+                    saveTheme.visibility = View.GONE
+                    if (skivvy.getThemeState() != skivvy.defaultTheme) {
+                        skivvy.setThemeState(skivvy.defaultTheme)
+                        startActivity(
+                            Intent(
+                                context,
+                                MainActivity::class.java
+                            ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        )
+                        finish()
+                    }
+                    getString(R.string.customize_theme)
                 }
             }
-            finish()
+        }
+        themeChoices.setOnCheckedChangeListener { group, checkedId ->
+            themeChosen = getThemeForRadio(checkedId)
+            speakOut((findViewById<RadioButton>(checkedId)).text.toString())
+            when (checkedId) {
+                getRadioForTheme(skivvy.getThemeState()) -> {
+                    saveButtonStatus(false)
+                }
+                else -> {
+                    saveButtonStatus(true)
+                }
+            }
+        }
+        saveTheme.setOnClickListener {
+            if (themeChosen != skivvy.getThemeState()) {
+                skivvy.setThemeState(themeChosen)
+                startActivity(
+                    Intent(
+                        context,
+                        MainActivity::class.java
+                    ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                )
+                finish()
+            }
         }
         response.setOnCheckedChangeListener { view, isChecked ->
             skivvy.setParallelResponseStatus(isChecked)
@@ -292,31 +388,6 @@ class Setup : AppCompatActivity() {
                     else -> getString(R.string.angles_in_degrees)
                 }
             )
-        }
-        darkVer.setOnCheckedChangeListener { view, isChecked ->
-            view.text = when (isChecked) {
-                true -> {
-                    skivvy.setThemeState(R.style.BlackTheme)
-                    startActivity(
-                        Intent(
-                            context,
-                            MainActivity::class.java
-                        ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    )
-                    "Deactivate hybrid view"
-                }
-                else -> {
-                    skivvy.setThemeState(R.style.DarkTheme)
-                    startActivity(
-                        Intent(
-                            context,
-                            MainActivity::class.java
-                        ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    )
-                    "Activate hybrid view"
-                }
-            }
-            finish()
         }
         biometrics.setOnCheckedChangeListener { view, isChecked ->
             if (isChecked) {
@@ -669,8 +740,10 @@ class Setup : AppCompatActivity() {
                 null,
                 "$code"
             )
-        } else code?.let { startVoiceRecIntent(code, text) }
-        Toast.makeText(this, text, Toast.LENGTH_LONG).show()
+        } else {
+            code?.let { startVoiceRecIntent(code, text) }
+            Toast.makeText(this, text, Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun startVoiceRecIntent(

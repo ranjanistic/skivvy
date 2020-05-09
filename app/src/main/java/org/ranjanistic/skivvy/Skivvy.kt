@@ -97,6 +97,7 @@ class Skivvy : Application() {
     val PREF_HEAD_APP_MODE = "appMode"
     val PREF_KEY_TRAINING = "training"
     val PREF_KEY_THEME = "theme"
+    val PREF_KEY_CUSTOM_THEME = "customTheme"
     val PREF_KEY_PARLLEL_TALK = "paralledResponse"
     val PREF_KEY_ANGLE_UNIT = "angleUnit"
     val PREF_HEAD_CALC = "calculator"
@@ -118,7 +119,7 @@ class Skivvy : Application() {
     )
     val operators = arrayOf("^", "p", "/", "*", "m", "-", "+")
     var pathToFile = ""
-
+    val defaultTheme = R.style.DarkTheme
     //default objects
     var tts: TextToSpeech? = null
     var packageDataManager: PackageDataManager =
@@ -414,6 +415,14 @@ class Skivvy : Application() {
             .putBoolean(this.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
     }
 
+    fun customTheme(chosen:Boolean){
+        getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
+            .putBoolean(this.PREF_KEY_CUSTOM_THEME, chosen).apply()
+    }
+    fun isCustomTheme():Boolean{
+        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_CUSTOM_THEME, false)
+    }
     fun setThemeState(themeCode: Int) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putInt(this.PREF_KEY_THEME, themeCode).apply()
@@ -421,7 +430,7 @@ class Skivvy : Application() {
 
     fun getThemeState(): Int {
         return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
-            .getInt(this.PREF_KEY_THEME, R.style.BlackTheme)
+            .getInt(this.PREF_KEY_THEME, this.defaultTheme)
     }
 
     fun setParallelResponseStatus(isParallel: Boolean) {
