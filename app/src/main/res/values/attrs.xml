@@ -7,10 +7,13 @@
         <attr name="base_background_color" format="color"/>
         <attr name="secondary_background_color" format="color"/>
         <attr name="tertiary_background_color" format="color"/>
+        <attr name="tertiary_text_color" format="color"/>
         <attr name="action_button_color" format="color"/>
         <attr name="text_button_color" format="color"/>
         <attr name="warning_button_color" format="color"/>
         <attr name="warning_button_color_text" format="color"/>
         <attr name="action_button_color_text" format="color"/>
+        <attr name="fluid_button_color" format="color"/>
+        <attr name="fluid_button_text_color" format="color"/>
     </declare-styleable>
 </resources>

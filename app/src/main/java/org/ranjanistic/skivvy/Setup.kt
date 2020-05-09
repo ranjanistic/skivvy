@@ -200,8 +200,9 @@ class Setup : AppCompatActivity() {
                 settingIcon.alpha = (1 - alpha * 8F)
                 settingIcon.translationY = alpha*500
                 settingIcon.translationZ = 0- alpha*500
-                noteView.alpha = alpha * 8F
-                noteView.translationY = alpha*100
+                noteView.alpha = (1 - alpha * 8F)
+                noteView.translationY = alpha*500
+                noteView.translationZ = 0- alpha*500
             }
 
         training.setOnCheckedChangeListener { view, isChecked ->

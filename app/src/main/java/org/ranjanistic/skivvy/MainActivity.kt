@@ -3,7 +3,6 @@ package org.ranjanistic.skivvy
 import android.Manifest
 import android.app.Activity
 import android.app.admin.DevicePolicyManager
-import android.bluetooth.BluetoothAdapter
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
@@ -44,7 +43,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.decodeBitmap
 import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import org.ranjanistic.skivvy.R.drawable.*
@@ -79,14 +77,14 @@ open class MainActivity : AppCompatActivity() {
     private lateinit var fallDown: Animation
     private lateinit var riseUp: Animation
     private lateinit var extendDownStartSetup: Animation
-    private lateinit var rotateRevolveToRight: Animation
+    private lateinit var slideToRight: Animation
+    private lateinit var rotateClock: Animation
     private lateinit var revolveRotateToLeft: Animation
     private lateinit var fadeOff: Animation
     private lateinit var fadeOn: Animation
     private lateinit var fadeOnFast: Animation
     private lateinit var receiver: ImageButton
     private lateinit var setting: ImageButton
-    private lateinit var settingBack: ImageView
     private lateinit var loading: ImageView
     private lateinit var backfall: ImageView
     private lateinit var icon: ImageView
@@ -98,9 +96,9 @@ open class MainActivity : AppCompatActivity() {
     private lateinit var context: Context
     private lateinit var calculationManager: CalculationManager
     private lateinit var input: InputSpeechManager
-    private lateinit var packages:PackageDataManager
+    private lateinit var packages: PackageDataManager
     private lateinit var audioManager: AudioManager
-    private lateinit var wifiManager:WifiManager
+    private lateinit var wifiManager: WifiManager
     private lateinit var recognitionIntent: Intent
     private var contact: ContactModel = ContactModel()
     private var temp: TempDataManager =
@@ -111,11 +109,11 @@ open class MainActivity : AppCompatActivity() {
         skivvy = this.application as Skivvy
         context = this
         setTheme(skivvy.getThemeState())
-        if (skivvy.getThemeState() == R.style.BlackTheme) {
-            setContentView(R.layout.activity_main_black)
-        } else {
-            setContentView(R.layout.activity_main)
-        }
+        //if (skivvy.getThemeState() == R.style.BlackTheme) {
+        setContentView(R.layout.activity_main_black)
+        //} else {
+        //setContentView(R.layout.activity_main)
+        //}
         window.statusBarColor = ContextCompat.getColor(context, android.R.color.transparent)
         window.navigationBarColor = ContextCompat.getColor(context, android.R.color.transparent)
         hideSysUI()
@@ -129,7 +127,6 @@ open class MainActivity : AppCompatActivity() {
 
     private fun setViewAndDefaults() {
         setting = findViewById(R.id.setting)
-        settingBack = findViewById(R.id.setting_icon_back)
         outputText = findViewById(R.id.textOutput)
         inputText = findViewById(R.id.textInput)
         feedback = findViewById(R.id.feedbackOutput)
@@ -143,6 +140,8 @@ open class MainActivity : AppCompatActivity() {
         wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         calculationManager = CalculationManager(skivvy)
         input = InputSpeechManager()
+        greet.text = getString(app_name)
+        greet.setCompoundDrawablesWithIntrinsicBounds(R.drawable.dots_in_circle, 0, 0, 0)
     }
 
     private fun loadDefaultAnimations() {
@@ -162,18 +161,25 @@ open class MainActivity : AppCompatActivity() {
         fadeOnFast = AnimationUtils.loadAnimation(context, R.anim.fade_on_quick)
         revolveRotateToLeft = AnimationUtils.loadAnimation(context, R.anim.pill_slide_left)
         setting.startAnimation(revolveRotateToLeft)
-        rotateRevolveToRight = AnimationUtils.loadAnimation(context, R.anim.pill_slide_right)
+        rotateClock = AnimationUtils.loadAnimation(context, R.anim.rotate_clock)
+        slideToRight = AnimationUtils.loadAnimation(context, R.anim.slide_right)
         extendDownStartSetup = AnimationUtils.loadAnimation(context, R.anim.extend_back)
     }
 
     private fun startSettingAnimate() {
-        setting.startAnimation(rotateRevolveToRight)
+        slideToRight.setAnimationListener(object: Animation.AnimationListener{
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {}
+            override fun onAnimationStart(animation: Animation?) {
+
+            }
+        })
+        setting.startAnimation(slideToRight)
         backfall.startAnimation(extendDownStartSetup)
         greet.startAnimation(fadeOff)
         outputText.startAnimation(fadeOff)
         receiver.startAnimation(fadeOff)
         inputText.startAnimation(fadeOff)
-        settingBack.startAnimation(fadeOff)
     }
 
     private fun startResumeAnimate() {
@@ -187,7 +193,6 @@ open class MainActivity : AppCompatActivity() {
         backfall.startAnimation(riseUp)
         outputText.startAnimation(fadeOn)
         inputText.startAnimation(fadeOn)
-        settingBack.startAnimation(fadeOn)
         //loading.setImageDrawable(getDrawable(dots_in_circle))
         //loading.startAnimation(zoomInOutRotate)
     }
@@ -435,7 +440,8 @@ open class MainActivity : AppCompatActivity() {
                 if (data == null || data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
                         ?.get(0)
                         .toString()
-                        .toLowerCase(skivvy.locale) == nothing) {
+                        .toLowerCase(skivvy.locale) == nothing
+                ) {
                     normalView()
                     speakOut(getString(no_input))
                     return
@@ -541,7 +547,7 @@ open class MainActivity : AppCompatActivity() {
             skivvy.CODE_APP_CONF -> {
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
-                
+
                 when (isCooperative(txt!!)) {
                     true -> {
                         successView(packages.getPackageIcon(temp.getPackageIndex()))
@@ -789,7 +795,9 @@ open class MainActivity : AppCompatActivity() {
                             if (temp.getContactPresence()) {
                                 speakOut(
 //                                  getString(should_i_text) + "${cdata.getContactNames()[temp.getContactIndex()]} at ${cdata.getContactPhones()[temp.getContactIndex()]!![temp.getPhoneIndex()]}" + getString( via_sms),
-                                    getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![temp.getPhoneIndex()]}" + getString(via_sms), skivvy.CODE_SMS_CONF
+                                    getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![temp.getPhoneIndex()]}" + getString(
+                                        via_sms
+                                    ), skivvy.CODE_SMS_CONF
                                 )
                             } else {
                                 speakOut(
@@ -882,7 +890,7 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             skivvy.CODE_WHATSAPP_ACTION -> {
-                
+
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
                 if (txt != nothing) {
@@ -957,16 +965,16 @@ open class MainActivity : AppCompatActivity() {
                 //the first function of Skivvy  ;-)
                 if (text.contains("on")) {
                     val stat = feature.bluetooth(true)
-                    if(stat == null){
+                    if (stat == null) {
                         successView(getDrawable(ic_bluetooth))
                         speakOut(getString(bt_already_on))
                     } else {
                         successView(getDrawable(ic_bluetooth))
                         speakOut(getString(bt_on))
                     }
-                } else if(text.contains("off")){
+                } else if (text.contains("off")) {
                     val stat = feature.bluetooth(false)
-                    if(stat == null){
+                    if (stat == null) {
                         errorView(getDrawable(ic_bluetooth))
                         speakOut(getString(bt_already_off))
                     } else {
@@ -975,7 +983,7 @@ open class MainActivity : AppCompatActivity() {
                     }
                 } else {
                     val stat = feature.bluetooth(null)
-                    if(stat!!){
+                    if (stat!!) {
                         successView(getDrawable(ic_bluetooth))
                         speakOut(getString(bt_on))
                     } else {
@@ -986,29 +994,29 @@ open class MainActivity : AppCompatActivity() {
             }
             text.contains("wi-fi") || text.contains("wifi") -> {
                 if (text.contains("on") || text.contains("enable")) {
-                    when(feature.wirelessFidelity(true, wifiManager)){
-                        null->{
+                    when (feature.wirelessFidelity(true, wifiManager)) {
+                        null -> {
                             waitingView(getDrawable(ic_wifi_connected))
                             speakOut(getString(wifi_already_on))
                         }
-                        true->{
+                        true -> {
                             successView(getDrawable(ic_wifi_connected))
                             speakOut(getString(wifi_on))
                         }
                     }
-                } else if(text.contains("off")){
-                    when(feature.wirelessFidelity(false, wifiManager)){
-                        null->{
+                } else if (text.contains("off")) {
+                    when (feature.wirelessFidelity(false, wifiManager)) {
+                        null -> {
                             waitingView(getDrawable(ic_wifi_disconnected))
                             speakOut(getString(wifi_already_off))
                         }
-                        false->{
+                        false -> {
                             successView(getDrawable(ic_wifi_disconnected))
                             speakOut(getString(wifi_off))
                         }
                     }
                 } else {
-                    if(feature.wirelessFidelity(null, wifiManager)!!){
+                    if (feature.wirelessFidelity(null, wifiManager)!!) {
                         waitingView(getDrawable(ic_wifi_connected))
                         speakOut(getString(wifi_on))
                     } else {
@@ -1120,7 +1128,7 @@ open class MainActivity : AppCompatActivity() {
             text.contains("volume") -> {
                 volumeOps(text.replace("volume", nothing).trim())
             }
-            text.contains("brightness")->{
+            text.contains("brightness") -> {
                 brightnessOps(text.replace("brightness", nothing).trim())
             }
             text == "mute" -> {
@@ -1364,7 +1372,6 @@ open class MainActivity : AppCompatActivity() {
     }
 
 
-
     private fun wifiOps(text: String) {
     }
 
@@ -1388,9 +1395,14 @@ open class MainActivity : AppCompatActivity() {
     }
 
     //TODO: This
-    private fun brightnessOps(action:String){
-        when{
-            action.contains(skivvy.numberPattern)->{
+    private fun brightnessOps(action: String) {
+        when {
+            action.contains(skivvy.numberPattern) -> {
+                val percent = action.replace(skivvy.nonNumeralPattern, nothing).toFloat()
+                if (percent > 100F) {
+                    speakOut("Invalid volume level.")
+                    return
+                }
             }
         }
     }
@@ -1509,15 +1521,22 @@ open class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     //TODO: specific app actions
     //actions invoking other applications
     private fun appOptions(text: String?): Boolean {
         var localText: String
         if (text != null) {
-            localText = input.removeBeforeLastStringsIn(text,arrayOf(resources.getStringArray(R.array.initiators)))
+            localText = input.removeBeforeLastStringsIn(
+                text,
+                arrayOf(resources.getStringArray(R.array.initiators))
+            )
             if (localText == nothing) {
-                localText = input.removeStringsIn(text, arrayOf(resources.getStringArray(R.array.initiators)))
-                if(localText == nothing) {
+                localText = input.removeStringsIn(
+                    text,
+                    arrayOf(resources.getStringArray(R.array.initiators))
+                )
+                if (localText == nothing) {
                     speakOut("Open what?", skivvy.CODE_SPEECH_RECORD)
                     return true
                 }
@@ -1525,7 +1544,7 @@ open class MainActivity : AppCompatActivity() {
             if (packages.getTotalPackages() > 0) {
                 var i = 0
                 while (i < packages.getTotalPackages()) {
-                    if(packages.packageAppName() == null || packages.packagesName() == null || packages.packagesMain() == null){
+                    if (packages.packageAppName() == null || packages.packagesName() == null || packages.packagesMain() == null) {
                         speakOut("What?", skivvy.CODE_SPEECH_RECORD, parallelReceiver = true)
                         return true
                     }
@@ -1548,9 +1567,9 @@ open class MainActivity : AppCompatActivity() {
                         packages.getPackageName(i)!!.contains(localText) -> {
                             temp.setPackageIndex(i)
                             waitingView(packages.getPackageIcon(i))
-                            if(packages.getPackageAppName(i)!!.contains(localText)){
+                            if (packages.getPackageAppName(i)!!.contains(localText)) {
                                 speakOut(
-                                  "Did you mean ${packages.getPackageAppName(i)!!
+                                    "Did you mean ${packages.getPackageAppName(i)!!
                                         .capitalize(skivvy.locale)}?",
                                     skivvy.CODE_APP_CONF
                                 )
@@ -1573,7 +1592,7 @@ open class MainActivity : AppCompatActivity() {
         return false
     }
 
-    private fun formatPhoneNumber(number:String):String{
+    private fun formatPhoneNumber(number: String): String {
         var num = number.replace(space, nothing).trim()
         when {
             num.length == 10 -> {
@@ -1616,7 +1635,7 @@ open class MainActivity : AppCompatActivity() {
         }
         return num
     }
-    
+
     //action invoking direct intents
     private fun directActions(text: String): Boolean {
         var localTxt: String
@@ -1946,21 +1965,25 @@ open class MainActivity : AppCompatActivity() {
                                 pCur!!.moveToFirst()
                                 //size = 0
                                 //while (pCur.moveToNext()) {
-                                    //++size
+                                //++size
                                 //}
                                 contact.phoneList = arrayOfNulls(pCur.count)
                                 //pCur.moveToFirst()
                                 var k = 0
                                 while (k < pCur.count) {
-                                    contact.phoneList!![k] = formatPhoneNumber(pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)))
+                                    contact.phoneList!![k] = formatPhoneNumber(
+                                        pCur.getString(
+                                            pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                                        )
+                                    )
                                     pCur.moveToNext()
                                     ++k
                                 }
 
                                 k = 0
-                                while(k+1<contact.phoneList!!.size){
-                                    if(contact.phoneList!![k] == contact.phoneList!![k+1]){
-                                        contact.phoneList!![k+1] = nothing
+                                while (k + 1 < contact.phoneList!!.size) {
+                                    if (contact.phoneList!![k] == contact.phoneList!![k + 1]) {
+                                        contact.phoneList!![k + 1] = nothing
                                     }
                                     ++k
                                 }
@@ -1986,7 +2009,7 @@ open class MainActivity : AppCompatActivity() {
                                             )
                                         }
                                     }
-                                } else if(pCur.count>1){
+                                } else if (pCur.count > 1) {
                                     if (temp.getContactCode() == skivvy.CODE_CALL_CONF) {
                                         speakOut(
                                             "I've got ${pCur.count} phone numbers of ${contact.displayName}.\nShould I call them at " +
@@ -2040,10 +2063,11 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun cropToCircle(uri:String):RoundedBitmapDrawable{
+    private fun cropToCircle(uri: String): RoundedBitmapDrawable {
         val rb: RoundedBitmapDrawable =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                RoundedBitmapDrawableFactory.create(resources,
+                RoundedBitmapDrawableFactory.create(
+                    resources,
                     try {
                         ImageDecoder.decodeBitmap(
                             ImageDecoder.createSource(
@@ -2051,18 +2075,19 @@ open class MainActivity : AppCompatActivity() {
                                 Uri.parse(uri)
                             )
                         )
-                    } catch (e:Exception){
+                    } catch (e: Exception) {
                         null
                     }
                 )
             } else {
-                RoundedBitmapDrawableFactory.create(resources,
+                RoundedBitmapDrawableFactory.create(
+                    resources,
                     try {
                         MediaStore.Images.Media.getBitmap(
                             context.contentResolver,
                             Uri.parse(uri)
                         )
-                    } catch (e:Exception){
+                    } catch (e: Exception) {
                         null
                     }
                 )
@@ -2071,6 +2096,7 @@ open class MainActivity : AppCompatActivity() {
         rb.setAntiAlias(true)
         return rb
     }
+
     private fun takeScreenshot() {
         val now = Date()
         DateFormat.format("yyyy-MM-dd_hh:mm:ss", now)
@@ -2164,7 +2190,10 @@ open class MainActivity : AppCompatActivity() {
                     TelephonyManager.CALL_STATE_RINGING -> {
                         speakOut("Incoming call from ${formatPhoneNumber(number)}")
                         successView(getDrawable(ic_phone_dialer))
-                        feature.setMediaVolume(audioManager.getStreamVolume(AudioManager.STREAM_RING).toFloat(), audioManager)
+                        feature.setMediaVolume(
+                            audioManager.getStreamVolume(AudioManager.STREAM_RING).toFloat(),
+                            audioManager
+                        )
                     }
                     TelephonyManager.CALL_STATE_OFFHOOK -> {
                         if (lastState == TelephonyManager.CALL_STATE_RINGING) {
@@ -2235,17 +2264,27 @@ open class MainActivity : AppCompatActivity() {
                 input.removeBeforeLastStringsIn(
                     response,
                     arrayOf(resources.getStringArray(R.array.acceptances))
-                ), arrayOf(resources.getStringArray(R.array.disruptions), resources.getStringArray(R.array.denials))
+                ),
+                arrayOf(
+                    resources.getStringArray(R.array.disruptions),
+                    resources.getStringArray(R.array.denials)
+                )
             ) -> false      //if denial was the last response in string
             input.containsString(
                 input.removeBeforeLastStringsIn(
                     response,
-                    arrayOf(resources.getStringArray(R.array.disruptions), resources.getStringArray(R.array.denials))
-                ),arrayOf(resources.getStringArray(R.array.acceptances))
+                    arrayOf(
+                        resources.getStringArray(R.array.disruptions),
+                        resources.getStringArray(R.array.denials)
+                    )
+                ), arrayOf(resources.getStringArray(R.array.acceptances))
             ) -> true       //if acceptance was the last response in string
             input.containsString(
                 " $response ",
-                arrayOf(resources.getStringArray(R.array.disruptions), resources.getStringArray(R.array.denials)),
+                arrayOf(
+                    resources.getStringArray(R.array.disruptions),
+                    resources.getStringArray(R.array.denials)
+                ),
                 isSingle = true
             ) -> false      //if response contains denial
             input.containsString(
@@ -2274,7 +2313,6 @@ open class MainActivity : AppCompatActivity() {
             receiver.visibility = View.VISIBLE
             greet.visibility = View.VISIBLE
             setting.visibility = View.VISIBLE
-            settingBack.visibility = View.VISIBLE
             setOutput(getString(im_ready))
             inputText.text = getString(tap_the_button)
         }
@@ -2291,7 +2329,6 @@ open class MainActivity : AppCompatActivity() {
         greet.text = getString(traning_title)
         receiver.visibility = View.GONE
         setting.visibility = View.GONE
-        settingBack.visibility = View.GONE
     }
 
     fun waitingView(image: Drawable?) {
@@ -2302,10 +2339,10 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun errorView(image:Drawable? = null): Boolean {
+    fun errorView(image: Drawable? = null): Boolean {
         loading.startAnimation(fadeOnFadeOff)
         loading.setImageDrawable(getDrawable(dots_in_circle_red))
-        image?.let{icon.setImageDrawable(image)}
+        image?.let { icon.setImageDrawable(image) }
         return false
     }
 
@@ -2409,11 +2446,13 @@ open class MainActivity : AppCompatActivity() {
                 }
             })
     }
+
     private fun String.isLandLine(): Boolean {
         return this[0] == '0' && this[1] == '1' && this[2] == '2' && this[3] == '0'
     }
-    private fun String.hasCountryCode(country:String):Boolean{
-        if(country == "IN")
+
+    private fun String.hasCountryCode(country: String): Boolean {
+        if (country == "IN")
             return this[0] == '+' && this[1] == '9' && this[2] == '1'
         return false
     }

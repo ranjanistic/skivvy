@@ -28,6 +28,7 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="base_text_color">@color/pitch_black</item>
         <item name="secondary_text_color">@color/charcoal</item>
+        <item name="tertiary_text_color">@color/charcoal</item>
         <item name="action_text_color">@color/dead_blue</item>
         <item name="base_background_color">@color/pitch_white</item>
         <item name="secondary_background_color">@color/dull_white</item>
@@ -37,6 +38,8 @@
         <item name="warning_button_color">@color/dark_red</item>
         <item name="warning_button_color_text">@color/dull_white</item>
         <item name="action_button_color_text">@color/dull_white</item>
+        <item name="fluid_button_color">@color/pitch_white</item>
+        <item name="fluid_button_text_color">@color/charcoal</item>
     </style>
 
     <style name="DarkTheme" parent="Theme.AppCompat.Light.NoActionBar">
@@ -53,22 +56,28 @@
         <item name="base_background_color">@color/charcoal</item>
         <item name="secondary_background_color">@color/dead_blue</item>
         <item name="tertiary_background_color">@color/spruce</item>
+        <item name="tertiary_text_color">@color/dull_white</item>
         <item name="action_button_color">@color/light_green</item>
         <item name="text_button_color">@color/dead_blue</item>
         <item name="warning_button_color">@color/dull_red</item>
         <item name="warning_button_color_text">@color/pitch_white</item>
         <item name="action_button_color_text">@color/dull_white</item>
+        <item name="fluid_button_color">@color/spruce</item>
+        <item name="fluid_button_text_color">@color/pitch_white</item>
     </style>
 
     <style name="BlackTheme" parent="DarkTheme">
         <item name="colorPrimary">@android:color/transparent</item>
         <item name="colorPrimaryDark">@android:color/transparent</item>
         <item name="fontFamily">@font/jost_light</item>
-        <item name="base_background_color">@color/pitch_white</item>
-        <item name="secondary_background_color">@color/pitch_black</item>
-        <item name="tertiary_background_color">@color/almost_black</item>
+        <item name="base_background_color">@color/dull_white</item>
         <item name="base_text_color">@color/pitch_black</item>
+        <item name="secondary_background_color">@color/pitch_black</item>
         <item name="secondary_text_color">@color/pitch_white</item>
+        <item name="tertiary_background_color">@color/dull_white</item>
+        <item name="tertiary_text_color">@color/almost_black</item>
+        <item name="fluid_button_color">@color/almost_black</item>
+        <item name="fluid_button_text_color">@color/dull_white</item>
     </style>
 
     <style name="TrainingTheme" parent="DarkTheme">

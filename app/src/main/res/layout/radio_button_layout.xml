@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RadioButton xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/radio_button_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginStart="@dimen/secondary_separation"
+    android:paddingVertical="@dimen/secondary_separation"
+    android:textSize="@dimen/normal_text_size"
+    android:background="@drawable/button_square_round_spruce"
+    android:backgroundTint="?attr/fluid_button_color"
+    android:textColor="?attr/fluid_button_text_color"
+    android:text="@string/hello" />

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/greeting"
+    android:layout_width="wrap_content"
+
+    android:layout_height="wrap_content"
+    android:background="@drawable/button_square_round"
+    android:backgroundTint="?attr/tertiary_background_color"
+    android:drawablePadding="4dp"
+    android:elevation="16dp"
+    android:fontFamily="@font/jost_medium"
+    android:gravity="center_vertical"
+    android:paddingVertical="4dp"
+    android:paddingStart="4dp"
+    android:paddingEnd="8dp"
+    android:textColor="?attr/tertiary_text_color"
+    android:textStyle="bold" />
