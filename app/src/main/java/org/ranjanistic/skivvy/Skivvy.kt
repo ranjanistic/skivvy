@@ -92,9 +92,10 @@ class Skivvy : Application() {
     val PREF_KEY_BIOMETRIC = "fingerprint"
     val PREF_KEY_VOCAL_AUTH = "voiceAuth"
     val PREF_KEY_VOCAL_PHRASE = "voicePhrase"
-    val PREF_HEAD_VOICE = "voice"
-    val PREF_KEY_MUTE_UNMUTE = "voiceStat"
     val PREF_HEAD_APP_MODE = "appMode"
+    val PREF_KEY_MUTE_UNMUTE = "voiceStat"
+    val PREF_KEY_NORMALIZE_VOLUME = "normalizeVolume"
+    val PREF_KEY_URGENT_VOLUME = "urgentVolumeLevel"
     val PREF_KEY_TRAINING = "training"
     val PREF_KEY_THEME = "theme"
     val PREF_KEY_CUSTOM_THEME = "customTheme"
@@ -414,7 +415,22 @@ class Skivvy : Application() {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
     }
-
+    fun getVolumeNormalization(): Boolean {
+        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_NORMALIZE_VOLUME, false)
+    }
+    fun setVolumeNormalization(isNormalized: Boolean) {
+        getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
+            .putBoolean(this.PREF_KEY_NORMALIZE_VOLUME, isNormalized).apply()
+    }
+    fun getUrgentVolume():Int{
+        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+            .getInt(this.PREF_KEY_URGENT_VOLUME, 0)
+    }
+    fun setUrgentVolume(level:Int){
+        getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
+            .putInt(this.PREF_KEY_URGENT_VOLUME, level).apply()
+    }
     fun customTheme(chosen:Boolean){
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_CUSTOM_THEME, chosen).apply()

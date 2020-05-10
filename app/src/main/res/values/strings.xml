@@ -261,4 +261,6 @@
     <string name="light_theme">White Light Theme</string>
     <string name="save">Save</string>
     <string name="save_apply">Save &amp; apply</string>
+    <string name="urgent_on_text_">Urgent volume level is&#160;</string>
+    <string name="urgent_off_text">Set urgent volume</string>
 </resources>

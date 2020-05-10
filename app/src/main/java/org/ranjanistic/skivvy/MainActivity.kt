@@ -2363,10 +2363,18 @@ open class MainActivity : AppCompatActivity() {
         text: String,
         taskCode: Int? = null,
         parallelReceiver: Boolean = skivvy.getParallelResponseStatus(),
-        isFeedback: Boolean = false
+        isFeedback: Boolean = false,
+        isUrgent:Boolean = false
     ) {
         if (isFeedback) setFeedback(text)
         else setOutput(text)
+        if(isUrgent) {
+            if (skivvy.getVolumeNormalization()) {
+                if (feature.getMediaVolume(audioManager) < skivvy.getUrgentVolume()) {
+                    feature.setMediaVolume(skivvy.getUrgentVolume().toFloat(), audioManager)
+                }
+            }
+        }
         skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onDone(utteranceId: String) {
                 if (!parallelReceiver)
