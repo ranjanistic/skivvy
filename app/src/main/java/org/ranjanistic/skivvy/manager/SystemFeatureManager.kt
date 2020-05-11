@@ -49,11 +49,12 @@ class SystemFeatureManager {
                 audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
     }
     //set media volume
-    fun setMediaVolume(percent: Float, audioManager: AudioManager) {
+    fun setMediaVolume(percent: Float, audioManager: AudioManager, showUI:Boolean = true) {
         audioManager.setStreamVolume(
             AudioManager.STREAM_MUSIC,
             (audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) * (percent / 100)).toInt(),
-            AudioManager.FLAG_SHOW_UI
+            if(showUI)AudioManager.FLAG_SHOW_UI
+            else 0
         )
     }
 

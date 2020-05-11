@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.ContactsContract
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
@@ -60,7 +61,7 @@ class Skivvy : Application() {
     )
 
     //defaults
-    val locale: Locale = Locale.US
+    val locale: Locale = Locale.getDefault()
     val numberPattern = "[0-9]".toRegex()
     val textPattern = "[a-zA-Z]".toRegex()
     val emailPattern = "[a-zA-Z0-9._-]+@[a-z.]+\\.+[a-z]+".toRegex()
@@ -94,7 +95,9 @@ class Skivvy : Application() {
     val PREF_KEY_VOCAL_PHRASE = "voicePhrase"
     val PREF_HEAD_APP_MODE = "appMode"
     val PREF_KEY_MUTE_UNMUTE = "voiceStat"
-    val PREF_KEY_NORMALIZE_VOLUME = "normalizeVolume"
+    val PREF_KEY_VOLUME_NORMAL = "normalVolume"
+    val PREF_KEY_NORMAL_VOLUME = "normalVolumeLevel"
+    val PREF_KEY_VOLUME_URGENT = "urgentVolume"
     val PREF_KEY_URGENT_VOLUME = "urgentVolumeLevel"
     val PREF_KEY_TRAINING = "training"
     val PREF_KEY_THEME = "theme"
@@ -104,21 +107,6 @@ class Skivvy : Application() {
     val PREF_HEAD_CALC = "calculator"
     val PREF_KEY_LAST_CALC = "lastResult"
     val FINISH_ACTION = "finish"
-    val mathFunctions = arrayOf(
-        "sin",
-        "cos",
-        "tan",
-        "cot",
-        "sec",
-        "cosec",
-        "log",
-        "ln",
-        "sqrt",
-        "cbrt",
-        "exp",
-        "fact"
-    )
-    val operators = arrayOf("^", "p", "/", "*", "m", "-", "+")
     var pathToFile = ""
     val defaultTheme = R.style.DarkTheme
     //default objects
@@ -129,12 +117,16 @@ class Skivvy : Application() {
         ContactDataManager(this)
     lateinit var deviceManager: DevicePolicyManager
     lateinit var compName: ComponentName
+    val hindiLocale = "hi_IN"
+    //TODO: Settings grouping header
 
+    @Suppress("NonAsciiCharacters", "LocalVariableName")
     @ExperimentalStdlibApi
     override fun onCreate() {
         super.onCreate()
         deviceManager =
             applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        Log.d("localelocale", this.locale.toString())
         compName = ComponentName(this, Administrator::class.java)
         if (this.hasPermissions(applicationContext)) {
             this.pathToFile = Environment.getExternalStorageDirectory().toString() + "/.Skivvy"
@@ -365,116 +357,96 @@ class Skivvy : Application() {
 
 
     //Security prefs
-    fun getBiometricStatus(): Boolean {
-        return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
-            .getBoolean(this.PREF_KEY_BIOMETRIC, false)
+    fun checkBioMetrics(): Boolean = when (BiometricManager.from(this).canAuthenticate()) {
+        BiometricManager.BIOMETRIC_SUCCESS -> true
+        else -> false
     }
-
+    fun getBiometricStatus(): Boolean = getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_BIOMETRIC, false)
     fun setBiometricsStatus(isEnabled: Boolean) {
         getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_BIOMETRIC, isEnabled).apply()
     }
 
-    fun getPhraseKeyStatus(): Boolean {
-        return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
+    fun getPhraseKeyStatus(): Boolean = getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_VOCAL_AUTH, false)
-    }
-
     fun setPhraseKeyStatus(voiceAuthStatus: Boolean) {
         getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_VOCAL_AUTH, voiceAuthStatus).apply()
     }
 
-    fun getVoiceKeyPhrase(): String? {
-        return getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
+    fun getVoiceKeyPhrase(): String? = getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
             .getString(this.PREF_KEY_VOCAL_PHRASE, null)
-    }
-
     fun setVoiceKeyPhrase(phrase: String?) {
         getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
             .putString(this.PREF_KEY_VOCAL_PHRASE, phrase).apply()
     }
 
     //custom prefs
-    fun getTrainingStatus(): Boolean {
-        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+    fun getTrainingStatus(): Boolean = getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_TRAINING, false)
-    }
-
     fun setTrainingStatus(isTraining: Boolean) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_TRAINING, isTraining).apply()
     }
 
-    fun getMuteStatus(): Boolean {
-        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+    fun getMuteStatus(): Boolean = getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_MUTE_UNMUTE, false)
-    }
-
     fun saveMuteStatus(isMuted: Boolean) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
     }
-    fun getVolumeNormalization(): Boolean {
-        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
-            .getBoolean(this.PREF_KEY_NORMALIZE_VOLUME, false)
-    }
-    fun setVolumeNormalization(isNormalized: Boolean) {
+
+    fun getVolumeNormal():Boolean = getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+        .getBoolean(this.PREF_KEY_VOLUME_NORMAL, false)
+    fun setVolumeNormal(isNormalized:Boolean){
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_NORMALIZE_VOLUME, isNormalized).apply()
+            .putBoolean(this.PREF_KEY_VOLUME_NORMAL, isNormalized).apply()
     }
-    fun getUrgentVolume():Int{
-        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+    fun getNormalVolume():Int = getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+        .getInt(this.PREF_KEY_NORMAL_VOLUME, 0)
+    fun setNormalVolume(level:Int){
+        getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
+            .putInt(this.PREF_KEY_NORMAL_VOLUME, level).apply()
+    }
+    fun getVolumeUrgent(): Boolean = getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_VOLUME_URGENT, false)
+    fun setVolumeUrgent(isUrgent: Boolean) {
+        getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
+            .putBoolean(this.PREF_KEY_VOLUME_URGENT, isUrgent).apply()
+    }
+    fun getUrgentVolume():Int = getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
             .getInt(this.PREF_KEY_URGENT_VOLUME, 0)
-    }
     fun setUrgentVolume(level:Int){
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putInt(this.PREF_KEY_URGENT_VOLUME, level).apply()
     }
+
+    fun isCustomTheme():Boolean = getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+        .getBoolean(this.PREF_KEY_CUSTOM_THEME, false)
     fun customTheme(chosen:Boolean){
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_CUSTOM_THEME, chosen).apply()
     }
-    fun isCustomTheme():Boolean{
-        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
-            .getBoolean(this.PREF_KEY_CUSTOM_THEME, false)
-    }
+    fun getThemeState(): Int = getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+        .getInt(this.PREF_KEY_THEME, this.defaultTheme)
     fun setThemeState(themeCode: Int) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putInt(this.PREF_KEY_THEME, themeCode).apply()
     }
 
-    fun getThemeState(): Int {
-        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
-            .getInt(this.PREF_KEY_THEME, this.defaultTheme)
-    }
-
+    fun getParallelResponseStatus(): Boolean = getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+        .getBoolean(this.PREF_KEY_PARLLEL_TALK, false)
     fun setParallelResponseStatus(isParallel: Boolean) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_PARLLEL_TALK, isParallel).apply()
     }
 
-    fun getParallelResponseStatus(): Boolean {
-        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
-            .getBoolean(this.PREF_KEY_PARLLEL_TALK, false)
-    }
-
+    fun getAngleUnit(): String = getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
+        .getString(this.PREF_KEY_ANGLE_UNIT, "deg")!!
     fun setAngleUnit(unit: String) {
         getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE).edit()
             .putString(this.PREF_KEY_ANGLE_UNIT, unit).apply()
-    }
-
-    fun getAngleUnit(): String {
-        return getSharedPreferences(this.PREF_HEAD_APP_MODE, AppCompatActivity.MODE_PRIVATE)
-            .getString(this.PREF_KEY_ANGLE_UNIT, "deg")!!
-    }
-
-    fun checkBioMetrics(): Boolean {
-        val biometricManager = BiometricManager.from(this)
-        return when (biometricManager.canAuthenticate()) {
-            BiometricManager.BIOMETRIC_SUCCESS -> true
-            else -> false
-        }
     }
 
     private fun createNotificationChannel() {
@@ -488,6 +460,11 @@ class Skivvy : Application() {
             val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(mChannel)
         }
+    }
+
+    fun isLocaleHindi():Boolean = when(this.locale.toString()){
+        this.hindiLocale -> true
+        else -> false
     }
 
     fun hasPermissions(context: Context): Boolean = this.permissions.all {

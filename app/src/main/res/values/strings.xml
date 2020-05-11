@@ -5,6 +5,7 @@
     <string name="recognize_error">I didn\'t get it.&#160;</string>
     <string name="no_input">You didn\'t say anything.</string>
     <string name="theme">Theme</string>
+    <string name="percent">%</string>
     <string name="bottom_sheet_behavior" translatable="false">com.google.android.material.bottomsheet.BottomSheetBehavior</string>
     <string-array name="acceptances">
         <item>yes</item>
@@ -122,7 +123,7 @@
     <string name="device_admin_failure">You didn\'t activate me as a device admin.</string>
     <string name="contact_not_found">No such contact.</string>
     <string name="no_contacts_available">You seem to have no contacts.</string>
-    <string name="should_i_email">Should I email&#160;</string>
+    <string name="should_i_email">Shall I email&#160;</string>
     <string name="invalid_call_request">Invalid call request.</string>
     <string name="invalid_email_request">Invalid email address.</string>
     <string name="you_dont_seem_having">You don\'t seem to have&#160;</string>
@@ -138,10 +139,10 @@
         This is required when you are about to perform a sensitive action directly affecting Skivvy\'s functions, or your real life.</string>
     <string name="invalid_expression">Invalid expression.</string>
     <string name="what_is_message">What\'s the message?</string>
-    <string name="should_i_text">Should I text&#160;</string>
+    <string name="should_i_text">Shall I text&#160;</string>
     <string name="via_sms">&#160;via SMS?</string>
     <string name="sending_sms_at">Sending SMS at&#160;</string>
-    <string name="discard">Discard</string>
+    <string name="discard" translatable="false">Discard</string>
     <string name="voice_output_on">Already speaking</string>
     <string name="biometric_already_on">Biometric is already enabled</string>
     <string name="biometric_on">Biometric authentication enabled</string>
@@ -150,15 +151,15 @@
     <string name="physical_auth_request">I need your physical authentication</string>
     <string name="have_all_permits">I have all the permissions that I need from you.</string>
     <string name="biometric_is_off">Biometric authentication disabled</string>
-    <string name="biometric_off_error">I could not disable biometric.</string>
+    <string name="biometric_off_error">I couldn\'t disable biometric.</string>
     <string name="verification_unsuccessfull">I could not verify you.</string>
-    <string name="back_drop">Back drop</string>
-    <string name="setting_icon">Setting Icon</string>
-    <string name="back_of_setting_icon">Back of setting icon</string>
-    <string name="current_process_image">Current process image</string>
-    <string name="breathing_skivvy">Breathing skivvy</string>
-    <string name="command_button">Command button</string>
-    <string name="speaking_indicator">Speaking indicator</string>
+    <string name="back_drop" translatable="false">Back drop</string>
+    <string name="setting_icon" translatable="false">Setting Icon</string>
+    <string name="back_of_setting_icon" translatable="false">Back of setting icon</string>
+    <string name="current_process_image" translatable="false">Current process image</string>
+    <string name="breathing_skivvy" translatable="false">Breathing skivvy</string>
+    <string name="command_button" translatable="false">Command button</string>
+    <string name="speaking_indicator" translatable="false">Speaking indicator</string>
     <string name="say_something">What\'s on your mind?</string>
     <string name="tap_the_button">Tap the button</string>
     <string name="im_ready">I\'m ready.</string>
@@ -172,27 +173,25 @@
     <string name="biometric_recommendation_passphrase_enabling">I recommend enabling biometric too, in case you forget the passphrase.</string>
     <string name="reset">Reset</string>
     <string name="enable_or_disable">Enable or Disable?</string>
-    <string name="text">text</string>
+    <string name="text" translatable="false">text</string>
     <string name="vocal_auth_off_error">I could not disable vocal authentication.</string>
     <string name="generic_voice_rec_text">I\'m listening</string>
-    <string name="switch_to_dark">Switch to dark theme</string>
-    <string name="switch_to_light">Switch to light theme</string>
-    <string name="grant_permissions">Grant\npermissions</string>
-    <string name="make_device_admin">Device\nadmin</string>
+    <string name="grant_permissions">Grant permissions</string>
+    <string name="make_device_admin">Device admin</string>
     <string name="device_admin_success">Thanks for making me your device admin.</string>
     <string name="reset_voice_auth_confirm">Confirm to reset and disable vocal authentication?</string>
-    <string name="traning_title">Training</string>
-    <string name="optimal_volume">40%</string>
-    <string name="parallel_receive_text">I\'ll receive while speaking</string>
-    <string name="queued_receive_text">I\'ll receive after speaking</string>
-    <string name="set_parallel_receive">Set receive while speaking</string>
-    <string name="set_queued_receive">Set receive after speaking</string>
+    <string name="traning_title" translatable="false">Training</string>
+    <string name="optimal_volume" translatable="false">40%</string>
+    <string name="parallel_receive_text">I\'ll listen while speaking</string>
+    <string name="queued_receive_text">I\'ll listen after speaking</string>
+    <string name="set_parallel_receive">Set listening while speaking</string>
+    <string name="set_queued_receive">Set listening after speaking</string>
     <string name="muted">Muted.</string>
     <string name="speaking">Speaking.</string>
-    <string name="voice_auth_enabled">Voice auth enabled.</string>
-    <string name="voice_auth_disabled">Voice auth disabled.</string>
-    <string name="light_theme_set">This is light theme</string>
-    <string name="dark_theme_set">This is dark theme</string>
+    <string name="voice_auth_enabled" translatable="false">Voice auth enabled.</string>
+    <string name="voice_auth_disabled" translatable="false">Voice auth disabled.</string>
+    <string name="light_theme_set" translatable="false">This is light theme</string>
+    <string name="dark_theme_set" translatable="false">This is dark theme</string>
     <string name="fingerprint_is_on">Fingerprint enabled.</string>
     <string name="recognition_service_error">Error in speech recognition.</string>
     <string-array name="notification_channel">
@@ -200,10 +199,10 @@
         <item>Skivvy is active</item>
         <item>To notify you that Skivvy is active in background.</item>
     </string-array>
-    <string name="appwidget_text">EXAMPLE</string>
-    <string name="configure">Configure</string>
-    <string name="add_widget">Add widget</string>
-    <string name="infinity">1000000000000000000000000000000000000000000000</string>
+    <string name="appwidget_text" translatable="false">EXAMPLE</string>
+    <string name="configure" translatable="false">Configure</string>
+    <string name="add_widget" translatable="false">Add widget</string>
+    <string name="infinity" translatable="false">1000000000000000000000000000000000000000000000</string>
     <string name="passphrase_text">Passphrase</string>
     <string name="auth_failed">Authentication failed</string>
     <string name="welcome">Welcome</string>
@@ -223,7 +222,7 @@
     <string name="volume_decreased">Volume decreased</string>
     <string name="min_audible_volume">Minimum audible volume achieved</string>
     <string name="volume_off">Volume silenced</string>
-    <string name="zero_percent">0%</string>
+    <string name="zero_percent" translatable="false">0%</string>
     <string name="showing_volume_controls">I\'m showing you the volume controls.</string>
     <string name="no_apps_installed">No applications installed on your device</string>
     <string name="flash_access_error">Can\'t access your flashlight</string>
@@ -243,7 +242,7 @@
     <string name="confirm_phrase">Say that again to confirm</string>
     <string name="try_again">Try again</string>
     <string name="undefined_result">Undefined result in my logic</string>
-    <string name="contact_file_name">people.json</string>
+    <string name="contact_file_name" translatable="false">people.json</string>
     <string name="vocal_auth_disabled">Vocal authentication disabled</string>
     <string name="flash_on">Flashlight is on.</string>
     <string name="flash_off">Flashlight is off.</string>
@@ -253,14 +252,30 @@
     <string name="wifi_already_on">Wi-Fi already on</string>
     <string name="wifi_already_off">Wi-Fi already off</string>
     <string name="bt_already_on">Bluetooth already on</string>
-    <string name="ten_percent">10%</string>
+    <string name="ten_percent" translatable="false">10%</string>
     <string name="set_default_theme">Switch back to default theme</string>
     <string name="customize_theme">Customize theme</string>
-    <string name="default_theme">Hybrid Theme</string>
+    <string name="default_theme">Black Hybrid Theme</string>
     <string name="dark_theme">Bluish Dark Theme</string>
     <string name="light_theme">White Light Theme</string>
     <string name="save">Save</string>
     <string name="save_apply">Save &amp; apply</string>
-    <string name="urgent_on_text_">Urgent volume level is&#160;</string>
-    <string name="urgent_off_text">Set urgent volume</string>
+    <string name="normal_vol_on_text_">My volume level is&#160;</string>
+    <string name="normal_vol_off_text">Set permanent volume</string>
+    <string name="urgent_vol_on_text_">Urgent volume level is&#160;</string>
+    <string name="urgent_vol_off_text">Set urgent volume</string>
+    <string name="my_own_volume">I have my own volume</string>
+    <string name="follow_system_volume">I\'ll follow system volume</string>
+    <string name="volume_raised_if_urgent">Volume will be raised if urgent</string>
+    <string name="_is_the_phrase">&#160;is the phrase.</string>
+    <string name="volume_raised_to_">Volume raised to&#160;</string>
+    <string name="volume_low_to_">Volume lowered to&#160;</string>
+    <string name="volume_at_">Volume at&#160;</string>
+    <string name="say_again">Come again?</string>
+    <string name="at">At&#160;</string>
+    <string name="i_have_">I\'ve got&#160;</string>
+    <string name="airplane_already_on">Already on airplane mode.</string>
+    <string name="airplane_mode_on">Airplane mode on.</string>
+    <string name="airplane_already_off">Airplane mode is already off.</string>
+    <string name="airplane_mode_off">Airplane mode off.</string>
 </resources>

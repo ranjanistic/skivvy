@@ -111,8 +111,9 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/trainingModeBtn" />
+
             <LinearLayout
-                android:id="@+id/volume_setup"
+                android:id="@+id/normal_volume_setup"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -128,10 +129,41 @@
                     layout="@layout/switch_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    />
+
+                <SeekBar
+                    android:id="@+id/normal_volume_seek"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="100"
+                    android:paddingTop="4dp"
+                    android:layout_marginHorizontal="@dimen/secondary_separation"
+                    android:paddingBottom="@dimen/minimum_separation"
+                    android:progressTint="@color/colorPrimary"
+                    android:thumbTint="@color/colorPrimary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/urgent_volume_setup"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/button_square_round"
+                android:backgroundTint="?attr/fluid_button_color"
+                android:textColor="?attr/fluid_button_text_color"
+                android:layout_marginVertical="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/normal_volume_setup" >
+                <include
+                    android:id="@+id/urgentVolume"
+                    layout="@layout/switch_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                    />
 
                 <SeekBar
-                    android:id="@+id/volume_seek"
+                    android:id="@+id/urgent_volume_seek"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:max="100"
@@ -152,7 +184,7 @@
                 android:textColor="?attr/fluid_button_text_color"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/volume_setup">
+                app:layout_constraintTop_toBottomOf="@id/urgent_volume_setup">
 
                 <include
                     android:id="@+id/theme_switch"

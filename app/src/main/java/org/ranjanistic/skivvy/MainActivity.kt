@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
+import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
@@ -94,7 +95,7 @@ open class MainActivity : AppCompatActivity() {
     private val nothing = ""
     private val space = " "
     private lateinit var context: Context
-    private lateinit var calculationManager: CalculationManager
+    private lateinit var calculation: CalculationManager
     private lateinit var input: InputSpeechManager
     private lateinit var packages: PackageDataManager
     private lateinit var audioManager: AudioManager
@@ -138,10 +139,14 @@ open class MainActivity : AppCompatActivity() {
         packages = skivvy.packageDataManager
         audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        calculationManager = CalculationManager(skivvy)
+        calculation = CalculationManager(skivvy)
         input = InputSpeechManager()
         greet.text = getString(app_name)
-        greet.setCompoundDrawablesWithIntrinsicBounds(R.drawable.dots_in_circle, 0, 0, 0)
+        greet.setCompoundDrawablesWithIntrinsicBounds(dots_in_circle, 0, 0, 0)
+        if(skivvy.isLocaleHindi()){
+            greet.typeface = Typeface.DEFAULT
+            inputText.typeface = Typeface.DEFAULT
+        }
     }
 
     private fun loadDefaultAnimations() {
@@ -253,7 +258,7 @@ open class MainActivity : AppCompatActivity() {
             }
         })
     }
-
+//TODO: Black hybrid
     private fun hideSysUI() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode =
@@ -285,7 +290,6 @@ open class MainActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         skivvy.setTrainingStatus(false)
-
     }
 
     override fun onRequestPermissionsResult(
@@ -390,12 +394,12 @@ open class MainActivity : AppCompatActivity() {
             }
             KeyEvent.KEYCODE_VOLUME_UP -> {
                 setFeedback(
-                    "Volume raised to ${feature.getMediaVolume(audioManager)}%"
+                    getString(volume_raised_to_)+"${feature.getMediaVolume(audioManager)}"+getString(percent)
                 )
             }
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
                 setFeedback(
-                    "Volume lowered to ${feature.getMediaVolume(audioManager)}%"
+                    getString(volume_low_to_)+ "${feature.getMediaVolume(audioManager)}" + getString(percent)
                 )
             }
         }
@@ -530,12 +534,12 @@ open class MainActivity : AppCompatActivity() {
                 if (txt != null) {
                     when (isCooperative(txt!!)) {
                         null -> speakOut(
-                            "Are you sure about the harmful ${temp.getVolumePercent()}% volume?",
+                            "Are you sure about the harmful"+"${temp.getVolumePercent()}% volume?",
                             skivvy.CODE_VOLUME_CONFIRM
                         )
                         true -> {
                             feature.setMediaVolume(temp.getVolumePercent(), audioManager)
-                            speakOut("Volume at ${temp.getVolumePercent().toInt()}%")
+                            speakOut(getString(volume_at_)+" ${temp.getVolumePercent().toInt()}"+getString(percent))
                         }
                         false -> {
                             setOutput(getString(okay))
@@ -595,7 +599,7 @@ open class MainActivity : AppCompatActivity() {
                     speakOut(getString(write_settings_permit_denied))
                     errorView()
                 } else {
-                    speakOut("Come again?", skivvy.CODE_SPEECH_RECORD)
+                    speakOut(getString(say_again), skivvy.CODE_SPEECH_RECORD)
                 }
             }
             skivvy.CODE_CALL_CONF -> {
@@ -637,7 +641,8 @@ open class MainActivity : AppCompatActivity() {
                             ).contains(txt)
                         ) {
                             speakOut(
-                                "At ${contact.phoneList!![temp.getPhoneIndex()]}?",
+                                getLocalisedString(getString(at)+"${contact.phoneList!![temp.getPhoneIndex()]}?",
+                                    "${contact.phoneList!![temp.getPhoneIndex()]}" + getString(at)+"?"),
                                 skivvy.CODE_CALL_CONF
                             )
                         } else {
@@ -648,12 +653,15 @@ open class MainActivity : AppCompatActivity() {
                     else -> {
                         if (temp.getContactPresence()) {
                             speakOut(
-                                getString(recognize_error) + "\n" + getString(should_i_call) + "${contact.displayName} at ${contact.phoneList!![temp.getPhoneIndex()]}?",
+                                getString(recognize_error) + "\n" + getString(should_i_call) + contact.displayName + space+
+                                        getLocalisedString("${getString(at)}${contact.phoneList!![temp.getPhoneIndex()]}?",
+                                            "को ${contact.phoneList!![temp.getPhoneIndex()]}${getString(at)}?"
+                                        ),
                                 skivvy.CODE_CALL_CONF
                             )
                         } else {
                             speakOut(
-                                getString(recognize_error) + "\n" + getString(should_i_call) + "${temp.getPhone()}?",
+                                getString(recognize_error) + "\n" + getString(should_i_call) + "${temp.getPhone()}" + getLocalisedString("?", "${getString(at)}?"),
                                 skivvy.CODE_CALL_CONF
                             )
                         }
@@ -693,26 +701,25 @@ open class MainActivity : AppCompatActivity() {
                             } else if (temp.getEmailBody() == null) {
                                 temp.setEmailBody(txt)
                                 if (temp.getContactPresence()) {
-                                    if (contact.emailList!!.size == 1) {
-                                        speakOut(
-                                            getString(body_added) + "\n" +
-//                                                    getString(should_i_email) + "${cdata.getContactNames()[temp.getContactIndex()]} at\n${cdata.getContactEmails()[temp.getContactIndex()]!![temp.getEmailIndex()]}?",
-                                                    getString(should_i_email) + "${contact.displayName} at\n${contact.emailList!![temp.getEmailIndex()]}?",
-                                            skivvy.CODE_EMAIL_CONF
-                                        )
-                                    } else {
-                                        speakOut(
-//                                            getString(body_added) + "I've got ${cdata.getContactEmails()[temp.getContactIndex()]!!.size} addresses of ${cdata.getContactNames()[temp.getContactIndex()]}.\n" +
-//                                                    getString(should_i_email) + "them at\n${cdata.getContactEmails()[temp.getContactIndex()]!![temp.getEmailIndex()]}?",
-                                            getString(body_added) + "I've got ${contact.emailList!!.size} addresses of ${contact.displayName}.\n" +
-                                                    getString(should_i_email) + "them at\n${contact.emailList!![temp.getEmailIndex()]}?",
-                                            skivvy.CODE_EMAIL_CONF
-                                        )
-                                    }
+                                    setFeedback(getString(i_have_)+
+                                            getLocalisedString("${contact.emailList!!.size} addresses of ${contact.displayName}.",
+                                                "${contact.displayName} के ${contact.emailList!!.size} पते हैं."
+                                            )
+                                    )
+                                    speakOut(
+//                                       getString(body_added) + "I've got ${cdata.getContactEmails()[temp.getContactIndex()]!!.size} addresses of ${cdata.getContactNames()[temp.getContactIndex()]}.\n" +
+//                                                  getString(should_i_email) + "them at\n${cdata.getContactEmails()[temp.getContactIndex()]!![temp.getEmailIndex()]}?",
+                                        getString(body_added) +
+                                                getString(should_i_email) + "${contact.displayName}${space}"+
+                                                getLocalisedString(getString(at)+"\n${contact.emailList!![temp.getEmailIndex()]}?",
+                                                    "को \n${contact.emailList!![temp.getEmailIndex()]}${getString(at)}?"
+                                                ),
+                                        skivvy.CODE_EMAIL_CONF
+                                    )
                                 } else {
                                     speakOut(
                                         getString(body_added) + "\n" +
-                                                getString(should_i_email) + "${temp.getEmail()}?",
+                                                getString(should_i_email) + "${temp.getEmail()}" + getLocalisedString("?","${getString(at)}?"),
                                         skivvy.CODE_EMAIL_CONF
                                     )
                                 }
@@ -752,7 +759,9 @@ open class MainActivity : AppCompatActivity() {
                             ).contains(txt)
                         ) {
                             speakOut(
-                                "At ${contact.emailList!![temp.getEmailIndex()]}?",
+                                getLocalisedString("${getString(at)}${contact.emailList!![temp.getEmailIndex()]}?",
+                                    "${contact.emailList!![temp.getEmailIndex()]}${getString(at)}?")
+                                ,
                                 skivvy.CODE_EMAIL_CONF
                             )
                         } else {
@@ -765,13 +774,16 @@ open class MainActivity : AppCompatActivity() {
                             speakOut(
                                 getString(recognize_error) + "\n" +
 //                                            getString(should_i_email) + "${cdata.getContactNames()[temp.getContactIndex()]} at\n${cdata.getContactEmails()[temp.getContactIndex()]!![temp.getEmailIndex()]}?",
-                                        getString(should_i_email) + "${contact.displayName} at\n${contact.emailList!![temp.getEmailIndex()]}?",
+                                        getString(should_i_email) + "${contact.displayName}${space}"+
+                                        getLocalisedString(getString(at)+"\n${contact.emailList!![temp.getEmailIndex()]}?",
+                                            "को \n${contact.emailList!![temp.getEmailIndex()]}${getString(at)}?"
+                                        ),
                                 skivvy.CODE_EMAIL_CONF
                             )
                         } else {
                             speakOut(
                                 getString(recognize_error) + "\n" +
-                                        getString(should_i_email) + "${temp.getEmail()}?",
+                                        getString(should_i_email) + "${temp.getEmail()}" + getLocalisedString("?","${getString(at)}?"),
                                 skivvy.CODE_EMAIL_CONF
                             )
                         }
@@ -795,15 +807,16 @@ open class MainActivity : AppCompatActivity() {
                             if (temp.getContactPresence()) {
                                 speakOut(
 //                                  getString(should_i_text) + "${cdata.getContactNames()[temp.getContactIndex()]} at ${cdata.getContactPhones()[temp.getContactIndex()]!![temp.getPhoneIndex()]}" + getString( via_sms),
-                                    getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![temp.getPhoneIndex()]}" + getString(
-                                        via_sms
-                                    ), skivvy.CODE_SMS_CONF
+                                    getString(should_i_text) + "${contact.displayName}$space" +
+                                            getLocalisedString(getString(at)+ "${contact.phoneList!![temp.getPhoneIndex()]}",
+                                                "को ${contact.phoneList!![temp.getPhoneIndex()]}"+getString(at)
+                                            )+ getString(via_sms)+"?",
+                                    skivvy.CODE_SMS_CONF
                                 )
                             } else {
                                 speakOut(
-                                    getString(should_i_text) + "${temp.getPhone()}" + getString(
-                                        via_sms
-                                    ),
+                                    getString(should_i_text) + "${temp.getPhone()}" + getLocalisedString("", "${getString(at)}$space") + getString(
+                                        via_sms)+"?",
                                     skivvy.CODE_SMS_CONF
                                 )
                             }
@@ -860,8 +873,9 @@ open class MainActivity : AppCompatActivity() {
                             ).contains(txt)
                         ) {
                             speakOut(
-                                //                                 "At ${cdata.getContactPhones()[temp.getContactIndex()]!![temp.getPhoneIndex()]}?",
-                                "At ${contact.phoneList!![temp.getPhoneIndex()]}?",
+                                //"At ${cdata.getContactPhones()[temp.getContactIndex()]!![temp.getPhoneIndex()]}?",
+                                getLocalisedString(getString(at)+"${contact.phoneList!![temp.getPhoneIndex()]}?",
+                                    "${contact.phoneList!![temp.getPhoneIndex()]}" + getString(at)+"?"),
                                 skivvy.CODE_SMS_CONF
                             )
                         } else {
@@ -873,16 +887,16 @@ open class MainActivity : AppCompatActivity() {
                         if (temp.getContactPresence()) {
                             speakOut(
 //                                getString(should_i_text) + "${cdata.getContactNames()[temp.getContactIndex()]} at ${cdata.getContactPhones()[temp.getContactIndex()]!![temp.getPhoneIndex()]}" + getString( via_sms),
-                                getString(should_i_text) + "${contact.displayName} at ${contact.phoneList!![temp.getPhoneIndex()]}" + getString(
-                                    via_sms
-                                ),
+                                getString(should_i_text) + "${contact.displayName}$space" +
+                                        getLocalisedString(getString(at)+ "${contact.phoneList!![temp.getPhoneIndex()]}",
+                                            "को ${contact.phoneList!![temp.getPhoneIndex()]}"+getString(at)
+                                        )+ getString(via_sms)+"?",
                                 skivvy.CODE_SMS_CONF
                             )
                         } else {
                             speakOut(
-                                getString(should_i_text) + "${temp.getPhone()}" + getString(
-                                    via_sms
-                                ),
+                                getString(should_i_text) + "${temp.getPhone()}" + getLocalisedString("", "${getString(at)}$space") + getString(
+                                    via_sms)+"?",
                                 skivvy.CODE_SMS_CONF
                             )
                         }
@@ -890,7 +904,6 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             skivvy.CODE_WHATSAPP_ACTION -> {
-
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
                 if (txt != nothing) {
@@ -960,7 +973,8 @@ open class MainActivity : AppCompatActivity() {
                 startActivity(Intent(context, Setup::class.java))
                 overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
             }
-//TODO: use this as external function, and return special codes for commands here just like isCooperative(): input.removeBeforeLastStringsIn(text, arrayOf(resources.getStringArray(R.array.bt_list)))
+
+            //TODO: use this as external function, and return special codes for commands here just like isCooperative(): input.removeBeforeLastStringsIn(text, arrayOf(resources.getStringArray(R.array.bt_list)))
             text.contains("bluetooth") -> {
                 //the first function of Skivvy  ;-)
                 if (text.contains("on")) {
@@ -1061,16 +1075,16 @@ open class MainActivity : AppCompatActivity() {
             text.contains("airplane") -> {
                 if (text.contains("on") || text.contains("enable")) {
                     if (isAirplaneModeEnabled()) {
-                        speakOut("Already on airplane mode.")
+                        speakOut(getString(R.string.airplane_already_on))
                     } else {
-                        speakOut("Airplane mode on.")
+                        speakOut(getString(R.string.airplane_mode_on))
                         setAirplaneMode(true)
                     }
                 } else if (text.contains("off") || text.contains("disable")) {
                     if (!isAirplaneModeEnabled()) {
-                        speakOut("Airplane mode is already off.")
+                        speakOut(getString(R.string.airplane_already_off))
                     } else {
-                        speakOut("Airplane mode off.")
+                        speakOut(getString(R.string.airplane_mode_off))
                         setAirplaneMode(false)
                     }
                 }
@@ -1257,13 +1271,13 @@ open class MainActivity : AppCompatActivity() {
         val expression = input.expressionize(rawExpression)
         if (expression.length == 3 && !reusing) {
             try {
-                val res = calculationManager.operate(
+                val res = calculation.operate(
                     expression[0].toString().toFloat(),
                     expression[1],
                     expression[2].toString().toFloat()
                 )
                 if (res != null) {
-                    speakOut(calculationManager.returnValidResult(arrayOf(res.toString())))
+                    speakOut(calculation.returnValidResult(arrayOf(res.toString())))
                     return true
                 } else {
                     computerOps(rawExpression, true)
@@ -1276,7 +1290,7 @@ open class MainActivity : AppCompatActivity() {
          * Storing availability of all operators and functions in given expression,
          * to arrays of booleans as true.
          */
-        val operatorsAndFunctionsArray = arrayOf(skivvy.operators, skivvy.mathFunctions)
+        val operatorsAndFunctionsArray = arrayOf(calculation.operators, calculation.mathFunctions)
         val operatorsAndFunctionsBoolean = arrayOf(
             arrayOfNulls<Boolean>(operatorsAndFunctionsArray[0].size),
             arrayOfNulls(operatorsAndFunctionsArray[1].size)
@@ -1295,9 +1309,9 @@ open class MainActivity : AppCompatActivity() {
             if (operatorsAndFunctionsBoolean[1].contains(true)) {       //has a mathematical function
                 if (expression.contains(skivvy.numberPattern)) {
                     setFeedback(expression)
-                    saveCalculationResult(calculationManager.operateFuncWithConstant(expression)!!)
+                    saveCalculationResult(calculation.operateFuncWithConstant(expression)!!)
                     if (getLastCalculationResult().let {
-                            calculationManager.handleExponentialTerm(
+                            calculation.handleExponentialTerm(
                                 it
                             )
                         } == nothing) {
@@ -1305,8 +1319,8 @@ open class MainActivity : AppCompatActivity() {
                         speakOut(getString(invalid_expression))
                     } else
                         speakOut(
-                            calculationManager.formatToProperValue(
-                                calculationManager.handleExponentialTerm(
+                            calculation.formatToProperValue(
+                                calculation.handleExponentialTerm(
                                     getLastCalculationResult()
                                 )
                             )
@@ -1321,8 +1335,8 @@ open class MainActivity : AppCompatActivity() {
             return false
         }
 
-        val totalOps = calculationManager.totalOperatorsInExpression(expression)
-        if (totalOps == 0 || !calculationManager.isExpressionOperatable(expression) || calculationManager.segmentizeExpression(
+        val totalOps = calculation.totalOperatorsInExpression(expression)
+        if (totalOps == 0 || !calculation.isExpressionOperatable(expression) || calculation.segmentizeExpression(
                 expression,
                 2 * totalOps + 1
             ) == null
@@ -1330,7 +1344,7 @@ open class MainActivity : AppCompatActivity() {
             return false
 
         var arrayOfExpression =
-            calculationManager.segmentizeExpression(expression, 2 * totalOps + 1)!!
+            calculation.segmentizeExpression(expression, 2 * totalOps + 1)!!
 
         var l = 0
         var k = 0
@@ -1354,7 +1368,7 @@ open class MainActivity : AppCompatActivity() {
 
         if (operatorsAndFunctionsBoolean[1].contains(true)) {      //If expression has mathematical functions
             val temp =
-                calculationManager.evaluateFunctionsInExpressionArray(arrayOfExpression)
+                calculation.evaluateFunctionsInExpressionArray(arrayOfExpression)
             if (temp == null) {
                 return false
             } else {
@@ -1362,10 +1376,10 @@ open class MainActivity : AppCompatActivity() {
             }
         }
 
-        if (!calculationManager.isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression))     //if array contains invalid values
+        if (!calculation.isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression))     //if array contains invalid values
             return false
         else {
-            saveCalculationResult(calculationManager.expressionCalculation(arrayOfExpression))
+            saveCalculationResult(calculation.expressionCalculation(arrayOfExpression))
             speakOut(getLastCalculationResult())
         }
         return true
@@ -2188,12 +2202,8 @@ open class MainActivity : AppCompatActivity() {
                 when (state) {
                     lastState -> return
                     TelephonyManager.CALL_STATE_RINGING -> {
-                        speakOut("Incoming call from ${formatPhoneNumber(number)}")
+                        speakOut("Incoming call from ${formatPhoneNumber(number)}", isUrgent = true)
                         successView(getDrawable(ic_phone_dialer))
-                        feature.setMediaVolume(
-                            audioManager.getStreamVolume(AudioManager.STREAM_RING).toFloat(),
-                            audioManager
-                        )
                     }
                     TelephonyManager.CALL_STATE_OFFHOOK -> {
                         if (lastState == TelephonyManager.CALL_STATE_RINGING) {
@@ -2201,7 +2211,7 @@ open class MainActivity : AppCompatActivity() {
                             speakOut("Speaking to ${formatPhoneNumber(number)}")
                         } else {
                             if (temp.getContactPresence()) {
-                                speakOut("Calling ${contact.displayName}")
+                                speakOut("Calling ${contact.displayName}", isUrgent = false)
                             } else {
                                 speakOut("Calling ${formatPhoneNumber(number)}")
                             }
@@ -2230,22 +2240,17 @@ open class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        loading.startAnimation(zoomInRotate)
         speakOut(getString(exit_msg))
+        loading.startAnimation(zoomInRotate)
         if (skivvy.tts != null) {
             skivvy.tts!!.stop()
             skivvy.tts!!.shutdown()
         }
         super.onDestroy()
     }
-
     override fun onBackPressed() {
         speakOut(getString(exit_msg))
         loading.startAnimation(zoomInRotate)
-        if (skivvy.tts != null) {
-            skivvy.tts!!.stop()
-            skivvy.tts!!.shutdown()
-        }
         super.onBackPressed()
     }
 
@@ -2368,10 +2373,11 @@ open class MainActivity : AppCompatActivity() {
     ) {
         if (isFeedback) setFeedback(text)
         else setOutput(text)
+        if(skivvy.getVolumeNormal()) feature.setMediaVolume(skivvy.getNormalVolume().toFloat(),audioManager, false)
         if(isUrgent) {
-            if (skivvy.getVolumeNormalization()) {
+            if (skivvy.getVolumeUrgent()) {
                 if (feature.getMediaVolume(audioManager) < skivvy.getUrgentVolume()) {
-                    feature.setMediaVolume(skivvy.getUrgentVolume().toFloat(), audioManager)
+                    feature.setMediaVolume(skivvy.getUrgentVolume().toFloat(), audioManager,false)
                 }
             }
         }
@@ -2454,7 +2460,12 @@ open class MainActivity : AppCompatActivity() {
                 }
             })
     }
-
+    private fun getLocalisedString(eng:String, hindi:String):String{
+        if(skivvy.isLocaleHindi()){
+            return hindi
+        }
+        return eng
+    }
     private fun String.isLandLine(): Boolean {
         return this[0] == '0' && this[1] == '1' && this[2] == '2' && this[3] == '0'
     }

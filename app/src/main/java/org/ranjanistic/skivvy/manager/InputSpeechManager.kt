@@ -22,18 +22,18 @@ class InputSpeechManager {
      * @param stringListArray:The array of list of strings from which [line] will be truncated as per the last occurrence of any string from it in [line].
      * @return: The truncated string having remaining data as string or null.
      */
-    fun removeBeforeLastStringsIn(line: String, stringListArray: Array<Array<String>>): String {
+    fun removeBeforeLastStringsIn(line: String, stringListArray: Array<Array<String>>, excludeLast:Boolean= false): String {
         var l = String()
         for (r in stringListArray) {
             for (k in r) {
                 if (line.contains(k)) {
-                    l = line.replaceBeforeLast(k, nothing).replace(k, nothing).trim()
+                    l = if(excludeLast) line.replaceBeforeLast(k, nothing).trim()
+                    else line.replaceBeforeLast(k, nothing).replace(k, nothing).trim()
                 }
             }
         }
         return l.trim()
     }
-
     /**If given [line] contains any string in given [stringListArray], return true, else false
      * @param line : The given string which is to be inspected.
      * @param stringListArray: The array of list of strings from which [line] will be inspected for occurrence.
@@ -63,6 +63,10 @@ class InputSpeechManager {
         }
         return false
     }
+
+    //TODO: Test this for other types of inputs
+    fun finallySaidSomethingFromList(line:String,stringListArray:Array<Array<String>>)
+            :Boolean = containsString(removeBeforeLastStringsIn(line, stringListArray,true), stringListArray)
 
     //formats given string to expression form, irrespective of it is mathematical expression or not
     fun expressionize(expression: String): String {

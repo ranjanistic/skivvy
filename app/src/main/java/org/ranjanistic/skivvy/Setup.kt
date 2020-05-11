@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
@@ -19,6 +20,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
+import org.ranjanistic.skivvy.manager.SystemFeatureManager
 import org.ranjanistic.skivvy.manager.TempDataManager
 import java.util.concurrent.Executor
 
@@ -27,15 +29,14 @@ import java.util.concurrent.Executor
 class Setup : AppCompatActivity() {
     lateinit var skivvy: Skivvy
     private lateinit var settingsContainer: ConstraintLayout
-    private lateinit var vocalLayout: LinearLayout
-    private lateinit var themeLayout: LinearLayout
     private lateinit var settingIcon: ImageView
     private lateinit var training: Switch
     private lateinit var mute: Switch
-    private lateinit var normalize: Switch
-    private lateinit var normalizeSeek: SeekBar
+    private lateinit var urgentVolume: Switch
+    private lateinit var urgentSeek: SeekBar
+    private lateinit var normalizeVolume:Switch
+    private lateinit var normalizeSeek:SeekBar
     private lateinit var theme: Switch
-    private lateinit var themesRadio: ArrayList<RadioButton>
     private lateinit var themeChoices: RadioGroup
     private lateinit var saveTheme: TextView
     private lateinit var response: Switch
@@ -52,6 +53,7 @@ class Setup : AppCompatActivity() {
     private lateinit var scrollView: ScrollView
     private lateinit var noteView: TextView
     private var temp = TempDataManager()
+    private var feature = SystemFeatureManager()
     private lateinit var recognitionIntent: Intent
     override fun onBackPressed() {
         super.onBackPressed()
@@ -99,8 +101,10 @@ class Setup : AppCompatActivity() {
         settingIcon = findViewById(R.id.settingIcon)
         training = findViewById(R.id.trainingModeBtn)
         mute = findViewById(R.id.muteUnmuteBtn)
-        normalize = findViewById(R.id.normalizeVolume)
-        normalizeSeek = findViewById(R.id.volume_seek)
+        normalizeVolume = findViewById(R.id.normalizeVolume)
+        normalizeSeek = findViewById(R.id.normal_volume_seek)
+        urgentVolume = findViewById(R.id.urgentVolume)
+        urgentSeek = findViewById(R.id.urgent_volume_seek)
         theme = findViewById(R.id.theme_switch)
         themeChoices = findViewById(R.id.themeChoices)
         saveTheme = findViewById(R.id.save_theme)
@@ -108,8 +112,6 @@ class Setup : AppCompatActivity() {
         response = findViewById(R.id.parallelResponseBtn)
         angleUnit = findViewById(R.id.angleUnitBtn)
         biometrics = findViewById(R.id.biometricsBtn)
-        vocalLayout = findViewById(R.id.voice_setup)
-        themeLayout = findViewById(R.id.theme_setup)
         voiceAuth = findViewById(R.id.voice_auth_switch)
         deleteVoiceSetup = findViewById(R.id.delete_voice_key)
         permissions = findViewById(R.id.permissionBtn)
@@ -134,16 +136,28 @@ class Setup : AppCompatActivity() {
             getString(R.string.mute_text)
         )
         setThumbAttrs(
-            normalize,
-            skivvy.getVolumeNormalization(),
-            getString(R.string.urgent_on_text_) + skivvy.getUrgentVolume().toString()+"%",
-            getString(R.string.urgent_off_text)
+            normalizeVolume,
+            skivvy.getVolumeNormal(),
+            getString(R.string.normal_vol_on_text_) + skivvy.getNormalVolume().toString()+getString(R.string.percent),
+            getString(R.string.normal_vol_off_text)
         )
-        if(skivvy.getVolumeNormalization()){
+        if(skivvy.getVolumeNormal()){
             normalizeSeek.visibility = View.VISIBLE
-            normalizeSeek.progress = skivvy.getUrgentVolume()
+            normalizeSeek.progress = skivvy.getNormalVolume()
         } else{
             normalizeSeek.visibility = View.GONE
+        }
+        setThumbAttrs(
+            urgentVolume,
+            skivvy.getVolumeUrgent(),
+            getString(R.string.urgent_vol_on_text_) + skivvy.getUrgentVolume().toString()+getString(R.string.percent),
+            getString(R.string.urgent_vol_off_text)
+        )
+        if(skivvy.getVolumeUrgent()){
+            urgentSeek.visibility = View.VISIBLE
+            urgentSeek.progress = skivvy.getUrgentVolume()
+        } else{
+            urgentSeek.visibility = View.GONE
         }
         setThumbAttrs(
             theme,
@@ -235,7 +249,7 @@ class Setup : AppCompatActivity() {
         }
     }
 
-    //TODO: normalize volume for important speakouts preference
+    //TODO: urgentVolume volume for important speakouts preference
     private fun getThemeForRadio(radioID: Int): Int {
         return when (radioID) {
             R.id.black_theme -> {
@@ -305,39 +319,77 @@ class Setup : AppCompatActivity() {
                 getString(R.string.mute_text)
             )
         }
-        normalize.setOnCheckedChangeListener{view, isChecked->
-            skivvy.setVolumeNormalization(isChecked)
+        normalizeVolume.setOnCheckedChangeListener{view, isChecked->
+            skivvy.setVolumeNormal(isChecked)
             speakOut(
                 when (isChecked) {
                     true ->{
                         normalizeSeek.visibility = View.VISIBLE
-                        normalizeSeek.progress = skivvy.getUrgentVolume()
-                        "Volume will be raised if urgent"
+                        normalizeSeek.progress = skivvy.getNormalVolume()
+                        getString(R.string.my_own_volume)
                     }
                     else ->{
                         normalizeSeek.visibility = View.GONE
-                        "Volume will always follow system"
+                        getString(R.string.follow_system_volume)
                     }
                 }
             )
             setThumbAttrs(
                 view as Switch,
                 isChecked,
-                getString(R.string.urgent_on_text_) + skivvy.getUrgentVolume().toString()+"%",
-                getString(R.string.urgent_off_text)
+                getString(R.string.normal_vol_on_text_) + skivvy.getNormalVolume().toString()+getString(R.string.percent),
+                getString(R.string.normal_vol_off_text)
             )
         }
-        var percent = skivvy.getUrgentVolume()
+        var nPercent = skivvy.getNormalVolume()
         normalizeSeek.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener{
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val txt = getString(R.string.urgent_on_text_)+"${progress}%"
-                if(fromUser) normalize.text = txt
-                percent = progress
+                val txt = getString(R.string.normal_vol_on_text_)+"$progress" + getString(R.string.percent)
+                if(fromUser) normalizeVolume.text = txt
+                nPercent = progress
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
             }
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                skivvy.setUrgentVolume(percent)
+                skivvy.setNormalVolume(nPercent)
+                speakOut("${nPercent}%")
+            }
+
+        })
+        urgentVolume.setOnCheckedChangeListener{view, isChecked->
+            skivvy.setVolumeUrgent(isChecked)
+            speakOut(
+                when (isChecked) {
+                    true ->{
+                        urgentSeek.visibility = View.VISIBLE
+                        urgentSeek.progress = skivvy.getUrgentVolume()
+                        getString(R.string.volume_raised_if_urgent)
+                    }
+                    else ->{
+                        urgentSeek.visibility = View.GONE
+                        getString(R.string.follow_system_volume)
+                    }
+                }
+            )
+            setThumbAttrs(
+                view as Switch,
+                isChecked,
+                getString(R.string.urgent_vol_on_text_) + skivvy.getUrgentVolume().toString()+getString(R.string.percent),
+                getString(R.string.urgent_vol_off_text)
+            )
+        }
+        var uPercent = skivvy.getUrgentVolume()
+        urgentSeek.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val txt = getString(R.string.urgent_vol_on_text_)+"$progress" + getString(R.string.percent)
+                if(fromUser) urgentVolume.text = txt
+                uPercent = progress
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            }
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                skivvy.setUrgentVolume(uPercent)
+                speakOut("${uPercent}%")
             }
 
         })
@@ -459,7 +511,6 @@ class Setup : AppCompatActivity() {
                         skivvy.CODE_VOICE_AUTH_INIT
                     )
                 } else {
-                    speakOut(getString(R.string.voice_auth_enabled))
                     skivvy.setPhraseKeyStatus(true)
                     setThumbAttrs(
                         voiceAuth,
@@ -467,12 +518,13 @@ class Setup : AppCompatActivity() {
                         onText = getString(R.string.disable_vocal_authentication)
                     )
                     deleteVoiceSetup.visibility = View.VISIBLE
+                    speakOut(getString(R.string.vocal_auth_enabled))
                     if (!skivvy.getBiometricStatus()) {
                         showBiometricRecommendation()
                     }
                 }
             } else {
-                speakOut(getString(R.string.voice_auth_disabled))
+                speakOut(getString(R.string.vocal_auth_disabled))
                 defaultVoiceAuthUIState()
             }
         }
@@ -613,9 +665,7 @@ class Setup : AppCompatActivity() {
                     voiceAuth.isChecked = true
                     skivvy.setPhraseKeyStatus(true)
                     deleteVoiceSetup.visibility = View.VISIBLE
-
-
-                    speakOut("'${skivvy.getVoiceKeyPhrase()}' is the phrase.")
+                    speakOut("'${skivvy.getVoiceKeyPhrase()}'"+getString(R.string._is_the_phrase))
                     if (!skivvy.getBiometricStatus() && skivvy.checkBioMetrics()) {
                         showBiometricRecommendation()
                     }
@@ -766,12 +816,16 @@ class Setup : AppCompatActivity() {
         code: Int? = null,
         isParallel: Boolean = skivvy.getParallelResponseStatus()
     ) {
+        if(skivvy.getVolumeNormal())
+            feature.setMediaVolume(skivvy.getNormalVolume().toFloat(),
+                applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager,
+                false
+            )
         skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onDone(utteranceId: String) {
                 if (!isParallel)
                     code?.let { startVoiceRecIntent(code, text) }
             }
-
             override fun onError(utteranceId: String) {}
             override fun onStart(utteranceId: String) {
                 if (isParallel)

@@ -7,17 +7,32 @@ import kotlin.math.*
 @ExperimentalStdlibApi
 class CalculationManager(var skivvy: Skivvy) {
     private val nothing = ""
+    val mathFunctions = arrayOf(
+        "sin",
+        "cos",
+        "tan",
+        "cot",
+        "sec",
+        "cosec",
+        "log",
+        "ln",
+        "sqrt",
+        "cbrt",
+        "exp",
+        "fact"
+    )
+    val operators = arrayOf("^", "p", "/", "*", "m", "-", "+")
     fun totalOperatorsInExpression(expression: String): Int {
         var expIndex = 0
         var totalOps = 0
         while (expIndex < expression.length) {
             var opIndex = 0
-            while (opIndex < skivvy.operators.size) {
-                if (expression[expIndex].toString() == skivvy.operators[opIndex]) {
+            while (opIndex < this.operators.size) {
+                if (expression[expIndex].toString() == this.operators[opIndex]) {
                     ++totalOps              //counting total
                 }
                 ++opIndex
-            }
+            }//5+5*6/2+3*4+cos60
             ++expIndex
         }
         return totalOps
@@ -35,8 +50,8 @@ class CalculationManager(var skivvy: Skivvy) {
         var expOpIndex = 0
         while (expIndex < expression.length) {
             var opIndex = 0
-            while (opIndex < skivvy.operators.size) {
-                if (expression[expIndex].toString() == skivvy.operators[opIndex]) {
+            while (opIndex < this.operators.size) {
+                if (expression[expIndex].toString() == this.operators[opIndex]) {
                     expOperatorPos[expOpIndex] = expIndex         //saving operator positions
                     ++expOpIndex
                 }
@@ -50,7 +65,7 @@ class CalculationManager(var skivvy: Skivvy) {
     /**
      * The following block extracts values from given expression, char by char, and stores them
      * in an array of Strings, by grouping digits in form of numbers at the same index as string,
-     * and skivvy.operators in the expression at a separate index if array of Strings.
+     * and this.operators in the expression at a separate index if array of Strings.
      *  For ex - Let the given expression be :   1234/556*89+4-23
      *  Starting from index = 0, the following block will store digits till '/'  at index =0 of empty array of Strings, then
      *  will store '/' itself at index =  1 of empty array of Strings. Then proceeds to store 5, 5  and 6
@@ -199,7 +214,7 @@ class CalculationManager(var skivvy: Skivvy) {
         }
         val validCharsOfExpression = arrayOf(".")
         val operatorsFunctionsNumbers =
-            arrayOf(skivvy.operators, skivvy.mathFunctions, validCharsOfExpression)
+            arrayOf(this.operators, this.mathFunctions, validCharsOfExpression)
         var kkk = 0
         while (kkk < operatorsFunctionsNumbers.size) {
             var kk = 0
@@ -240,10 +255,10 @@ class CalculationManager(var skivvy: Skivvy) {
     fun expressionCalculation(arrayOfExpression: Array<String?>): String {
         var nullPosCount = 0
         var opIndex = 0
-        while (opIndex < skivvy.operators.size) {
+        while (opIndex < this.operators.size) {
             var opPos = 1
             while (opPos < arrayOfExpression.size - nullPosCount) {
-                if (arrayOfExpression[opPos] == skivvy.operators[opIndex]) {
+                if (arrayOfExpression[opPos] == this.operators[opIndex]) {
                     if (arrayOfExpression[opPos] == "-") {
                         arrayOfExpression[opPos + 1] =
                             (0 - arrayOfExpression[opPos + 1]!!.toFloat()).toString()
@@ -265,7 +280,7 @@ class CalculationManager(var skivvy: Skivvy) {
                     }
                     nullPosCount += 2
                     if (arrayOfExpression.size > 3 &&
-                        arrayOfExpression[opPos] == skivvy.operators[opIndex]
+                        arrayOfExpression[opPos] == this.operators[opIndex]
                     ) {    //if replacing operator is same as the replaced one
                         opPos -= 2            //index two indices back so that it returns at same position again
                     }

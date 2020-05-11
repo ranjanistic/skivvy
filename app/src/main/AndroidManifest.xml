@@ -46,9 +46,14 @@
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:description="@string/app_tag_line"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/DarkTheme">
+        android:logo="@drawable/dots_in_circle"
+        android:appCategory="productivity"
+        android:hasFragileUserData="true"
+        android:theme="@style/DarkTheme"
+        tools:targetApi="q">
         <receiver android:name=".DirectCommand">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
