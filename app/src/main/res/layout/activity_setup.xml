@@ -34,6 +34,7 @@
         app:layout_constraintStart_toStartOf="@id/settingIcon"
         app:layout_constraintTop_toBottomOf="@id/settingIcon" />
 
+
     <ScrollView
         android:id="@+id/settingScrollView"
         android:layout_width="0dp"
@@ -51,45 +52,59 @@
             android:paddingHorizontal="@dimen/secondary_separation"
             android:paddingTop="240dp"
             android:paddingBottom="80dp">
-
-            <LinearLayout
-                android:id="@+id/specialSettings"
+            <include
+                android:id="@+id/permit_group_head"
+                layout="@layout/text_head_top_round"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+            <include
+                android:id="@+id/permissionBtn"
+                layout="@layout/text_button_image"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="1">
+                android:layout_marginEnd="@dimen/minimum_separation"
+                android:layout_marginBottom="@dimen/minimum_separation"
+                app:layout_constraintEnd_toStartOf="@+id/deviceAdminBtn"
+                app:layout_constraintBottom_toTopOf="@id/writeSettingsBtn"
+                app:layout_constraintHorizontal_chainStyle="spread_inside"
+                app:layout_constraintTop_toBottomOf="@id/permit_group_head"/>
 
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
+            <include
+                android:id="@+id/deviceAdminBtn"
+                layout="@layout/text_button_image"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@+id/permissionBtn"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@id/permissionBtn"
+                app:layout_constraintTop_toBottomOf="@id/permit_group_head" />
 
-                <include
-                    android:id="@+id/permissionBtn"
-                    layout="@layout/text_button_image_layout"
-                    android:layout_width="155dp"
-                    android:layout_height="wrap_content" />
+            <include
+                android:id="@+id/writeSettingsBtn"
+                layout="@layout/text_button_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toTopOf="@id/voice_group_head"
+                app:layout_constraintEnd_toEndOf="@+id/permissionBtn"
+                app:layout_constraintHorizontal_chainStyle="spread_inside"
+                app:layout_constraintStart_toStartOf="@+id/permissionBtn" />
 
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-
-                <include
-                    android:id="@+id/deviceAdminBtn"
-                    layout="@layout/text_button_image_layout"
-                    android:layout_width="155dp"
-                    android:layout_height="wrap_content" />
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-            </LinearLayout>
+            <include
+                android:id="@+id/notificationAccessBtn"
+                layout="@layout/text_button_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@+id/writeSettingsBtn"
+                app:layout_constraintEnd_toEndOf="@+id/deviceAdminBtn"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="@+id/deviceAdminBtn"
+                app:layout_constraintTop_toTopOf="@id/writeSettingsBtn" />
 
             <include
                 android:id="@+id/trainingModeBtn"
@@ -99,45 +114,55 @@
                 android:layout_marginVertical="@dimen/base_separation"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <include
+                android:id="@+id/voice_group_head"
+                layout="@layout/text_head_top_round"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/specialSettings" />
+                app:layout_constraintTop_toBottomOf="@id/writeSettingsBtn" />
 
             <include
                 android:id="@+id/muteUnmuteBtn"
                 layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/base_separation"
+                android:layout_marginBottom="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/trainingModeBtn" />
+                app:layout_constraintTop_toBottomOf="@id/voice_group_head" />
 
             <LinearLayout
                 android:id="@+id/normal_volume_setup"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginVertical="@dimen/base_separation"
                 android:background="@drawable/button_square_round"
                 android:backgroundTint="?attr/fluid_button_color"
+                android:orientation="vertical"
                 android:textColor="?attr/fluid_button_text_color"
-                android:layout_marginVertical="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/muteUnmuteBtn" >
+                app:layout_constraintTop_toBottomOf="@id/muteUnmuteBtn">
+
                 <include
                     android:id="@+id/normalizeVolume"
                     layout="@layout/switch_layout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    />
+                    android:layout_height="wrap_content" />
 
                 <SeekBar
                     android:id="@+id/normal_volume_seek"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/secondary_separation"
                     android:max="100"
                     android:paddingTop="4dp"
-                    android:layout_marginHorizontal="@dimen/secondary_separation"
                     android:paddingBottom="@dimen/minimum_separation"
                     android:progressTint="@color/colorPrimary"
                     android:thumbTint="@color/colorPrimary" />
@@ -147,44 +172,56 @@
                 android:id="@+id/urgent_volume_setup"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginVertical="@dimen/base_separation"
                 android:background="@drawable/button_square_round"
                 android:backgroundTint="?attr/fluid_button_color"
+                android:orientation="vertical"
                 android:textColor="?attr/fluid_button_text_color"
-                android:layout_marginVertical="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/normal_volume_setup" >
+                app:layout_constraintTop_toBottomOf="@id/normal_volume_setup">
+
                 <include
                     android:id="@+id/urgentVolume"
                     layout="@layout/switch_layout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                   />
+                    android:layout_height="wrap_content" />
 
                 <SeekBar
                     android:id="@+id/urgent_volume_seek"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/secondary_separation"
                     android:max="100"
                     android:paddingTop="4dp"
-                    android:layout_marginHorizontal="@dimen/secondary_separation"
                     android:paddingBottom="@dimen/minimum_separation"
                     android:progressTint="@color/colorPrimary"
                     android:thumbTint="@color/colorPrimary" />
             </LinearLayout>
+
+            <include
+                android:id="@+id/appsetup_group_head"
+                layout="@layout/text_head_top_round"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/urgent_volume_setup" />
+
             <LinearLayout
                 android:id="@+id/theme_setup"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/base_separation"
+                android:layout_marginBottom="@dimen/base_separation"
                 android:background="@drawable/button_square_round"
                 android:backgroundTint="?attr/fluid_button_color"
                 android:orientation="vertical"
                 android:textColor="?attr/fluid_button_text_color"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/urgent_volume_setup">
+                app:layout_constraintTop_toBottomOf="@id/appsetup_group_head">
 
                 <include
                     android:id="@+id/theme_switch"
@@ -196,8 +233,8 @@
                     android:id="@+id/themeChoices"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:elevation="@dimen/base_separation"
-                    android:layout_marginHorizontal="@dimen/minimum_separation" >
+                    android:layout_marginHorizontal="@dimen/minimum_separation"
+                    android:elevation="@dimen/base_separation">
 
                     <include
                         android:id="@+id/black_theme"
@@ -209,15 +246,13 @@
                         android:id="@+id/dark_theme"
                         layout="@layout/radio_button_layout"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        />
+                        android:layout_height="wrap_content" />
 
                     <include
                         android:id="@+id/light_theme"
                         layout="@layout/radio_button_layout"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        />
+                        android:layout_height="wrap_content" />
                 </RadioGroup>
 
                 <TextView
@@ -227,13 +262,13 @@
                     android:layout_gravity="end"
                     android:layout_marginHorizontal="@dimen/minimum_separation"
                     android:layout_marginBottom="@dimen/minimum_separation"
-                    android:paddingHorizontal="@dimen/minimum_separation"
                     android:background="@drawable/button_square_round"
                     android:backgroundTint="@color/colorPrimary"
                     android:clickable="true"
+                    android:elevation="@dimen/base_separation"
                     android:focusable="true"
                     android:gravity="center"
-                    android:elevation="@dimen/base_separation"
+                    android:paddingHorizontal="@dimen/minimum_separation"
                     android:paddingVertical="4dp"
                     android:text="@string/save_apply"
                     android:textColor="@color/pitch_white"
@@ -249,9 +284,8 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/theme_setup" />
-
             <include
-                android:id="@+id/angleUnitBtn"
+                android:id="@+id/handDirectionBtn"
                 layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -259,16 +293,47 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/parallelResponseBtn" />
+            <include
+                android:id="@+id/mathematics_group_head"
+                layout="@layout/text_head_top_round"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/handDirectionBtn" />
 
+            <include
+                android:id="@+id/angleUnitBtn"
+                layout="@layout/switch_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/mathematics_group_head" />
+
+            <include
+                android:id="@+id/security_group_head"
+                layout="@layout/text_head_top_round"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/angleUnitBtn" />
+            <!--TODO : Left handed preference-->
             <include
                 android:id="@+id/biometricsBtn"
                 layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/base_separation"
+                android:layout_marginBottom="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/angleUnitBtn" />
+                app:layout_constraintTop_toBottomOf="@id/security_group_head" />
 
             <LinearLayout
                 android:id="@+id/voice_setup"

@@ -116,7 +116,8 @@
     <string name="what_is_body">मुख्य भाग क्या है?</string>
     <string name="body_added">मुख्य भाग जोड़ा गया.</string>
     <string name="preparing_email">भेजने के लिए ईमेल तैयार कर रही हूँ.</string>
-    <string name="biometric_auth_explanation">आगे बढ़ने के लिए खुद को प्रमाणित करें.</string>
+    <string name="biometric_auth_explanation">आगे बढ़ने के लिए खुद को प्रमाणित करें.
+    यह आवश्यक है जब आप स्किवी के कार्यों, या आपके वास्तविक जीवन को प्रभावित करने वाली एक संवेदनशील कार्रवाई करने वाले हों</string>
     <string name="invalid_expression">अमान्य अभिव्यक्ति</string>
     <string name="what_is_message">क्या संदेश है?</string>
     <string name="should_i_text">क्या मैं संदेश भेजूं&#160;</string>
@@ -232,4 +233,19 @@
     <string name="airplane_mode_on">हवाई जहाज मोड पर.</string>
     <string name="airplane_already_off">हवाई जहाज मोड पहले से ही बंद है.</string>
     <string name="airplane_mode_off">हवाई जहाज मोड बंद.</string>
+    <string name="voice_and_volume">ध्वनि और स्तर</string>
+    <string name="app_and_setup">रूप और व्यवहार</string>
+    <string name="maths_and_setup">गणित और तर्क</string>
+    <string name="security_and_setup">सुरक्षा और स्किवी</string>
+    <string name="write_sys_settings">Write settings</string>
+    <string name="write_settings_permit_allowed">Thanks for allowing me to change system settings</string>
+    <string name="left_handy">Left handy human</string>
+    <string name="right_handy">Right handy human</string>
+    <string name="you_left_handed">You are left handed</string>
+    <string name="you_right_handed">You are right handed</string>
+    <string name="user_tasks">Your tasks</string>
+    <string name="access_notifs">Access notifications</string>
+    <string name="request_read_notifs_permit">Allow me to access your notifications</string>
+    <string name="access_notifs_permit_allowed">Thanks for allowing me to access notifications</string>
+    <string name="access_notifs_permit_denied">You didn\'t allow me to access notifications</string>
 </resources>

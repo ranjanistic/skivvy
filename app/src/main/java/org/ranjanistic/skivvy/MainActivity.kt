@@ -42,6 +42,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.RoundedBitmapDrawable
@@ -111,7 +112,7 @@ open class MainActivity : AppCompatActivity() {
         context = this
         setTheme(skivvy.getThemeState())
         //if (skivvy.getThemeState() == R.style.BlackTheme) {
-        setContentView(R.layout.activity_main_black)
+        setContentView(R.layout.activity_homescreen)
         //} else {
         //setContentView(R.layout.activity_main)
         //}
@@ -129,11 +130,13 @@ open class MainActivity : AppCompatActivity() {
     private fun setViewAndDefaults() {
         setting = findViewById(R.id.setting)
         outputText = findViewById(R.id.textOutput)
+        //TODO: Handy view
+        //setHandyView()
         inputText = findViewById(R.id.textInput)
+        receiver = findViewById(R.id.receiverBtn)
         feedback = findViewById(R.id.feedbackOutput)
         loading = findViewById(R.id.loader)
         icon = findViewById(R.id.actionIcon)
-        receiver = findViewById(R.id.receiverBtn)
         greet = findViewById(R.id.greeting)
         backfall = findViewById(R.id.backdrop)
         packages = skivvy.packageDataManager
@@ -234,8 +237,23 @@ open class MainActivity : AppCompatActivity() {
             hideSysUI()
     }
 
+    private fun setHandyView(){
+        if(skivvy.getLeftHandy()){
+            findViewById<ImageView>(R.id.receiverBtn).visibility = View.GONE
+            findViewById<TextView>(R.id.textInput).visibility = View.GONE
+            inputText = findViewById(R.id.textInputL)
+            receiver = findViewById(R.id.receiverBtnL)
+        } else {
+            findViewById<ImageView>(R.id.receiverBtnL).visibility = View.GONE
+            findViewById<TextView>(R.id.textInputL).visibility = View.GONE
+            inputText = findViewById(R.id.textInput)
+            receiver = findViewById(R.id.receiverBtn)
+        }
+    }
+
     override fun onStart() {
         super.onStart()
+        //setHandyView()
         recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             .putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,

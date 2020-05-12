@@ -278,4 +278,19 @@
     <string name="airplane_mode_on">Airplane mode on.</string>
     <string name="airplane_already_off">Airplane mode is already off.</string>
     <string name="airplane_mode_off">Airplane mode off.</string>
+    <string name="voice_and_volume">Voice &amp; Volume</string>
+    <string name="app_and_setup">App &amp; Lications</string>
+    <string name="maths_and_setup">Maths &amp; Functions</string>
+    <string name="security_and_setup">Security &amp; Skivvy</string>
+    <string name="write_sys_settings">Write settings</string>
+    <string name="write_settings_permit_allowed">Thanks for allowing me to change system settings</string>
+    <string name="left_handy">Left handy human</string>
+    <string name="right_handy">Right handy human</string>
+    <string name="you_left_handed">You are left handed</string>
+    <string name="you_right_handed">You are right handed</string>
+    <string name="user_tasks">Your tasks</string>
+    <string name="access_notifs">Access notifications</string>
+    <string name="request_read_notifs_permit">Allow me to access your notifications</string>
+    <string name="access_notifs_permit_allowed">Thanks for allowing me to access notifications</string>
+    <string name="access_notifs_permit_denied">You didn\'t allow me to access notifications</string>
 </resources>
