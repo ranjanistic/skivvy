@@ -173,51 +173,6 @@ class ContactDataManager(val skivvy: Skivvy) {
     }
 
     val contact: ArrayList<ContactModel> = ArrayList()
-    /*
-    private fun setContactData(index:Int,model:ContactModel){
-        contact[index].photo = model.photo
-        contact[index].getNameSet().prefix = model.getNameSet().prefix
-        contact[index].getNameSet().first = model.getNameSet().first
-        contact[index].getNameSet().middle = model.getNameSet().middle
-        contact[index].getNameSet().last = model.getNameSet().last
-        contact[index].getNameSet().suffix = model.getNameSet().suffix
-
-            contact[index].getNameSet().getPhoneticSet().first = model.getNameSet().getPhoneticSet().first
-            contact[index].getNameSet().getPhoneticSet().middle = model.getNameSet().getPhoneticSet().middle
-            contact[index].getNameSet().getPhoneticSet().surname = model.getNameSet().getPhoneticSet().surname
-
-            contact[index].getNameSet().getNicknameSet().type = ""
-            contact[index].getNameSet().getNicknameSet().nickname = ""
-            contact[index].getNameSet().getNicknameSet().frequency = 0
-        
-        contact[index].getWorkSet().title = ""
-        contact[index].getWorkSet().company = ""
-        
-        contact[index].getAddressSet().line1 = ""
-        contact[index].getAddressSet().line2 = ""
-        contact[index].getAddressSet().city = ""
-        contact[index].getAddressSet().state = ""
-        contact[index].getAddressSet().country = ""
-        contact[index].getAddressSet().frequency = 0
-        
-        contact[index].getPhoneSet().type = ""
-        contact[index].getPhoneSet().number = ""
-        contact[index].getPhoneSet().frequency = 0
-        
-        contact[index].getEmailSet().type = ""
-        contact[index].getEmailSet().emailID = ""
-        contact[index].getEmailSet().frequency = 0
-        
-        contact[index].getDateSet().type = ""
-        contact[index].getDateSet().date = ""
-        
-        contact[index].getRelationSet().type = ""
-        contact[index].getRelationSet().relation = ""
-        
-        contact[index].getCustomFields(0).type = ""
-        contact[index].getCustomFields(0).value = ""
-    }
-    */
 
     fun saveContactsToJson() {
         val output = FileOutputStream(

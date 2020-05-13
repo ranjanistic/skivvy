@@ -111,11 +111,7 @@ open class MainActivity : AppCompatActivity() {
         skivvy = this.application as Skivvy
         context = this
         setTheme(skivvy.getThemeState())
-        //if (skivvy.getThemeState() == R.style.BlackTheme) {
         setContentView(R.layout.activity_homescreen)
-        //} else {
-        //setContentView(R.layout.activity_main)
-        //}
         window.statusBarColor = ContextCompat.getColor(context, android.R.color.transparent)
         window.navigationBarColor = ContextCompat.getColor(context, android.R.color.transparent)
         hideSysUI()
@@ -235,20 +231,6 @@ open class MainActivity : AppCompatActivity() {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus)
             hideSysUI()
-    }
-
-    private fun setHandyView(){
-        if(skivvy.getLeftHandy()){
-            findViewById<ImageView>(R.id.receiverBtn).visibility = View.GONE
-            findViewById<TextView>(R.id.textInput).visibility = View.GONE
-            inputText = findViewById(R.id.textInputL)
-            receiver = findViewById(R.id.receiverBtnL)
-        } else {
-            findViewById<ImageView>(R.id.receiverBtnL).visibility = View.GONE
-            findViewById<TextView>(R.id.textInputL).visibility = View.GONE
-            inputText = findViewById(R.id.textInput)
-            receiver = findViewById(R.id.receiverBtn)
-        }
     }
 
     override fun onStart() {

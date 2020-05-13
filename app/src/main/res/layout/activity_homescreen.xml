@@ -30,9 +30,10 @@
         android:layout_margin="@dimen/minimum_separation"
         android:textColor="?attr/tertiary_text_color"
         android:textSize="@dimen/normal_text_size"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintHorizontal_bias="0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/setting"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
@@ -46,11 +47,10 @@
         android:elevation="22dp"
         android:padding="4dp"
         android:scaleType="centerCrop"
-        app:layout_constraintBottom_toBottomOf="@id/greeting"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1"
         app:layout_constraintStart_toEndOf="@id/greeting"
-        app:layout_constraintTop_toTopOf="@id/greeting"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.5"
         app:srcCompat="@drawable/ic_setting" />
 
@@ -69,7 +69,24 @@
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="@+id/greeting"
         app:layout_constraintTop_toBottomOf="@id/greeting"
+        app:layout_constraintBottom_toTopOf="@id/feedbackOutput"
+        app:layout_constraintVertical_chainStyle="packed"
         tools:ignore="SpUsage" />
+    <TextView
+        android:id="@+id/feedbackOutput"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:elevation="22dp"
+        android:gravity="start|bottom"
+        android:paddingVertical="8dp"
+        android:text="@string/biometric_auth_explanation"
+        android:textColor="?attr/secondary_text_color"
+        android:textSize="13sp"
+        app:layout_constraintEnd_toEndOf="@+id/textOutput"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/textOutput"
+        app:layout_constraintTop_toBottomOf="@+id/textOutput" />
 
     <ImageView
         android:id="@+id/actionIcon"
@@ -87,91 +104,15 @@
         android:id="@+id/loader"
         android:layout_width="94pt"
         android:layout_height="94pt"
+        android:layout_margin="6dp"
         android:contentDescription="@string/breathing_skivvy"
         android:elevation="16dp"
         android:scaleType="fitCenter"
-        android:layout_margin="6dp"
         app:layout_constraintBottom_toBottomOf="@id/backdrop"
         app:layout_constraintEnd_toEndOf="@+id/backdrop"
         app:layout_constraintHorizontal_bias="1"
-        app:layout_constraintStart_toStartOf="@+id/textInput"
-        app:layout_constraintVertical_bias="1"
-        app:srcCompat="@drawable/dots_in_circle" />
-
-    <TextView
-        android:id="@+id/feedbackOutput"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:elevation="22dp"
-        android:gravity="start|bottom"
-        android:paddingVertical="8dp"
-        android:text="@string/biometric_auth_explanation"
-        android:textColor="?attr/secondary_text_color"
-        android:textSize="13sp"
-        app:layout_constraintEnd_toEndOf="@+id/textOutput"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@+id/textOutput"
-        app:layout_constraintTop_toBottomOf="@+id/textOutput" />
-
-    <TextView
-        android:id="@+id/textInputL"
-        android:visibility="gone"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:elevation="22dp"
-        android:gravity="start"
-        android:padding="8dp"
-        android:text="@string/biometric_auth_explanation"
-        android:textColor="?attr/base_text_color"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/receiverBtnL"
-        app:layout_constraintStart_toStartOf="@id/backdrop"
-        app:layout_constraintHorizontal_bias="0"
-        app:layout_constraintEnd_toStartOf="@+id/receiverBtnL"
-        app:layout_constraintTop_toTopOf="@id/receiverBtnL"
-        app:layout_constraintVertical_bias="0.5" />
-
-    <ImageButton
-        android:id="@+id/receiverBtnL"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_margin="12dp"
-        android:background="@drawable/button_circle"
-        android:contentDescription="@string/command_button"
-        android:elevation="22dp"
-        android:visibility="gone"
-        android:paddingTop="12dp"
-        android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1"
         app:layout_constraintStart_toStartOf="@+id/backdrop"
-        app:layout_constraintTop_toBottomOf="@id/backdrop"
-        app:layout_constraintVertical_bias="0.5"
-        app:srcCompat="@drawable/ic_mic" />
-
-
-    <TextView
-        android:id="@+id/textInput"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:elevation="22dp"
-        android:gravity="end"
-        android:padding="8dp"
-        android:text="@string/biometric_auth_explanation"
-        android:textColor="?attr/base_text_color"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/receiverBtn"
-        app:layout_constraintEnd_toEndOf="@+id/backdrop"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@id/receiverBtn"
-        app:layout_constraintTop_toTopOf="@id/receiverBtn"
-        app:layout_constraintVertical_bias="0.5" />
+        app:srcCompat="@drawable/dots_in_circle" />
 
     <ImageButton
         android:id="@+id/receiverBtn"
@@ -184,11 +125,32 @@
         android:paddingTop="12dp"
         android:scaleType="fitCenter"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/textInput"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/backdrop"
         app:layout_constraintHorizontal_bias="0"
-        app:layout_constraintStart_toStartOf="@+id/backdrop"
-        app:layout_constraintTop_toBottomOf="@id/backdrop"
         app:layout_constraintVertical_bias="0.5"
         app:srcCompat="@drawable/ic_mic" />
+    <TextView
+        android:id="@+id/textInput"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:elevation="22dp"
+        android:gravity="end"
+        android:padding="8dp"
+        android:text="@string/biometric_auth_explanation"
+        android:textColor="?attr/base_text_color"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/backdrop"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintVertical_chainStyle="spread_inside"
+        app:layout_constraintTop_toBottomOf="@id/backdrop"
+        app:layout_constraintStart_toEndOf="@id/receiverBtn"
+        app:layout_constraintVertical_bias="0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -51,61 +51,46 @@
             android:layout_height="wrap_content"
             android:paddingHorizontal="@dimen/secondary_separation"
             android:paddingTop="240dp"
-            android:paddingBottom="80dp">
-            <include
-                android:id="@+id/permit_group_head"
-                layout="@layout/text_head_top_round"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-            <include
-                android:id="@+id/permissionBtn"
-                layout="@layout/text_button_image"
+            android:paddingBottom="@dimen/base_separation">
+            <GridLayout
+                android:id="@+id/accessGrid"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="parent"
-                android:layout_marginEnd="@dimen/minimum_separation"
-                android:layout_marginBottom="@dimen/minimum_separation"
-                app:layout_constraintEnd_toStartOf="@+id/deviceAdminBtn"
-                app:layout_constraintBottom_toTopOf="@id/writeSettingsBtn"
-                app:layout_constraintHorizontal_chainStyle="spread_inside"
-                app:layout_constraintTop_toBottomOf="@id/permit_group_head"/>
-
-            <include
-                android:id="@+id/deviceAdminBtn"
-                layout="@layout/text_button_image"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="@+id/permissionBtn"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toEndOf="@id/permissionBtn"
-                app:layout_constraintTop_toBottomOf="@id/permit_group_head" />
-
-            <include
-                android:id="@+id/writeSettingsBtn"
-                layout="@layout/text_button_image"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:useDefaultMargins="true"
+                android:layout_marginBottom="@dimen/base_separation"
                 app:layout_constraintBottom_toTopOf="@id/voice_group_head"
-                app:layout_constraintEnd_toEndOf="@+id/permissionBtn"
-                app:layout_constraintHorizontal_chainStyle="spread_inside"
-                app:layout_constraintStart_toStartOf="@+id/permissionBtn" />
+                app:layout_constraintVertical_chainStyle="spread_inside"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+                <include
+                    android:id="@+id/permissionBtn"
+                    layout="@layout/text_button_image"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1" />
 
-            <include
-                android:id="@+id/notificationAccessBtn"
-                layout="@layout/text_button_image"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="@+id/writeSettingsBtn"
-                app:layout_constraintEnd_toEndOf="@+id/deviceAdminBtn"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="@+id/deviceAdminBtn"
-                app:layout_constraintTop_toTopOf="@id/writeSettingsBtn" />
+                <include
+                    android:id="@+id/deviceAdminBtn"
+                    layout="@layout/text_button_image"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1" />
+                <include
+                    android:id="@+id/writeSettingsBtn"
+                    layout="@layout/text_button_image"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1" />
 
+                <include
+                    android:id="@+id/notificationAccessBtn"
+                    layout="@layout/text_button_image"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1" />
+            </GridLayout>
             <include
                 android:id="@+id/trainingModeBtn"
                 layout="@layout/switch_layout"
@@ -121,11 +106,10 @@
                 layout="@layout/text_head_top_round"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/base_separation"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/writeSettingsBtn" />
+                app:layout_constraintTop_toBottomOf="@id/accessGrid" />
 
             <include
                 android:id="@+id/muteUnmuteBtn"
@@ -284,6 +268,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/theme_setup" />
+
             <include
                 android:id="@+id/handDirectionBtn"
                 layout="@layout/switch_layout"
@@ -293,6 +278,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/parallelResponseBtn" />
+
             <include
                 android:id="@+id/mathematics_group_head"
                 layout="@layout/text_head_top_round"
