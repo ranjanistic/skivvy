@@ -131,6 +131,7 @@ class Setup : AppCompatActivity() {
             when (skivvy.getThemeState()) {
                 R.style.LightTheme -> R.color.dull_white
                 R.style.BlackTheme -> R.color.pitch_black
+                R.style.BlueTheme -> R.color.blue
                 else -> R.color.dead_blue
             }
         )
@@ -216,7 +217,8 @@ class Setup : AppCompatActivity() {
         val themeNames = arrayOf(
             getString(R.string.default_theme),
             getString(R.string.dark_theme),
-            getString(R.string.light_theme)
+            getString(R.string.light_theme),
+            getString(R.string.blue_theme)
         )
         for (i in 0 until appSetup.themeChoices.childCount) {
             (appSetup.themeChoices.getChildAt(i) as RadioButton).text = themeNames[i]
@@ -388,6 +390,9 @@ class Setup : AppCompatActivity() {
             R.style.LightTheme -> {
                 R.id.light_theme
             }
+            R.style.BlueTheme->{
+                R.id.blue_theme
+            }
             else -> getRadioForTheme(skivvy.defaultTheme)
         }
     }
@@ -407,6 +412,9 @@ class Setup : AppCompatActivity() {
             }
             R.id.light_theme -> {
                 R.style.LightTheme
+            }
+            R.id.blue_theme ->{
+                R.style.BlueTheme
             }
             else -> skivvy.defaultTheme
         }

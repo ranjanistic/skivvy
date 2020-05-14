@@ -6,33 +6,43 @@
         <item name="android:statusBarColor">@color/dead_blue</item>
         <item name="android:background">@drawable/splash</item>
     </style>
-    <style name="SplashLight" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="SplashLight" parent="DefaultLight">
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">@color/dull_white</item>
         <item name="android:statusBarColor">@color/dull_white</item>
         <item name="android:background">@drawable/splash_light</item>
     </style>
-    <style name="SplashBlack" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="SplashBlack" parent="DefaultDark">
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:navigationBarColor">@color/pitch_black</item>
         <item name="android:statusBarColor">@color/pitch_black</item>
         <item name="android:background">@drawable/splash_black</item>
     </style>
-    <style name="LightTheme" parent="Theme.AppCompat.Light.NoActionBar">
+
+    <style name="DefaultLight" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="fontFamily">@font/jost_light</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:statusBarColor">@color/dull_white</item>
-        <item name="android:navigationBarColor">@color/pitch_white</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+    </style>
+    <style name="DefaultDark" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="fontFamily">@font/jost_light</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+    <style name="LightTheme" parent="DefaultLight">
+        <item name="android:statusBarColor">@color/dull_white</item>
+        <item name="android:navigationBarColor">@color/pitch_white</item>
         <item name="base_text_color">@color/pitch_black</item>
         <item name="secondary_text_color">@color/charcoal</item>
-        <item name="tertiary_text_color">@color/charcoal</item>
+        <item name="tertiary_text_color">@color/dull_white</item>
         <item name="action_text_color">@color/dead_blue</item>
         <item name="base_background_color">@color/pitch_white</item>
         <item name="secondary_background_color">@color/dull_white</item>
-        <item name="tertiary_background_color">@color/pitch_white</item>
+        <item name="tertiary_background_color">@color/pitch_black</item>
         <item name="action_button_color">@color/light_green</item>
         <item name="text_button_color">@color/dead_blue</item>
         <item name="warning_button_color">@color/dark_red</item>
@@ -42,14 +52,9 @@
         <item name="fluid_button_text_color">@color/charcoal</item>
     </style>
 
-    <style name="DarkTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="fontFamily">@font/jost_light</item>
-        <item name="android:windowLightStatusBar">false</item>
+    <style name="DarkTheme" parent="DefaultDark">
         <item name="android:statusBarColor">@color/dead_blue</item>
         <item name="android:navigationBarColor">@color/charcoal</item>
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
         <item name="base_text_color">@color/pitch_white</item>
         <item name="secondary_text_color">@color/dull_white</item>
         <item name="action_text_color">@color/dark_blue</item>
@@ -65,11 +70,9 @@
         <item name="fluid_button_color">@color/spruce</item>
         <item name="fluid_button_text_color">@color/pitch_white</item>
     </style>
-
-    <style name="BlackTheme" parent="DarkTheme">
+    <style name="BlackTheme" parent="DefaultDark">
         <item name="colorPrimary">@android:color/transparent</item>
         <item name="colorPrimaryDark">@android:color/transparent</item>
-        <item name="fontFamily">@font/jost_light</item>
         <item name="base_background_color">@color/dull_white</item>
         <item name="base_text_color">@color/pitch_black</item>
         <item name="secondary_background_color">@color/pitch_black</item>
@@ -80,12 +83,24 @@
         <item name="fluid_button_text_color">@color/dull_white</item>
     </style>
 
+    <style name="BlueTheme" parent="DefaultLight">
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="base_background_color">@color/pitch_white</item>
+        <item name="base_text_color">@color/almost_black</item>
+        <item name="secondary_background_color">@color/blue</item>
+        <item name="secondary_text_color">@color/pitch_white</item>
+        <item name="tertiary_background_color">@color/dull_white</item>
+        <item name="tertiary_text_color">@color/blue</item>
+        <item name="fluid_button_color">@color/dull_white</item>
+        <item name="fluid_button_text_color">@color/almost_black</item>
+    </style>
+
     <style name="TrainingTheme" parent="DarkTheme">
         <item name="android:statusBarColor">@color/charcoal</item>
         <item name="android:navigationBarColor">@color/dead_blue</item>
         <item name="base_background_color">@color/dead_blue</item>
         <item name="secondary_background_color">@color/charcoal</item>
         <item name="tertiary_background_color">@color/spruce</item>
-
     </style>
+
 </resources>

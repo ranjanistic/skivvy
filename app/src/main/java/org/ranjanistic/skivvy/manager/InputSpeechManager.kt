@@ -68,6 +68,37 @@ class InputSpeechManager {
     fun finallySaidSomethingFromList(line:String,stringListArray:Array<Array<String>>)
             :Boolean = containsString(removeBeforeLastStringsIn(line, stringListArray,true), stringListArray)
 
+    //TODO: try suspend fun
+
+    fun removeDuplicateStrings(stringArray: Array<String?>):Array<String?>{
+        var size = stringArray.size
+        var i = 0
+        while(i < size){
+            var j = i+1
+            while(j< size){
+                if(stringArray[i] == stringArray[j]){
+                    stringArray[j] = nothing
+                }
+                ++j
+            }
+            ++i
+        }
+        for (k in stringArray){
+            if(k == nothing || k == null){
+                --size
+            }
+        }
+        var count = 0
+        val newArray = arrayOfNulls<String>(size)
+        for(k in stringArray) {
+            if(k!=nothing && k!=null){
+                newArray[count] = k
+                ++count
+            }
+        }
+        return newArray
+    }
+
     //formats given string to expression form, irrespective of it is mathematical expression or not
     fun expressionize(expression: String): String {
         var finalExpression = expression

@@ -97,12 +97,12 @@
     <string name="snap_failed">Can\'t take screenshot.</string>
     <string name="exit_msg">Bye!</string>
     <string name="okay">Okay</string>
-    <string name="null_variable_error">Sorry, I forgot your command</string>
+    <string name="null_variable_error">Sorry, I forgot your command.</string>
     <string name="error">Error</string>
     <string name="language_not_supported">The Language specified is not supported.</string>
     <string name="output_error">Error in speaking.</string>
     <string name="call_permit_denied">You didn\'t allow me to make calls.</string>
-    <string name="should_i_call">Should I call&#160;</string>
+    <string name="should_i_call">Shall I call&#160;</string>
     <string name="storage_permission_denied">You didn\'t allow me to store screenshots on device.</string>
     <string name="contact_permission_denied">You didn\'t allow me to access your contacts.</string>
     <string name="unmute_text">Un-mute speech output</string>
@@ -258,6 +258,7 @@
     <string name="default_theme">Black Hybrid Theme</string>
     <string name="dark_theme">Bluish Dark Theme</string>
     <string name="light_theme">White Light Theme</string>
+    <string name="blue_theme">Blue Light Theme</string>
     <string name="save">Save</string>
     <string name="save_apply">Save &amp; apply</string>
     <string name="normal_vol_on_text_">My volume level is&#160;</string>
@@ -293,4 +294,5 @@
     <string name="request_read_notifs_permit">Allow me to access your notifications</string>
     <string name="access_notifs_permit_allowed">Thanks for allowing me to access notifications</string>
     <string name="access_notifs_permit_denied">You didn\'t allow me to access notifications</string>
+    <string name="_phone_nums_of_">&#160;phone numbers of&#160;</string>
 </resources>

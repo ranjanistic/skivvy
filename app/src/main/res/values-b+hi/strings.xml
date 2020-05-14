@@ -212,6 +212,7 @@
     <string name="default_theme">संकर काला रूप</string>
     <string name="dark_theme">गहरा नीला रूप</string>
     <string name="light_theme">प्रकाश सफेद रूप</string>
+    <string name="blue_theme">प्रकाश नीला रूप</string>
     <string name="save">सहेजें</string>
     <string name="save_apply">सहेजें और लागू करें</string>
     <string name="normal_vol_on_text_">मेरा वॉल्यूम स्तर&#160;</string>
@@ -248,4 +249,5 @@
     <string name="request_read_notifs_permit">Allow me to access your notifications</string>
     <string name="access_notifs_permit_allowed">Thanks for allowing me to access notifications</string>
     <string name="access_notifs_permit_denied">You didn\'t allow me to access notifications</string>
+    <string name="_phone_nums_of_">phone numbers of</string>
 </resources>

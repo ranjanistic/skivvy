@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginStart="@dimen/secondary_separation"
-    android:background="@drawable/button_square_round_spruce"
+    android:background="@drawable/button_square_round"
     android:backgroundTint="?attr/fluid_button_color"
     android:buttonTint="@color/colorPrimary"
     android:checked="true"

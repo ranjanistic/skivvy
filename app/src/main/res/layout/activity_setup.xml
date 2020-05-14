@@ -140,16 +140,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
-                <SeekBar
+                <include
                     android:id="@+id/normal_volume_seek"
+                    layout="@layout/seekbar_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/secondary_separation"
-                    android:max="100"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="@dimen/minimum_separation"
-                    android:progressTint="@color/colorPrimary"
-                    android:thumbTint="@color/colorPrimary" />
+                    />
             </LinearLayout>
 
             <LinearLayout
@@ -171,16 +168,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
-                <SeekBar
+                <include
                     android:id="@+id/urgent_volume_seek"
+                    layout="@layout/seekbar_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/secondary_separation"
-                    android:max="100"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="@dimen/minimum_separation"
-                    android:progressTint="@color/colorPrimary"
-                    android:thumbTint="@color/colorPrimary" />
+                    />
             </LinearLayout>
 
             <include
@@ -234,6 +228,11 @@
 
                     <include
                         android:id="@+id/light_theme"
+                        layout="@layout/radio_button_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <include
+                        android:id="@+id/blue_theme"
                         layout="@layout/radio_button_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content" />

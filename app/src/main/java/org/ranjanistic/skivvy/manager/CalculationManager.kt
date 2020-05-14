@@ -204,6 +204,7 @@ class CalculationManager(var skivvy: Skivvy) {
     /**
      * Checks if expression doesn't have any illegal characters,
      * and returns true if operatable.
+     * @param expression The string of expression to be checked for invalid chars.
      */
     fun isExpressionOperatable(expression: String): Boolean {
         var localExp = expression
@@ -227,6 +228,12 @@ class CalculationManager(var skivvy: Skivvy) {
         return localExp == nothing
     }
 
+    /**
+     * Checks if given array of string [arrayOfExpression] has only numbers and operators in it.
+     * @note The argument must be passed after solving mathematical functions to avoid false return by this method.
+     * @param arrayOfExpression The array of Strings forming an expression to be checked.
+     * @return Boolean value if [arrayOfExpression] is a qualified array of strings of numbers and mathematical operators only.
+     */
     fun isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression: Array<String?>): Boolean {
         var fci = 0
         while (fci < arrayOfExpression.size) {
@@ -247,10 +254,10 @@ class CalculationManager(var skivvy: Skivvy) {
     /**
      * Considering having the new array of strings, the proper segmented
      * expression as
-     * @param arrayOfExpression
-     * with operators at every even position of the array (at odd indices),
+     * @param arrayOfExpression The array of strings forming valid mathematical expression of numbers
+     * and operators only, with operators at every even position of the array (at odd indices),
      * the following block of code will evaluate the expression according to the BODMAS rule.
-     * @return the final answer solved at index = 0 of the given array of expression.
+     * @return The final answer solved at index = 0 of the given array of expression.
      */
     fun expressionCalculation(arrayOfExpression: Array<String?>): String {
         var nullPosCount = 0
@@ -270,8 +277,8 @@ class CalculationManager(var skivvy: Skivvy) {
                             arrayOfExpression[opPos]!!.toCharArray()[0],
                             arrayOfExpression[opPos + 1]!!.toFloat()
                         ).toString()
-                    } catch (e: Exception) {
-                        arrayOfExpression[opPos - 1] = "point"
+                    } catch (e: NumberFormatException) {
+                        arrayOfExpression[opPos - 1] = "point"      //has multiple decimal points in single number
                     }
                     var j = opPos
                     while (j + 2 < arrayOfExpression.size) {
@@ -291,6 +298,12 @@ class CalculationManager(var skivvy: Skivvy) {
         }
         return returnValidResult(arrayOfExpression)
     }
+
+    /**
+     * Checks validity of array of strings forming expression [result] if it has mathematically undefined or exceptional results in it.
+     * @param result The array of strings forming expression which is to be checked.
+     * @return A string of proper answer with possible reason of different cases,
+     */
     fun returnValidResult(result: Array<String?>):String{
         return when {
             result.contentDeepToString().contains("point")->
@@ -299,7 +312,6 @@ class CalculationManager(var skivvy: Skivvy) {
                 skivvy.getString(R.string.undefined_result)
             else-> formatToProperValue(result[0].toString())     //final result stored at index = 0
         }
-
     }
 
     /**
