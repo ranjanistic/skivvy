@@ -121,11 +121,12 @@ class CalculationManager(var skivvy: Skivvy) {
         }
         return arrayOfExpression
     }
+    val input = InputSpeechManager()
 
     fun evaluateFunctionsInExpressionArray(arrayOfExpression: Array<String?>): Array<String?>? {
         var fin = 0
         while (fin < arrayOfExpression.size) {
-            if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {
+            if (arrayOfExpression[fin]!!.contains(skivvy.textPattern)) {        //TODO: try functions array instead of regular text
                 if (!arrayOfExpression[fin]!!.contains(skivvy.numberPattern)) {
                     if (arrayOfExpression[fin + 1]!! == "+") {
                         arrayOfExpression[fin + 1] = nothing
@@ -168,6 +169,13 @@ class CalculationManager(var skivvy: Skivvy) {
         return arrayOfExpression
     }
 
+    /**
+     * If [value] contains E: The exponential term , then this considers the value to be very small (if E-) or very large (if only E),
+     * and returns 0 and infinity respectively overriding them.
+     * @note Although this approach is ambiguous, and certainly not very good for proper evaluation, however, considering that
+     * most of the time any calculation results into a very large or small number, it is denoted by any computer with an E (case sensitive that's why),
+     * and thus, this works real good for most of the time, and it is very unlikely to have erroneous result using this method, however, not impossible.
+     * */
     fun handleExponentialTerm(value:String):String{
         return if(value.contains(skivvy.textPattern)) {
             when {
@@ -182,15 +190,23 @@ class CalculationManager(var skivvy: Skivvy) {
         } else value
     }
 
-    //To operate function with a constant in beginning (to be multiplied)
+    /**
+     * To operate function with a constant in beginning (to be multiplied).
+     * @param func The function with its surrounding numbers, the right one being the argument.
+     * The left one being the constant, intended to be multiplied by the value of the function with given argument.
+     * This method first solves the function using [functionOperate] with its argument (on right), and then passes the result
+     * to [operate] with '*' (multiplication symbol) and the number on the left of function, thus getting it multiplied.
+     * @return The solved function as String. If [func] doesn't have any argument then returns [nothing].
+     *
+     */
     fun operateFuncWithConstant(func: String):String?{
-        val tempp = func.replace(skivvy.textPattern,"|")
-        val numBefore = tempp.substringBefore("|")
-        val numAfter = tempp.substringAfterLast("|")
+        val temp = func.replace(skivvy.textPattern,"|")
+        val numBefore = temp.substringBefore("|")
+        val numAfter = temp.substringAfterLast("|")
         return if(numBefore.contains(skivvy.numberPattern) && numAfter.contains(skivvy.numberPattern)){
             this.functionOperate(
                 func.replace(skivvy.numberPattern,nothing).replace(".",nothing)
-                    + tempp.substringAfterLast("|"))?.toFloat()?.let {
+                    + temp.substringAfterLast("|"))?.toFloat()?.let {
                 this.operate(numBefore.toFloat(),'*',
                     it
                 ).toString()
@@ -198,7 +214,7 @@ class CalculationManager(var skivvy: Skivvy) {
         } else if(numAfter.contains(skivvy.numberPattern)){
             this.functionOperate(func)
         } else{
-          nothing  
+            nothing
         }
     }
     /**
@@ -380,13 +396,16 @@ class CalculationManager(var skivvy: Skivvy) {
         }
     }
 
+    /**
+     * Calculates factorial of [num] and returns it. ([num]!)
+     */
     private fun factorialOf(num: Int): Long {
-    var result = 1L
-    var i = 1
-    while (i<=num){
-        result *= i
-        ++i
-    }
+        var result = 1L
+        var i = 1
+        while (i<=num){
+            result *= i
+            ++i
+        }
         return result
     }
 
@@ -394,6 +413,11 @@ class CalculationManager(var skivvy: Skivvy) {
         return value.toFloat() - value.toFloat().toInt() != 0F
     }
 
+    /**Formats numbers to decimal or non decimals
+     * When [value] is
+     * 25.0, returns 25
+     * 25.9, returns 25.9
+     */
     fun formatToProperValue(value: String): String {
         return if (isFloat(value)) {
             value.toFloat().toString()
@@ -401,7 +425,7 @@ class CalculationManager(var skivvy: Skivvy) {
     }
     private fun Number.toRadian(angle:String): Float {
         return when(angle){
-            "rad"->this.toFloat()*1F
+            skivvy.radian->this.toFloat()*1F
             else-> this.toFloat()*PI.div(180).toFloat()
         }
     }

@@ -261,7 +261,6 @@ open class MainActivity : AppCompatActivity() {
         })
     }
 
-    //TODO: Black hybrid
     private fun hideSysUI() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode =
@@ -1965,7 +1964,7 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    //TODO: Either create contact list data class (created) and use that here, or do direct lookup faster in background.
+    //TODO: Format this function
     private fun contactOps(name: String, code: Int): ContactModel? {
         temp.setContactCode(code)
         temp.setContactReceived(name.trim())

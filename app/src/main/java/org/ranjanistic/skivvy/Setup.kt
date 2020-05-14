@@ -351,6 +351,8 @@ class Setup : AppCompatActivity() {
         )
     }
 
+    //TODO: Animation from left for child views
+    //TODO: Start listening as soon as app opens preference
     override fun onStart() {
         super.onStart()
         setPermissionGridView()

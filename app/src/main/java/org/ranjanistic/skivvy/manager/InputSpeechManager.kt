@@ -64,9 +64,9 @@ class InputSpeechManager {
         return false
     }
 
-    //TODO: Test this for other types of inputs
+    //TODO: Check for substring after contained string
     fun finallySaidSomethingFromList(line:String,stringListArray:Array<Array<String>>)
-            :Boolean = containsString(removeBeforeLastStringsIn(line, stringListArray,true), stringListArray)
+            :Boolean = containsString(removeBeforeLastStringsIn(line, stringListArray,true).trim(), stringListArray)
 
     //TODO: try suspend fun
 
