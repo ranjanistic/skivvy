@@ -18,7 +18,12 @@
         <item name="android:statusBarColor">@color/pitch_black</item>
         <item name="android:background">@drawable/splash_black</item>
     </style>
-
+    <style name="SplashBlue" parent="DefaultLight">
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/blue</item>
+        <item name="android:statusBarColor">@color/blue</item>
+        <item name="android:background">@drawable/splash_blue</item>
+    </style>
     <style name="DefaultLight" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="fontFamily">@font/jost_light</item>
         <item name="android:windowLightStatusBar">true</item>

@@ -63,7 +63,7 @@ open class MainActivity : AppCompatActivity() {
     lateinit var skivvy: Skivvy
 
     //TODO: lock screen activity, its brightness, battery level, charging status, incoming notifications on lock screen view, charging view
-    //TODO:
+    //TODO: Call logs checkup for quick dial of recent contacts
     //TODO: widget for actions (calculations first, or a calculator widget)
     private lateinit var outputText: TextView
     private lateinit var inputText: TextView
@@ -95,7 +95,6 @@ open class MainActivity : AppCompatActivity() {
     private lateinit var loading: ImageView
     private lateinit var backfall: ImageView
     private lateinit var icon: ImageView
-
     private var txt: String? = null
     private val nothing = ""
     private val space = " "
@@ -122,8 +121,12 @@ open class MainActivity : AppCompatActivity() {
         loadDefaultAnimations()
         normalView()
         setListeners()
-        setOutput(getString(im_ready))
-        inputText.text = getString(tap_the_button)
+        if(skivvy.shouldListenStartup())
+            startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
+        else{
+            setOutput(getString(im_ready))
+            inputText.text = getString(tap_the_button)
+        }
     }
 
     private fun setViewAndDefaults() {
@@ -2314,7 +2317,7 @@ open class MainActivity : AppCompatActivity() {
         loading.setImageDrawable(
             getDrawable(
                 when (skivvy.getThemeState()) {
-                    R.style.BlueTheme -> dots_in_circle_darker
+                    R.style.BlueTheme -> dots_in_circle_white
                     else -> dots_in_circle
                 }
             )

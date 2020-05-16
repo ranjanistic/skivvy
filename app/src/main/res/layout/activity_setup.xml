@@ -279,6 +279,16 @@
                 app:layout_constraintTop_toBottomOf="@id/parallelResponseBtn" />
 
             <include
+                android:id="@+id/recordOnStart"
+                layout="@layout/switch_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/handDirectionBtn" />
+
+            <include
                 android:id="@+id/mathematics_group_head"
                 layout="@layout/text_head_top_round"
                 android:layout_width="wrap_content"
@@ -287,7 +297,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/handDirectionBtn" />
+                app:layout_constraintTop_toBottomOf="@id/recordOnStart" />
 
             <include
                 android:id="@+id/angleUnitBtn"
@@ -309,7 +319,7 @@
                 app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/angleUnitBtn" />
-            <!--TODO : Left handed preference-->
+
             <include
                 android:id="@+id/biometricsBtn"
                 layout="@layout/switch_layout"

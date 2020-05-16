@@ -29,12 +29,19 @@ class Splash : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         skivvy = this.application as Skivvy
-        if (skivvy.getThemeState() == R.style.LightTheme) {
-            setTheme(R.style.SplashLight)
-        } else if(skivvy.getThemeState() == R.style.BlackTheme){
-            setTheme(R.style.SplashBlack)
-        } else {
-            setTheme(R.style.Splash)
+        when {
+            skivvy.getThemeState() == R.style.LightTheme -> {
+                setTheme(R.style.SplashLight)
+            }
+            skivvy.getThemeState() == R.style.BlackTheme -> {
+                setTheme(R.style.SplashBlack)
+            }
+            skivvy.getThemeState() == R.style.BlueTheme -> {
+                setTheme(R.style.SplashBlue)
+            }
+            else -> {
+                setTheme(R.style.Splash)
+            }
         }
         context = this
         mainIntent = Intent(context, MainActivity::class.java)

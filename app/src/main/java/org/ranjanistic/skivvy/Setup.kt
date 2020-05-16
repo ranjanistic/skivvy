@@ -53,6 +53,7 @@ class Setup : AppCompatActivity() {
         lateinit var saveTheme: TextView
         lateinit var response: Switch
         lateinit var handy: Switch
+        lateinit var onStartup: Switch
         lateinit var training: Switch
     }
 
@@ -69,6 +70,7 @@ class Setup : AppCompatActivity() {
         lateinit var promptInfo: BiometricPrompt.PromptInfo
     }
 
+    //Switch properties on one class
     private class SwitchAttribute(size: Int = 0) {
         var total = size
         var switch = arrayOfNulls<Switch>(size)
@@ -86,6 +88,7 @@ class Setup : AppCompatActivity() {
     private val feature = SystemFeatureManager()
 
     private lateinit var reveal: Animation
+    private lateinit var slideIn:Animation
     private lateinit var settingIcon: ImageView
     private lateinit var noteView: TextView
     private lateinit var permissions: TextView
@@ -154,6 +157,7 @@ class Setup : AppCompatActivity() {
         appSetup.saveTheme = findViewById(R.id.save_theme)
         appSetup.response = findViewById(R.id.parallelResponseBtn)
         appSetup.handy = findViewById(R.id.handDirectionBtn)
+        appSetup.onStartup = findViewById(R.id.recordOnStart)
         maths.angleUnit = findViewById(R.id.angleUnitBtn)
         security.biometrics = findViewById(R.id.biometricsBtn)
         security.voiceAuth = findViewById(R.id.voice_auth_switch)
@@ -226,31 +230,21 @@ class Setup : AppCompatActivity() {
         if (skivvy.isCustomTheme()) {
             appSetup.themeChoices.check(getRadioForTheme(skivvy.getThemeState()))
         }
-        val switches = arrayOf(
+        val switches:Array<Switch?> = arrayOf(
             voice.mute,
             voice.normalizeVolume,
             voice.urgentVolume,
             appSetup.theme,
             appSetup.response,
             appSetup.handy,
+            appSetup.onStartup,
             appSetup.training,
             maths.angleUnit,
             security.biometrics,
             security.voiceAuth
         )
         val switchData = SwitchAttribute(switches.size)
-        switchData.switch = arrayOf(
-            voice.mute,
-            voice.normalizeVolume,
-            voice.urgentVolume,
-            appSetup.theme,
-            appSetup.response,
-            appSetup.handy,
-            appSetup.training,
-            maths.angleUnit,
-            security.biometrics,
-            security.voiceAuth
-        )
+        switchData.switch = switches
         switchData.state = arrayOf(
             skivvy.getMuteStatus(),
             skivvy.getVolumeNormal(),
@@ -258,6 +252,7 @@ class Setup : AppCompatActivity() {
             skivvy.isCustomTheme(),
             skivvy.getParallelResponseStatus(),
             skivvy.getLeftHandy(),
+            skivvy.shouldListenStartup(),
             skivvy.getTrainingStatus(),
             skivvy.getAngleUnit() == skivvy.radian,
             skivvy.getBiometricStatus(),
@@ -272,6 +267,7 @@ class Setup : AppCompatActivity() {
             getString(R.string.set_default_theme),
             getString(R.string.set_queued_receive),
             getString(R.string.left_handy),
+            getString(R.string.listen_on_click),
             getString(R.string.deactivate_training_text),
             getString(R.string.unit_radian_text),
             getString(R.string.disable_fingerprint),
@@ -280,7 +276,7 @@ class Setup : AppCompatActivity() {
         switchData.offText = arrayOf(
             getString(R.string.mute_text), getString(R.string.normal_vol_off_text),
             getString(R.string.urgent_vol_off_text), getString(R.string.customize_theme),
-            getString(R.string.set_parallel_receive), getString(R.string.right_handy),
+            getString(R.string.set_parallel_receive), getString(R.string.right_handy),getString(R.string.listen_on_start),
             getString(R.string.activate_training_text), getString(R.string.unit_degree_text),
             getString(R.string.enable_fingerprint), getString(R.string.enable_vocal_authentication)
         )
@@ -365,14 +361,18 @@ class Setup : AppCompatActivity() {
         setPermissionGridView()
     }
 
+    private fun slideIn(view:View){
+        slideIn = AnimationUtils.loadAnimation(context, R.anim.slide_from_right)
+        view.startAnimation(slideIn)
+    }
     private fun bubbleAnimateChildrenOf(constraintLayout: ConstraintLayout) {
-        reveal = AnimationUtils.loadAnimation(context, R.anim.reveal_delay)
         for (i in 0 until constraintLayout.childCount) {
-            bubbleThis(constraintLayout.getChildAt(i) as View)
+            slideIn(constraintLayout.getChildAt(i) as View)
         }
     }
 
     private fun bubbleThis(view: View) {
+        reveal = AnimationUtils.loadAnimation(context, R.anim.reveal_delay)
         view.startAnimation(reveal)
     }
 
@@ -596,15 +596,11 @@ class Setup : AppCompatActivity() {
                 if (fromUser) voice.normalizeVolume.text = txt
                 nPercent = progress
             }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-            }
-
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 skivvy.setNormalVolume(nPercent)
                 speakOut("${nPercent}%")
             }
-
         })
         voice.urgentVolume.setOnCheckedChangeListener { view, isChecked ->
             skivvy.setVolumeUrgent(isChecked)
@@ -676,7 +672,7 @@ class Setup : AppCompatActivity() {
                 }
             }
         }
-        appSetup.themeChoices.setOnCheckedChangeListener { group, checkedId ->
+        appSetup.themeChoices.setOnCheckedChangeListener { _, checkedId ->
             themeChosen = getThemeForRadio(checkedId)
             setActivenessOf(
                 appSetup.saveTheme,
@@ -723,6 +719,21 @@ class Setup : AppCompatActivity() {
                 when (isChecked) {
                     true -> getString(R.string.you_left_handed)
                     else -> getString(R.string.you_right_handed)
+                }, showSnackbar = true
+            )
+        }
+        appSetup.onStartup.setOnCheckedChangeListener { view, isChecked ->
+            skivvy.listenOnStartup(isChecked)
+            setThumbAttrs(
+                view as Switch,
+                isChecked,
+                getString(R.string.listen_on_click),
+                getString(R.string.listen_on_start)
+            )
+            speakOut(
+                when (isChecked) {
+                    true -> getString(R.string.i_listen_at_start)
+                    else -> getString(R.string.i_listen_on_tap)
                 }, showSnackbar = true
             )
         }
@@ -809,7 +820,7 @@ class Setup : AppCompatActivity() {
             }
         }
         security.deleteVoiceSetup.setOnLongClickListener { view ->
-            view.startAnimation(AnimationUtils.loadAnimation(context, R.anim.bubble_wave))
+            bubbleThis(view)
             speakOut(getString(R.string.passphrase_to_be_deleted))
             true
         }
@@ -824,7 +835,7 @@ class Setup : AppCompatActivity() {
         }
 
         permissions.setOnLongClickListener { view ->
-            view.startAnimation(AnimationUtils.loadAnimation(context, R.anim.bubble_wave))
+            bubbleThis(view)
             speakOut(getString(R.string.grant_all_permissions), showSnackbar = true)
             true
         }
@@ -842,7 +853,7 @@ class Setup : AppCompatActivity() {
             }
         }
         deviceAdmin.setOnLongClickListener { view ->
-            view.startAnimation(AnimationUtils.loadAnimation(context, R.anim.bubble_wave))
+            bubbleThis(view)
             speakOut(getString(R.string.make_me_admin_persuation), showSnackbar = true)
             true
         }
@@ -865,7 +876,7 @@ class Setup : AppCompatActivity() {
             )
         }
         accessNotifications.setOnLongClickListener { view ->
-            view.startAnimation(AnimationUtils.loadAnimation(context, R.anim.bubble_wave))
+            bubbleThis(view)
             speakOut(getString(R.string.request_read_notifs_permit), showSnackbar = true)
             true
         }

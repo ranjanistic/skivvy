@@ -8,18 +8,9 @@ import kotlin.math.*
 class CalculationManager(var skivvy: Skivvy) {
     private val nothing = ""
     val mathFunctions = arrayOf(
-        "sin",
-        "cos",
-        "tan",
-        "cot",
-        "sec",
-        "cosec",
-        "log",
-        "ln",
-        "sqrt",
-        "cbrt",
-        "exp",
-        "fact"
+        "sin", "cos", "tan", "cot",
+        "sec", "cosec", "log", "ln",
+        "sqrt", "cbrt", "exp", "fact"
     )
     val operators = arrayOf("^", "p", "/", "*", "m", "-", "+")
     fun totalOperatorsInExpression(expression: String): Int {
@@ -32,7 +23,7 @@ class CalculationManager(var skivvy: Skivvy) {
                     ++totalOps              //counting total
                 }
                 ++opIndex
-            }//5+5*6/2+3*4+cos60
+            }
             ++expIndex
         }
         return totalOps

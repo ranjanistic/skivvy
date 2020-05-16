@@ -101,7 +101,7 @@ class Skivvy : Application() {
     val PREF_KEY_CUSTOM_THEME = "customTheme"
     val PREF_KEY_PARLLEL_TALK = "parallelResponse"
     val PREF_KEY_HANDY = "handSide"
-    
+    val PREF_KEY_START_TALK = "talkOnStart"
     val PREF_HEAD_MATHS = "mathsSetup"
     val PREF_KEY_ANGLE_UNIT = "angleUnit"
     
@@ -429,6 +429,12 @@ class Skivvy : Application() {
     fun setLeftHandy(isLefty:Boolean){
         getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE).edit()
             .putBoolean(this.PREF_KEY_HANDY, isLefty).apply()
+    }
+    fun shouldListenStartup():Boolean = getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
+        .getBoolean(this.PREF_KEY_START_TALK, false)
+    fun listenOnStartup(listen:Boolean){
+        getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE).edit()
+            .putBoolean(this.PREF_KEY_START_TALK, listen).apply()
     }
 
     //Mathematics and calculation preferences
