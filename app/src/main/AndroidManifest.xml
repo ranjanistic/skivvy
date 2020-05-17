@@ -55,8 +55,6 @@
         android:supportsRtl="true"
         android:theme="@style/DarkTheme">
         <activity android:name=".Setup" />
-        <service android:name=".CommandService"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"/>
         <activity
             android:name=".Splash"
             android:theme="@style/Splash">

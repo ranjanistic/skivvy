@@ -254,4 +254,5 @@
     <string name="listen_on_start">Set listening on startup</string>
     <string name="i_listen_at_start">I\'ll start listening at opening</string>
     <string name="i_listen_on_tap">I\'ll listen when mic is tapped</string>
+    <string name="what_next">What next?</string>
 </resources>

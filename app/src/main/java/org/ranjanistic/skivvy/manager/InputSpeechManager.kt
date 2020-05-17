@@ -63,12 +63,11 @@ class InputSpeechManager {
         }
         return false
     }
-
+    //TODO: setting icon attribute for different themes
     //TODO: Check for substring after contained string
     fun finallySaidSomethingFromList(line:String,stringListArray:Array<Array<String>>)
             :Boolean = containsString(removeBeforeLastStringsIn(line, stringListArray,true).trim(), stringListArray)
 
-    //TODO: try suspend fun
 
     fun removeDuplicateStrings(stringArray: Array<String?>):Array<String?>{
         var size = stringArray.size

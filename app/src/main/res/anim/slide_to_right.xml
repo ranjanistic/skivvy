@@ -4,12 +4,12 @@
     android:fillAfter="true"
     android:interpolator="@android:anim/accelerate_decelerate_interpolator">
     <translate
-        android:fromXDelta="100%"
+        android:fromXDelta="0"
         android:fromYDelta="0"
-        android:toXDelta="0"
+        android:toXDelta="100%"
         android:toYDelta="0" />
     <alpha
-        android:fromAlpha="0"
-        android:toAlpha="1"
+        android:fromAlpha="1"
+        android:toAlpha="0"
         />
 </set>

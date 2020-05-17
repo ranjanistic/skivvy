@@ -55,6 +55,8 @@
         <item name="action_button_color_text">@color/dull_white</item>
         <item name="fluid_button_color">@color/pitch_white</item>
         <item name="fluid_button_text_color">@color/charcoal</item>
+        <item name="mic_button">@drawable/ic_mic</item>
+        <item name="setting_icon">@drawable/ic_setting</item>
     </style>
 
     <style name="DarkTheme" parent="DefaultDark">
@@ -74,6 +76,8 @@
         <item name="action_button_color_text">@color/dull_white</item>
         <item name="fluid_button_color">@color/spruce</item>
         <item name="fluid_button_text_color">@color/pitch_white</item>
+        <item name="mic_button">@drawable/ic_mic</item>
+        <item name="setting_icon">@drawable/ic_setting</item>
     </style>
     <style name="BlackTheme" parent="DefaultDark">
         <item name="colorPrimary">@android:color/transparent</item>
@@ -86,6 +90,8 @@
         <item name="tertiary_text_color">@color/almost_black</item>
         <item name="fluid_button_color">@color/almost_black</item>
         <item name="fluid_button_text_color">@color/dull_white</item>
+        <item name="mic_button">@drawable/ic_mic</item>
+        <item name="setting_icon">@drawable/ic_setting</item>
     </style>
 
     <style name="BlueTheme" parent="DefaultLight">
@@ -98,6 +104,8 @@
         <item name="tertiary_text_color">@color/blue</item>
         <item name="fluid_button_color">@color/dull_white</item>
         <item name="fluid_button_text_color">@color/almost_black</item>
+        <item name="mic_button">@drawable/ic_mic_blue_variant</item>
+        <item name="setting_icon">@drawable/ic_setting_blue_variant</item>
     </style>
 
     <style name="TrainingTheme" parent="DarkTheme">

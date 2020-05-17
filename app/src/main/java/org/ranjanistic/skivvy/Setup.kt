@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.animation.Animation
@@ -89,6 +90,7 @@ class Setup : AppCompatActivity() {
 
     private lateinit var reveal: Animation
     private lateinit var slideIn:Animation
+    private lateinit var slideOut:Animation
     private lateinit var settingIcon: ImageView
     private lateinit var noteView: TextView
     private lateinit var permissions: TextView
@@ -102,7 +104,6 @@ class Setup : AppCompatActivity() {
     override fun onBackPressed() {
         super.onBackPressed()
         overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
-        finish()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -141,6 +142,17 @@ class Setup : AppCompatActivity() {
     }
 
     private fun setViewAndInitials() {
+        slideOut = AnimationUtils.loadAnimation(context, R.anim.slide_to_right)
+        slideOut.setAnimationListener(object : Animation.AnimationListener{
+            override fun onAnimationStart(animation: Animation?) {
+            }
+            override fun onAnimationEnd(animation: Animation?) {
+                overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
+                finish()
+            }
+            override fun onAnimationRepeat(animation: Animation?) {
+            }
+        })
         settingIcon = findViewById(R.id.settingIcon)
         noteView = findViewById(R.id.end_note)
         childLayout.scrollView = findViewById(R.id.settingScrollView)
@@ -166,7 +178,6 @@ class Setup : AppCompatActivity() {
         deviceAdmin = findViewById(R.id.deviceAdminBtn)
         writeSettings = findViewById(R.id.writeSettingsBtn)
         accessNotifications = findViewById(R.id.notificationAccessBtn)
-
         noteView.text = "${BuildConfig.VERSION_NAME}\n${getString(R.string.app_tag_line)}"
         findViewById<TextView>(R.id.voice_group_head).text = getString(R.string.voice_and_volume)
         findViewById<TextView>(R.id.appsetup_group_head).text = getString(R.string.app_and_setup)
@@ -187,8 +198,8 @@ class Setup : AppCompatActivity() {
             drawableIDs = arrayOf(
                 R.drawable.ic_key_abstract,
                 R.drawable.ic_key_locked,
-                R.drawable.ic_key_abstract,
-                R.drawable.ic_key_abstract
+                R.drawable.ic_writesettingsicon,
+                R.drawable.ic_message_notification
             )
         )
         setVisibilityOf(
@@ -352,7 +363,7 @@ class Setup : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         setPermissionGridView()
-        bubbleAnimateChildrenOf(childLayout.settingsContainer)
+        slideAnimateChildrenOf(childLayout.settingsContainer,true)
     }
 
     //TODO: drawables for other permissions in grid.
@@ -365,14 +376,21 @@ class Setup : AppCompatActivity() {
         slideIn = AnimationUtils.loadAnimation(context, R.anim.slide_from_right)
         view.startAnimation(slideIn)
     }
-    private fun bubbleAnimateChildrenOf(constraintLayout: ConstraintLayout) {
+    private fun slideOut(view:View){
+        view.startAnimation(slideOut)
+    }
+    private fun slideAnimateChildrenOf(constraintLayout: ConstraintLayout, isEntering:Boolean) {
         for (i in 0 until constraintLayout.childCount) {
-            slideIn(constraintLayout.getChildAt(i) as View)
+            if(isEntering) {
+                slideIn(constraintLayout.getChildAt(i) as View)
+            } else {
+                slideOut(constraintLayout.getChildAt(i) as View)
+            }
         }
     }
 
     private fun bubbleThis(view: View) {
-        reveal = AnimationUtils.loadAnimation(context, R.anim.reveal_delay)
+        reveal = AnimationUtils.loadAnimation(context, R.anim.bubble_wave)
         view.startAnimation(reveal)
     }
 
@@ -541,7 +559,7 @@ class Setup : AppCompatActivity() {
             }
 
         appSetup.training.setOnCheckedChangeListener { view, isChecked ->
-            skivvy.setTrainingStatus(isChecked)
+            skivvy.setAppModePref(isTraining = isChecked)
             setThumbAttrs(
                 view as Switch,
                 isChecked,
@@ -554,7 +572,7 @@ class Setup : AppCompatActivity() {
             } else speakOut(getString(R.string.deactivate_training_text))
         }
         voice.mute.setOnCheckedChangeListener { view, isChecked ->
-            skivvy.saveMuteStatus(isChecked)
+            skivvy.setVoicePreference(voiceMute = isChecked)
             speakOut(
                 when (isChecked) {
                     true -> getString(R.string.muted)
@@ -569,7 +587,7 @@ class Setup : AppCompatActivity() {
             )
         }
         voice.normalizeVolume.setOnCheckedChangeListener { view, isChecked ->
-            skivvy.setVolumeNormal(isChecked)
+            skivvy.setVoicePreference(normalizeVolume = isChecked)
             setVisibilityOf(voice.normalizeSeek, visible = isChecked)
             speakOut(
                 when (isChecked) {
@@ -598,12 +616,12 @@ class Setup : AppCompatActivity() {
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                skivvy.setNormalVolume(nPercent)
+                skivvy.setVoicePreference(normalVolumeLevel = nPercent)
                 speakOut("${nPercent}%")
             }
         })
         voice.urgentVolume.setOnCheckedChangeListener { view, isChecked ->
-            skivvy.setVolumeUrgent(isChecked)
+            skivvy.setVoicePreference(urgentVolume = isChecked)
             setVisibilityOf(voice.urgentSeek, visible = isChecked)
             setThumbAttrs(
                 view as Switch,
@@ -633,14 +651,14 @@ class Setup : AppCompatActivity() {
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                skivvy.setUrgentVolume(uPercent)
+                skivvy.setVoicePreference(urgentVolumeLevel = uPercent)
                 speakOut("${uPercent}%")
             }
 
         })
         var themeChosen = skivvy.getThemeState()
         appSetup.theme.setOnCheckedChangeListener { view, isChecked ->
-            skivvy.customTheme(isChecked)
+            skivvy.setAppModePref(isCustomTheme = isChecked)
             setThumbAttrs(
                 view as Switch,
                 isChecked,
@@ -659,7 +677,7 @@ class Setup : AppCompatActivity() {
                 }
                 else -> {
                     if (skivvy.getThemeState() != skivvy.defaultTheme) {
-                        skivvy.setThemeState(skivvy.defaultTheme)
+                        skivvy.setAppModePref(customTheme = skivvy.defaultTheme)
                         startActivity(
                             Intent(
                                 context,
@@ -682,7 +700,7 @@ class Setup : AppCompatActivity() {
         }
         appSetup.saveTheme.setOnClickListener {
             if (themeChosen != skivvy.getThemeState()) {
-                skivvy.setThemeState(themeChosen)
+                skivvy.setAppModePref(customTheme = themeChosen)
                 startActivity(
                     Intent(
                         context,
@@ -693,7 +711,7 @@ class Setup : AppCompatActivity() {
             }
         }
         appSetup.response.setOnCheckedChangeListener { view, isChecked ->
-            skivvy.setParallelResponseStatus(isChecked)
+            skivvy.setAppModePref(parallelListen = isChecked)
             setThumbAttrs(
                 view as Switch,
                 isChecked,
@@ -708,7 +726,7 @@ class Setup : AppCompatActivity() {
             )
         }
         appSetup.handy.setOnCheckedChangeListener { view, isChecked ->
-            skivvy.setLeftHandy(isChecked)
+            skivvy.setAppModePref(leftHandy = isChecked)
             setThumbAttrs(
                 view as Switch,
                 isChecked,
@@ -723,7 +741,7 @@ class Setup : AppCompatActivity() {
             )
         }
         appSetup.onStartup.setOnCheckedChangeListener { view, isChecked ->
-            skivvy.listenOnStartup(isChecked)
+            skivvy.setAppModePref(onStartListen = isChecked)
             setThumbAttrs(
                 view as Switch,
                 isChecked,
@@ -738,12 +756,10 @@ class Setup : AppCompatActivity() {
             )
         }
         maths.angleUnit.setOnCheckedChangeListener { view, isChecked ->
-            skivvy.setAngleUnit(
-                when (isChecked) {
-                    true -> skivvy.radian
-                    else -> skivvy.degree
-                }
-            )
+            skivvy.setMathsPref( angleUnit = when (isChecked) {
+                true -> skivvy.radian
+                else -> skivvy.degree
+            })
             setThumbAttrs(
                 view as Switch,
                 isChecked,
@@ -759,7 +775,7 @@ class Setup : AppCompatActivity() {
         }
         security.biometrics.setOnCheckedChangeListener { view, isChecked ->
             if (isChecked) {
-                skivvy.setBiometricsStatus(true)
+                skivvy.setSecurityPref(biometricOn = true)
                 setThumbAttrs(
                     view as Switch,
                     true,
@@ -782,7 +798,7 @@ class Setup : AppCompatActivity() {
                         skivvy.CODE_VOICE_AUTH_INIT
                     )
                 } else {
-                    skivvy.setPhraseKeyStatus(true)
+                    skivvy.setSecurityPref(vocalAuthOn = true)
                     setThumbAttrs(
                         security.voiceAuth,
                         true,
@@ -812,7 +828,7 @@ class Setup : AppCompatActivity() {
                     .setTextColor(ContextCompat.getColor(context, R.color.dull_white))
                     .setBackgroundTint(ContextCompat.getColor(context, R.color.dark_red))
                     .setAction(getString(R.string.reset)) {
-                        skivvy.setVoiceKeyPhrase(null)
+                        skivvy.setSecurityPref(vocalAuthPhrase = null)
                         defaultVoiceAuthUIState()
                     }
                     .setActionTextColor(ContextCompat.getColor(context, R.color.colorPrimary))
@@ -865,7 +881,7 @@ class Setup : AppCompatActivity() {
             )
         }
         writeSettings.setOnLongClickListener { view ->
-            view.startAnimation(AnimationUtils.loadAnimation(context, R.anim.bubble_wave))
+            bubbleThis(view)
             speakOut(getString(R.string.request_settings_write_permit), showSnackbar = true)
             true
         }
@@ -932,7 +948,7 @@ class Setup : AppCompatActivity() {
             } else {
                 if (resultCode == skivvy.CODE_VOICE_AUTH_INIT || resultCode == skivvy.CODE_VOICE_AUTH_CONFIRM) {
                     speakOut(getString(R.string.no_input))
-                    skivvy.setVoiceKeyPhrase(null)
+                    skivvy.setSecurityPref(vocalAuthPhrase = null)
                     defaultVoiceAuthUIState()
                     return
                 }
@@ -945,11 +961,11 @@ class Setup : AppCompatActivity() {
                     if (text.length < 5) {
                         speakOut(getString(R.string.phrase_too_short), skivvy.CODE_VOICE_AUTH_INIT)
                     } else {
-                        skivvy.setVoiceKeyPhrase(text)
+                        skivvy.setSecurityPref(vocalAuthPhrase = text)
                         speakOut(getString(R.string.confirm_phrase), skivvy.CODE_VOICE_AUTH_CONFIRM)
                     }
                 } else {
-                    skivvy.setVoiceKeyPhrase(null)
+                    skivvy.setSecurityPref(vocalAuthPhrase = null)
                     defaultVoiceAuthUIState()
                     speakOut(getString(R.string.no_input))
                     return
@@ -957,16 +973,16 @@ class Setup : AppCompatActivity() {
             }
             skivvy.CODE_VOICE_AUTH_CONFIRM -> {
                 if (text == skivvy.getVoiceKeyPhrase()) {
-                    skivvy.setVoiceKeyPhrase(text)
+                    skivvy.setSecurityPref(vocalAuthPhrase = text)
                     security.voiceAuth.isChecked = true
-                    skivvy.setPhraseKeyStatus(true)
+                    skivvy.setSecurityPref(vocalAuthOn  = true)
                     setVisibilityOf(security.deleteVoiceSetup, visible = true)
                     speakOut("'${skivvy.getVoiceKeyPhrase()}'" + getString(R.string._is_the_phrase))
                     if (!skivvy.getBiometricStatus() && skivvy.checkBioMetrics()) {
                         showBiometricRecommendation()
                     }
                 } else {
-                    skivvy.setVoiceKeyPhrase(null)
+                    skivvy.setSecurityPref(vocalAuthPhrase = null)
                     defaultVoiceAuthUIState()
                     speakOut(getString(R.string.confirmation_phrase_didnt_match))
                     Snackbar.make(
@@ -1030,7 +1046,7 @@ class Setup : AppCompatActivity() {
         .setTextColor(ContextCompat.getColor(context, R.color.pitch_white))
         .setBackgroundTint(ContextCompat.getColor(context, R.color.charcoal))
         .setAction(getString(R.string.enable)) {
-            skivvy.setBiometricsStatus(true)
+            skivvy.setSecurityPref(biometricOn = true)
             setThumbAttrs(
                 security.biometrics,
                 true,
@@ -1058,11 +1074,11 @@ class Setup : AppCompatActivity() {
                         skivvy.CODE_VOICE_AUTH_CONFIRM -> {
                             speakOut(getString(R.string.secret_phrase_deleted))
                             defaultVoiceAuthUIState()
-                            skivvy.setVoiceKeyPhrase(null)
+                            skivvy.setSecurityPref(vocalAuthPhrase = null)
                         }
                         skivvy.CODE_BIOMETRIC_CONFIRM -> {
                             speakOut(getString(R.string.fingerprint_off))
-                            skivvy.setBiometricsStatus(false)
+                            skivvy.setSecurityPref(biometricOn = false)
                             setThumbAttrs(
                                 security.biometrics,
                                 false,
@@ -1076,7 +1092,7 @@ class Setup : AppCompatActivity() {
                     super.onAuthenticationError(errorCode, errString)
                     when (code) {
                         skivvy.CODE_BIOMETRIC_CONFIRM -> {
-                            skivvy.setBiometricsStatus(true)
+                            skivvy.setSecurityPref(biometricOn = true)
                             setThumbAttrs(
                                 security.biometrics,
                                 true,
@@ -1090,7 +1106,7 @@ class Setup : AppCompatActivity() {
                     super.onAuthenticationFailed()
                     when (code) {
                         skivvy.CODE_BIOMETRIC_CONFIRM -> {
-                            skivvy.setBiometricsStatus(true)
+                            skivvy.setSecurityPref(biometricOn = true)
                             setThumbAttrs(
                                 security.biometrics,
                                 true,
@@ -1110,7 +1126,7 @@ class Setup : AppCompatActivity() {
     }
 
     private fun defaultVoiceAuthUIState() {
-        skivvy.setPhraseKeyStatus(false)
+        skivvy.setSecurityPref(vocalAuthOn  = false)
         setThumbAttrs(
             security.voiceAuth,
             false,

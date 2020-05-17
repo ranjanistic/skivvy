@@ -15,5 +15,7 @@
         <attr name="action_button_color_text" format="color"/>
         <attr name="fluid_button_color" format="color"/>
         <attr name="fluid_button_text_color" format="color"/>
+        <attr name="mic_button" format="reference"/>
+        <attr name="setting_icon" format="reference"/>
     </declare-styleable>
 </resources>

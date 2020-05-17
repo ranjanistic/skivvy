@@ -135,23 +135,8 @@ class Skivvy : Application() {
     @ExperimentalStdlibApi
     override fun onCreate() {
         super.onCreate()
-
-        deviceManager =
-            applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-        Log.d("localelocale", this.locale.toString())
+        deviceManager = applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         compName = ComponentName(this, Administrator::class.java)
-        if (this.hasPermissions(applicationContext)) {
-            this.pathToFile = Environment.getExternalStorageDirectory().toString() + "/.Skivvy"
-            try {
-                val file = File(this.pathToFile, getString(R.string.contact_file_name))
-                if (!file.exists()) {
-                    file.mkdir()
-                    contactDataManager.saveContactsToJson()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalPackages()
         }
@@ -161,11 +146,6 @@ class Skivvy : Application() {
             } else
                 Toast.makeText(this, getString(R.string.output_error), Toast.LENGTH_SHORT).show()
         })
-        /*
-        GlobalScope.launch {    //Long running task, getting all contacts
-            getLocalContacts()
-        }
-         */
         //TODO: createNotificationChannel()
     }
 
@@ -193,277 +173,90 @@ class Skivvy : Application() {
         this.packageDataManager.setPackagesDetail(packageData)
     }
 
-    private fun saveContacts() {
-        val file = File(this.pathToFile, "people_data.json")
-        var json: String? = null
-        json = try {
-            val iStream = assets.open("users_list.json")
-            val size = iStream.available()
-            val buffer = ByteArray(size)
-            iStream.read(buffer)
-            iStream.close()
-            String(buffer, Charset.forName("UTF-8"))
-        } catch (ex: IOException) {
-            ex.printStackTrace()
-        }.toString()
-        val obj: JSONObject = JSONObject(json)
-        val contacts: JSONArray = obj.getJSONArray("contacts")
-        var i = 0
-        while (i < contacts.length()) {
-            val user: JSONObject = contacts.getJSONObject(i)
-            contactDataManager.names.add(user.getString("name"))
-            ++i
-        }
-    }
-
-    private fun getLocalContacts() {
-        var contactCount = 0
-        lateinit var contactData: ContactDataManager.ContactData
-        val cr: ContentResolver = contentResolver
-        val cur: Cursor? = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
-        if (cur!!.count > 0) {
-            this.contactDataManager.setTotalContacts(cur.count)
-            contactData = ContactDataManager.ContactData(this.contactDataManager.getTotalContacts())
-            /*
-            this.contactDataManager.setContactDataInitials(
-                arrayOfNulls(this.contactDataManager.getTotalContacts()),
-                arrayOfNulls(this.contactDataManager.getTotalContacts()),
-                arrayOfNulls(this.contactDataManager.getTotalContacts()),
-                arrayOfNulls(this.contactDataManager.getTotalContacts()),
-                arrayOfNulls(this.contactDataManager.getTotalContacts()),
-                arrayOfNulls(this.contactDataManager.getTotalContacts())
-            )
-             */
-            while (cur.moveToNext()) {
-                contactData.iDs[contactCount] =
-                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID))
-                contactData.photoIDs[contactCount] =
-                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
-                contactData.names[contactCount] =
-                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-                /*
-                this.contactDataManager.setContactSoloData(contactCount,
-                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID)),
-                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI)),
-                    cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-                )
-
-                 */
-
-                //for nicknames
-                var deepCur: Cursor? = cr.query(
-                    ContactsContract.Data.CONTENT_URI,
-                    null,
-                    ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
-                    arrayOf(
-                        contactData.iDs[contactCount],
-                        ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE
-                    ),
-                    null
-                )
-                if (deepCur!!.count > 0) {
-//                    this.contactDataManager.setContactNicknameInitials(contactCount, arrayOfNulls(deepCur.count))
-                    contactData.nickNames[contactCount] = arrayOfNulls(deepCur.count)
-                    var nickCount = 0
-                    while (deepCur.moveToNext()) {
-                        val nicknameName =
-                            deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Nickname.NAME))
-                                ?.toLowerCase(this.locale)
-                        contactData.nickNames[contactCount]?.set(nickCount, nicknameName)
-//                        this.contactDataManager.setContactNicknameData(contactCount,nickCount,nicknameName)
-                        ++nickCount
-                    }
-                }
-
-                //for phone numbers
-                deepCur = cr.query(
-                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    null,
-                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                    arrayOf(contactDataManager.getContactIDs()[contactCount]),
-                    null
-                )
-                var size = 0
-                while (deepCur!!.moveToNext()) {
-                    ++size
-                }
-                contactData.phones[contactCount] = arrayOfNulls(size)
-                val localPhone = arrayOfNulls<String>(size)
-                var pCount = 0
-                deepCur.moveToFirst()
-                while (pCount < size) {
-                    localPhone[pCount] =
-                        deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                    //TODO: Check this too if using this method
-                    var tempPhone = ""
-                    if (localPhone[pCount] != null) {
-                        localPhone[pCount] = localPhone[pCount]!!.replace("+", "")
-                        if (!(localPhone[pCount]!!.toCharArray()[0] == '0' && localPhone[pCount]!!.toCharArray()[1] == '1'
-                                    && localPhone[pCount]!!.toCharArray()[2] == '2' && localPhone[pCount]!!.toCharArray()[3] == '0')
-                        ) {
-                            localPhone[pCount]!!.replace(" ", "")
-                            if (localPhone[pCount]!!.toCharArray()[0] == '0') {
-                                var k = 1
-                                while (k < localPhone[pCount]!!.length) {
-                                    localPhone[pCount]!!.toCharArray()[k - 1] =
-                                        localPhone[pCount]!!.toCharArray()[k]
-                                    ++k
-                                }
-                            }
-                            if (localPhone[pCount].toString().length == 10) {
-                                var x = 0
-                                while (x < 5) {
-                                    if (tempPhone == "") {
-                                        tempPhone = localPhone[pCount]!!.toCharArray()[x].toString()
-                                    } else {
-                                        tempPhone += localPhone[pCount]!!.toCharArray()[x].toString()
-                                    }
-                                    ++x
-                                }
-                                tempPhone += " "
-                                while (x < 10) {
-                                    tempPhone += localPhone[pCount]!!.toCharArray()[x].toString()
-                                    ++x
-                                }
-                            }
-                        }
-                        contactData.phones[contactCount]?.set(pCount, tempPhone)
-//                            this.contactDataManager.setContactPhoneData(contactCount, pCount, tempPhone)
-                    }
-                    deepCur.moveToNext()
-                    if (tempPhone != " ") {
-                        ++pCount
-                    }
-                }
-
-                //for email IDs
-                deepCur = cr.query(
-                    ContactsContract.CommonDataKinds.Email.CONTENT_URI,
-                    null,
-                    ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
-                    arrayOf(contactDataManager.getContactIDs()[contactCount]),
-                    null
-                )
-                if (deepCur!!.count > 0) {
-                    this.contactDataManager.setContactEmailsInitials(
-                        contactCount,
-                        arrayOfNulls(deepCur.count)
-                    )
-                    var eCount = 0
-                    while (deepCur.moveToNext()) {
-                        contactData.emails[contactCount]?.set(
-                            eCount,
-                            deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA))
-                        )
-//                        this.contactDataManager.setContactEmailData(contactCount,eCount, deepCur.getString(deepCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA)))
-                        ++eCount
-                    }
-                }
-                deepCur.close()
-                ++contactCount
-            }
-        }
-        cur.close()
-        this.contactDataManager.setContactDetails(contactData)
-    }
-
     //Voice and volume preferences
+    fun setVoicePreference(
+        voiceMute:Boolean? = null,
+        normalizeVolume:Boolean? = null,
+        normalVolumeLevel:Int? = null,
+        urgentVolume:Boolean? = null,
+        urgentVolumeLevel:Int? = null
+    ){
+        val editor = getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE).edit()
+        voiceMute?.let{ editor.putBoolean(this.PREF_KEY_MUTE_UNMUTE, it).apply() }
+        normalizeVolume?.let{ editor.putBoolean(this.PREF_KEY_VOLUME_NORMAL, it).apply() }
+        normalVolumeLevel?.let { editor.putInt(this.PREF_KEY_NORMAL_VOLUME, it).apply() }
+        urgentVolume?.let{ editor.putBoolean(this.PREF_KEY_VOLUME_URGENT, it).apply() }
+        urgentVolumeLevel?.let { editor.putInt(this.PREF_KEY_URGENT_VOLUME, it).apply() }
+    }
+
     fun getMuteStatus(): Boolean = getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_MUTE_UNMUTE, false)
-    fun saveMuteStatus(isMuted: Boolean) {
-        getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_MUTE_UNMUTE, isMuted).apply()
-    }
     fun getVolumeNormal():Boolean = getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE)
         .getBoolean(this.PREF_KEY_VOLUME_NORMAL, false)
-    fun setVolumeNormal(isNormalized:Boolean){
-        getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_VOLUME_NORMAL, isNormalized).apply()
-    }
     fun getNormalVolume():Int = getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE)
         .getInt(this.PREF_KEY_NORMAL_VOLUME, 0)
-    fun setNormalVolume(level:Int){
-        getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE).edit()
-            .putInt(this.PREF_KEY_NORMAL_VOLUME, level).apply()
-    }
     fun getVolumeUrgent(): Boolean = getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_VOLUME_URGENT, false)
-    fun setVolumeUrgent(isUrgent: Boolean) {
-        getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_VOLUME_URGENT, isUrgent).apply()
-    }
     fun getUrgentVolume():Int = getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE)
             .getInt(this.PREF_KEY_URGENT_VOLUME, 0)
-    fun setUrgentVolume(level:Int){
-        getSharedPreferences(this.PREF_HEAD_VOICE, AppCompatActivity.MODE_PRIVATE).edit()
-            .putInt(this.PREF_KEY_URGENT_VOLUME, level).apply()
-    }
 
     //App setup and UI preferences
+    fun setAppModePref(
+        isTraining: Boolean? = null,
+        isCustomTheme:Boolean? = null,
+        customTheme:Int? = null,
+        parallelListen:Boolean? = null,
+        leftHandy:Boolean? = null,
+        onStartListen:Boolean? = null
+    ){
+        val editor = getSharedPreferences(this.PREF_HEAD_APP_SETUP, MODE_PRIVATE).edit()
+        isTraining?.let{ editor.putBoolean(this.PREF_KEY_TRAINING, it).apply() }
+        isCustomTheme?.let{ editor.putBoolean(this.PREF_KEY_CUSTOM_THEME, it).apply() }
+        customTheme?.let { editor.putInt(this.PREF_KEY_THEME, it).apply() }
+        parallelListen?.let{ editor.putBoolean(this.PREF_KEY_PARLLEL_TALK, it).apply() }
+        leftHandy?.let { editor.putBoolean(this.PREF_KEY_HANDY, it).apply() }
+        onStartListen?.let { editor.putBoolean(this.PREF_KEY_START_TALK, it).apply() }
+    }
+
     fun getTrainingStatus(): Boolean = getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
         .getBoolean(this.PREF_KEY_TRAINING, false)
-    fun setTrainingStatus(isTraining: Boolean) {
-        getSharedPreferences(this.PREF_HEAD_APP_SETUP, MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_TRAINING, isTraining).apply()
-    }
     fun isCustomTheme():Boolean = getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
         .getBoolean(this.PREF_KEY_CUSTOM_THEME, false)
-    fun customTheme(chosen:Boolean){
-        getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_CUSTOM_THEME, chosen).apply()
-    }
     fun getThemeState(): Int = getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
         .getInt(this.PREF_KEY_THEME, this.defaultTheme)
-    fun setThemeState(themeCode: Int) {
-        getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE).edit()
-            .putInt(this.PREF_KEY_THEME, themeCode).apply()
-    }
     fun getParallelResponseStatus(): Boolean = getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
         .getBoolean(this.PREF_KEY_PARLLEL_TALK, false)
-    fun setParallelResponseStatus(isParallel: Boolean) {
-        getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_PARLLEL_TALK, isParallel).apply()
-    }
     fun getLeftHandy():Boolean = getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
         .getBoolean(this.PREF_KEY_HANDY, false)
-    fun setLeftHandy(isLefty:Boolean){
-        getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_HANDY, isLefty).apply()
-    }
     fun shouldListenStartup():Boolean = getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
         .getBoolean(this.PREF_KEY_START_TALK, false)
-    fun listenOnStartup(listen:Boolean){
-        getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_START_TALK, listen).apply()
-    }
 
     //Mathematics and calculation preferences
+    fun setMathsPref(angleUnit:String? = null){
+        val editor = getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE).edit()
+        angleUnit?.let{ editor.putString(this.PREF_KEY_ANGLE_UNIT, it).apply() }
+    }
     fun getAngleUnit(): String = getSharedPreferences(this.PREF_HEAD_MATHS, AppCompatActivity.MODE_PRIVATE)
         .getString(this.PREF_KEY_ANGLE_UNIT, this.degree)!!
-    fun setAngleUnit(unit: String) {
-        getSharedPreferences(this.PREF_HEAD_MATHS, AppCompatActivity.MODE_PRIVATE).edit()
-            .putString(this.PREF_KEY_ANGLE_UNIT, unit).apply()
-    }
 
     //Security preferences
+    fun setSecurityPref(
+        biometricOn:Boolean? = null,
+        vocalAuthOn:Boolean? = null,
+        vocalAuthPhrase:String? = null
+    ){
+        val editor = getSharedPreferences(this.PREF_HEAD_SECURITY, MODE_PRIVATE).edit()
+        biometricOn?.let { editor.putBoolean(this.PREF_KEY_BIOMETRIC, it).apply() }
+        vocalAuthOn?.let { editor.putBoolean(this.PREF_KEY_VOCAL_AUTH, it).apply() }
+        vocalAuthPhrase?.let { editor.putString(this.PREF_KEY_VOCAL_PHRASE, it).apply() }
+    }
+
     fun getBiometricStatus(): Boolean = getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
         .getBoolean(this.PREF_KEY_BIOMETRIC, false)
-    fun setBiometricsStatus(isEnabled: Boolean) {
-        getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_BIOMETRIC, isEnabled).apply()
-    }
     fun getPhraseKeyStatus(): Boolean = getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
         .getBoolean(this.PREF_KEY_VOCAL_AUTH, false)
-    fun setPhraseKeyStatus(voiceAuthStatus: Boolean) {
-        getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
-            .putBoolean(this.PREF_KEY_VOCAL_AUTH, voiceAuthStatus).apply()
-    }
     fun getVoiceKeyPhrase(): String? = getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
         .getString(this.PREF_KEY_VOCAL_PHRASE, null)
-    fun setVoiceKeyPhrase(phrase: String?) {
-        getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE).edit()
-            .putString(this.PREF_KEY_VOCAL_PHRASE, phrase).apply()
-    }
 
     fun checkBioMetrics(): Boolean = when (BiometricManager.from(this).canAuthenticate()) {
         BiometricManager.BIOMETRIC_SUCCESS -> true
