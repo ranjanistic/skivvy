@@ -7,6 +7,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -109,8 +110,8 @@ open class MainActivity : AppCompatActivity() {
     private var feature: SystemFeatureManager = SystemFeatureManager()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        skivvy = this.application as Skivvy
         context = this
+        skivvy = this.application as Skivvy
         setTheme(skivvy.getThemeState())
         setContentView(R.layout.activity_homescreen)
         window.statusBarColor = ContextCompat.getColor(context, android.R.color.transparent)

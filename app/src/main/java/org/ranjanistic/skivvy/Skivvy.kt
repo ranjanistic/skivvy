@@ -124,8 +124,6 @@ class Skivvy : Application() {
     var tts: TextToSpeech? = null
     var packageDataManager: PackageDataManager =
         PackageDataManager(this)
-    var contactDataManager: ContactDataManager =
-        ContactDataManager(this)
     lateinit var deviceManager: DevicePolicyManager
     lateinit var compName: ComponentName
     private val hindiLocale = "hi_IN"

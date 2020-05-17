@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">स्किवी</string>
+    <string name="hello">नमस्ते!</string>
+    <string name="mic_open_caption">हुक्म</string>
+    <string name="theme">थीम</string>
+    <string name="recognize_error">मुझे समझ नहीं आया.&#160;</string>
+    <string name="no_input">आपने कुछ भी नहीं कहा.</string>
+
+    <string-array name="acceptances">
+        <item>हाँ</item>
+        <item>हां</item>
+        <item>बिल्कुल</item>
+        <item>ज़रूर</item>
+        <item>ठीक है</item>
+    </string-array>
+
+    <string-array name="denials">
+        <item>नही</item>
+        <item>नहीं</item>
+        <item>ना</item>
+        <item>बिल्कुल नहीं</item>
+        <item>बिल्कुल नही</item>
+        <item>रुको</item>
+    </string-array>
+
+    <string-array name="setup_list">
+        <item>सेट अप</item>
+        <item>व्यवस्था</item>
+    </string-array>
+
+    <string-array name="bt_list">
+        <item>ब्लूटूथ</item>
+        <item> ब्लूटूथ खोलो</item>
+        <item>ब्लूटूथ चालू करो</item>
+    </string-array>
+
+    <string-array name="wifi_list">
+        <item>वाई - फाई</item>
+        <item>वाईफाई</item>
+        <item>वाईफाई चालू करो</item>
+        <item>वाईफाई खोलो</item>
+        <item>वाई फाई</item>
+        <item>वाई फाई खोलो</item>
+    </string-array>
+    <string-array name="gps_list">
+        <item>जीपीएस</item>
+        <item>ग्लोबल पोजिशनिंग सिस्टम</item>
+        <item>जीपीएस खोलो</item>
+        <item>स्थान</item>
+    </string-array>
+    <string-array name="lock_list">
+        <item>लॉक</item>
+        <item>लॉक करो</item>
+        <item>स्क्रीन लॉक</item>
+        <item>लॉक स्क्रीन</item>
+        <item>सो जाओ</item>
+    </string-array>
+    <string-array name="snap_list">
+        <item>स्नैपशॉट</item>
+        <item>स्क्रीनशॉट</item>
+        <item>स्क्रीनशॉट लो</item>
+    </string-array>
+
+
+    <string name="device_admin_request">मुझे स्क्रीन लॉक करने के लिए डिवाइस एडमिन बनना होगा</string>
+    <string name="device_admin_persuation">अपने आदेश पर स्क्रीन लॉक करने के लिए स्किवी को एक डिवाइस एडमिन के रूप में सक्रिय करें। चिंता न करें, स्किवी सुरक्षित है और कभी भी आपके डिवाइस को किसी भी तरह से नुकसान नहीं पहुंचाएगी।</string>
+    <string name="do_u_want_open">क्या आप चाहते हैं कि मैं खोलूं&#160;</string>
+    <string name="opening">खोल रही हूं&#160;</string>
+    <string name="gps_enabled">सभी उपग्रह अब आप पर हैं</string>
+    <string name="gps_is_off">जीपीएस सक्षम नहीं है</string>
+    <string name="bt_off">ब्लूटूथ बंद है</string>
+    <string name="bt_on">ब्लूटूथ चालू है</string>
+    <string name="wifi_off">वाई-फाई बंद कर दिया</string>
+    <string name="wifi_on">वाईफ़ाई उपलब्ध हॉट स्पॉट ढ़ूँढ रहा है</string>
+    <string name="screen_locked">बंद</string>
+    <string name="internal_error">आंतरिक गलती</string>
+    <string name="snap_success">स्क्रीन शॉट लिया</string>
+    <string name="snap_failed">मैं स्क्रीनशॉट नहीं ले पाई.</string>
+    <string name="exit_msg">अलविदा</string>
+    <string name="okay">ठीक है</string>
+    <string name="null_variable_error">क्षमा करें, मैं आपकी आज्ञा को भूल गयी.</string>
+    <string name="error">त्रुटि</string>
+    <string name="language_not_supported">निर्दिष्ट भाषा समर्थित नहीं है</string>
+    <string name="output_error">बोलने में त्रुटि</string>
+    <string name="call_permit_denied">आपने मुझे कॉल करने की अनुमति नहीं दी</string>
+    <string name="should_i_call">क्या मैं कॉल करूं &#160;</string>
+    <string name="should_i_email">क्या मैं ईमेल भे़जुं&#160;</string>
+    <string name="storage_permission_denied">आपने मुझे डिवाइस पर स्क्रीनशॉट रखने की अनुमति नहीं दी.</string>
+    <string name="contact_permission_denied">आपने मुझे अपने संपर्कों तक पहुँचने की अनुमति नहीं दी.</string>
+    <string name="unmute_text">मेरा बोलना बंद</string>
+    <string name="mute_text">मैं बोल सकती हूँ</string>
+    <string name="activate_training_text">प्रशिक्षण मोड को सक्रिय करें</string>
+    <string name="deactivate_training_text">प्रशिक्षण मोड निष्क्रिय करें</string>
+    <string name="disable_fingerprint">बायोमेट्रिक अक्षम करें</string>
+    <string name="enable_fingerprint">बायोमेट्रिक्स सक्षम करें</string>
+    <string name="auth_demand_title">स्किव्वी प्रवेश अनुरोध</string>
+    <string name="auth_demand_subtitle">मुझे आपका फिंगरप्रिंट चाहिए</string>
+    <string name="other_auth_ops">खाता पासवर्ड का उपयोग करें</string>
+    <string name="require_physical_permission">मुझे आपकी अनुमति चाहिए</string>
+    <string name="i_am">मैं हूँ&#160;</string>
+    <string name="coming_soon">जल्द आ रहा है</string>
+    <string name="calling">मैं कॉल कर रही हूँ&#160;</string>
+    <string name="app_tag_line">प्रियांशु रंजन का एक प्रयोग.</string>
+    <string name="call">कॉल</string>
+    <string name="device_admin_failure">आपने मुझे डिवाइस व्यवस्थापक के रूप में सक्रिय नहीं किया</string>
+    <string name="contact_not_found">ऐसा कोई संपर्क नहीं मिला</string>
+    <string name="no_contacts_available">आपके कोई संपर्क नहीं है</string>
+    <string name="invalid_call_request">अमान्य कॉल अनुरोध</string>
+    <string name="invalid_email_request">अमान्य ईमेल पता</string>
+    <string name="you_dont_seem_having">शायद आपके पास नहीं है&#160;</string>
+    <string name="someone_email_address">&#160;का ईमेल पता</string>
+    <string name="someones_phone_number">&#160;का फोन नंबर</string>
+    <string name="what_is_subject">विषय क्या है?</string>
+    <string name="subject_added">विषय जोड़ा गया.</string>
+    <string name="what_is_body">मुख्य भाग क्या है?</string>
+    <string name="body_added">मुख्य भाग जोड़ा गया.</string>
+    <string name="preparing_email">भेजने के लिए ईमेल तैयार कर रही हूँ.</string>
+    <string name="biometric_auth_explanation">आगे बढ़ने के लिए खुद को प्रमाणित करें.
+    यह आवश्यक है जब आप स्किवी के कार्यों, या आपके वास्तविक जीवन को प्रभावित करने वाली एक संवेदनशील कार्रवाई करने वाले हों</string>
+    <string name="invalid_expression">अमान्य अभिव्यक्ति</string>
+    <string name="what_is_message">क्या संदेश है?</string>
+    <string name="should_i_text">क्या मैं संदेश भेजूं&#160;</string>
+    <string name="via_sms">&#160;एसएमएस द्वारा?</string>
+    <string name="sending_sms_at">एसएमएस भेज रही हूँ&#160;</string>
+    <string name="voice_output_on">बोलने में सक्षम</string>
+    <string name="biometric_already_on">फिंगरप्रिंट पहले से ही सक्षम है</string>
+    <string name="biometric_on">फिंगरप्रिंट प्रमाणीकरण सक्षम</string>
+    <string name="biometric_already_off">फिंगरप्रिंट पहले से ही अक्षम है.</string>
+    <string name="physical_auth_request">मुझे आपकी दैहिक अनुमति चाहिए.</string>
+    <string name="have_all_permits">मेरे पास सभी अनुमतियां हैं जिनकी मुझे आपसे आवश्यकता है.</string>
+    <string name="biometric_is_off">फिंगरप्रिंट प्रमाणीकरण अक्षम किया गया.</string>
+    <string name="biometric_enable_error">मैं फिंगरप्रिंट सक्षम नहीं कर सका.</string>
+    <string name="biometric_off_error">मैं फिंगरप्रिंट को अक्षम नहीं कर सकी.</string>
+    <string name="verification_unsuccessfull">मैं आपको सत्यापित नहीं कर सकी.</string>
+    <string name="say_something">आपके दिल में क्या है?</string>
+    <string name="tap_the_button">बटन स्पर्श करें</string>
+    <string name="im_ready">मैं तैयार हूँ</string>
+    <string name="sms_permit_denied">आपने मुझे एसएमएस भेजने की अनुमति नहीं दी.</string>
+    <string name="set_new_secret_phrase">नया गुप्त वाक्यांश सेट करें</string>
+    <string name="reset_secret_phrase">अपना गुप्त वाक्यांश रीसेट करें</string>
+    <string name="tell_new_secret_phrase">मुझे अपने गुप्त वाक्यांश या शब्द बताएं</string>
+    <string name="confirmation_phrase_didnt_match">पुष्टि वाक्यांश आपके द्वारा सेट किए गए वाक्यांश से मेल नहीं खाता.</string>
+    <string name="biometric_recommendation_passphrase_enabling">आपको बायोमेट्रिक को भी सक्षम करना चाहिए, यदि आप वाक्यांश भूल गए तो?</string>
+    <string name="reset">रीसेट</string>
+    <string name="enable_or_disable">सक्षम या अक्षम?</string>
+    <string name="generic_voice_rec_text">मैं सुन रही हूँ</string>
+    <string name="grant_permissions">अनुमति प्रदान करें</string>
+    <string name="make_device_admin">डिवाइस व्यवस्थापक</string>
+    <string name="device_admin_success">मुझे अपनी डिवाइस व्यवस्थापक बनाने के लिए धन्यवाद.</string>
+    <string name="reset_voice_auth_confirm">मुखर प्रमाणीकरण को रीसेट और अक्षम करने की पुष्टि करें?</string>
+    <string name="parallel_receive_text">मैं बोलते हुए सुनूंगी</string>
+    <string name="queued_receive_text">मैं बोलने के बाद सुनूंगी</string>
+    <string name="set_parallel_receive">बोलते समय सुनना सेट करें</string>
+    <string name="set_queued_receive">बोलने के बाद सुनना सेट करें</string>
+    <string name="muted">म्यूट कर दिया</string>
+    <string name="speaking">मैं बोल रही हूँ</string>
+    <string name="fingerprint_is_on">फिंगरप्रिंट सक्षम किया गया</string>
+    <string name="recognition_service_error">भाषण मान्यता में त्रुटि</string>
+    <string name="passphrase_text">गुप्त वाक्यांश</string>
+    <string name="auth_failed">प्रमाणीकरण विफल हो गया.</string>
+    <string name="welcome">स्वागत है</string>
+    <string name="last_chance">अंतिम मौका</string>
+    <string name="chances_left">&#160;मौके बचे हैं</string>
+    <string name="need_physical_verification">मुझे आपका दैहिक सत्यापन चाहिए.</string>
+    <string name="vocal_auth_failed">मुखर प्रमाणीकरण विफल रहा.&#160;</string>
+    <string name="vocal_auth_enabled">मुखर प्रमाणीकरण सक्षम किया गया</string>
+    <string name="vocal_auth_disabled">मुखर प्रमाणीकरण अक्षम किया गया</string>
+    <string name="vocal_auth_unset">आपको खुद से मुखर प्रमाणीकरण स्थापित करना होगा</string>
+    <string name="vocal_auth_already_on">मुखर प्रमाणीकरण पहले से सक्षम है</string>
+    <string name="vocal_auth_already_off">मुखर प्रमाणीकरण पहले से ही अक्षम है</string>
+    <string name="enable_vocal_authentication">मुखर प्रमाणीकरण सक्षम करें</string>
+    <string name="disable_vocal_authentication">मुखर प्रमाणीकरण अक्षम करें</string>
+    <string name="vocal_auth_off_error">मैं मुखर प्रमाणीकरण को अक्षम नहीं कर सकी.</string>
+    <string name="get_passphrase_text">मुझे अपना गुप्त वाक्यांश बताएं</string>
+    <string name="biometric_unsupported">आपका डिवाइस फ़िंगरप्रिंट का समर्थन नहीं करता है.</string>
+    <string name="volume_highest">ध्वनि का अधिकतम स्तर</string>
+    <string name="volume_increased"> ध्वनि का स्तर बढ़ गया</string>
+    <string name="volume_lowest">ध्वनि का न्यूनतम स्तर</string>
+    <string name="volume_decreased">ध्वनि का स्तर कम हो गया</string>
+    <string name="min_audible_volume">यह ध्वनि का न्यूनतम स्तर है</string>
+    <string name="volume_off">आवाज खामोश</string>
+    <string name="showing_volume_controls">मैं आपको ध्वनि नियंत्रण दिखा रही हूं.</string>
+    <string name="no_apps_installed">आपके डिवाइस पर कोई एप्लिकेशन इंस्टॉल नहीं किया गया है.</string>
+    <string name="flash_access_error">मैं आपकी टॉर्च तक नहीं पहुँच पाई.</string>
+    <string name="unit_degree_text">कोण की इकाई डिग्री है</string>
+    <string name="unit_radian_text">कोण की इकाई रेडियन है</string>
+    <string name="fingerprint_off">फिंगरप्रिंट अक्षम है</string>
+    <string name="secret_phrase_deleted">आपका गुप्त वाक्यांश मिटा दिया गया.</string>
+    <string name="enable">सक्षम करें</string>
+    <string name="angles_in_radians">मैं कोणों को रेडियन में समझूंगी</string>
+    <string name="angles_in_degrees">मैं कोणों को डिग्री में समझूंगी</string>
+    <string name="passphrase_to_be_deleted">इससे आपका मौजूदा गुप्त वाक्यांश को मिट जाएगा</string>
+    <string name="need_all_permissions">मुझे पूरी तरह से काम करने के लिए इन अनुमतियों की आवश्यकता है.</string>
+    <string name="grant_all_permissions">उपयोग के लिए मुझे अनुमतियां प्रदान करें.</string>
+    <string name="make_me_admin_persuation">बेहतर प्रदर्शन के लिए मुझे अपनी डिवाइस व्यवस्थापक बनाएं.</string>
+    <string name="all_permissions_not_granted">मेरे पास अभी भी सभी अनुमतियां नहीं हैं.</string>
+    <string name="phrase_too_short">बड़े वाक्यांश के साथ प्रयास करें</string>
+    <string name="confirm_phrase">पुष्टि करने के लिए, फिर से कहें</string>
+    <string name="try_again">पुनः प्रयास करें</string>
+    <string name="undefined_result">मेरे तर्क के अनुसार परिणाम अनिर्धारित है.</string>
+    <string name="flash_on">टॉर्च जल रही है</string>
+    <string name="flash_off">टॉर्च बंद है</string>
+    <string name="request_settings_write_permit">मुझे सूची में खोजें और अपनी सिस्टम सेटिंग्स लिखने की अनुमति दें.</string>
+    <string name="write_settings_permit_denied">आपने मुझे अपनी सिस्टम सेटिंग्स को संशोधित करने की अनुमति नहीं दी.</string>
+    <string name="bt_already_off">ब्लूटूथ पहले से ही बंद है</string>
+    <string name="wifi_already_off">वाईफाई पहले से ही बंद है</string>
+    <string name="wifi_already_on">वाईफाई पहले से चालू है</string>
+    <string name="bt_already_on">ब्लूटूथ पहले से ही चालू है</string>
+    <string name="set_default_theme">वापस डिफ़ॉल्ट रूप में स्विच करें</string>
+    <string name="customize_theme">रूप अनुकूलित करें</string>
+    <string name="default_theme">संकर काला रूप</string>
+    <string name="dark_theme">गहरा नीला रूप</string>
+    <string name="light_theme">प्रकाश सफेद रूप</string>
+    <string name="blue_theme">प्रकाश नीला रूप</string>
+    <string name="save">सहेजें</string>
+    <string name="save_apply">सहेजें और लागू करें</string>
+    <string name="normal_vol_on_text_">मेरा वॉल्यूम स्तर&#160;</string>
+    <string name="normal_vol_off_text">स्थायी वॉल्यूम सेट करें</string>
+    <string name="urgent_vol_on_text_">महत्वपूर्ण वॉल्यूम स्तर&#160;</string>
+    <string name="urgent_vol_off_text">महत्वपूर्ण वॉल्यूम सेट करें</string>
+    <string name="percent">% है</string>
+    <string name="my_own_volume">मेरा अपना वॉल्यूम है</string>
+    <string name="follow_system_volume">मैं सिस्टम वॉल्यूम का पालन करूंगी</string>
+    <string name="volume_raised_if_urgent">ज़रूरी संदेशों के लिए आवाज़ बढ़ा दी जाएगी.</string>
+    <string name="_is_the_phrase">&#160;आपका वाक्याँश है.</string>
+    <string name="volume_raised_to_">ध्वनि का स्तर&#160;</string>
+    <string name="volume_low_to_">ध्वनि का स्तर&#160;</string>
+    <string name="volume_at_">ध्वनि का स्तर&#160;</string>
+    <string name="say_again">फिरसे कहिए?</string>
+    <string name="at">&#160;पर</string>
+    <string name="i_have_">मेरे पास&#160;</string>
+    <string name="airplane_already_on">पहले से ही हवाई जहाज मोड पर.</string>
+    <string name="airplane_mode_on">हवाई जहाज मोड पर.</string>
+    <string name="airplane_already_off">हवाई जहाज मोड पहले से ही बंद है.</string>
+    <string name="airplane_mode_off">हवाई जहाज मोड बंद.</string>
+    <string name="voice_and_volume">ध्वनि और स्तर</string>
+    <string name="app_and_setup">रूप और व्यवहार</string>
+    <string name="maths_and_setup">गणित और तर्क</string>
+    <string name="security_and_setup">सुरक्षा और स्किवी</string>
+    <string name="write_sys_settings">Write settings</string>
+    <string name="write_settings_permit_allowed">Thanks for allowing me to change system settings</string>
+    <string name="left_handy">Left handy human</string>
+    <string name="right_handy">Right handy human</string>
+    <string name="you_left_handed">You are left handed</string>
+    <string name="you_right_handed">You are right handed</string>
+    <string name="user_tasks">Your tasks</string>
+    <string name="access_notifs">Access notifications</string>
+    <string name="request_read_notifs_permit">Allow me to access your notifications</string>
+    <string name="access_notifs_permit_allowed">Thanks for allowing me to access notifications</string>
+    <string name="access_notifs_permit_denied">You didn\'t allow me to access notifications</string>
+    <string name="_phone_nums_of_">phone numbers of</string>
+    <string name="listen_on_click">Set listening on button press</string>
+    <string name="listen_on_start">Set listening on startup</string>
+    <string name="i_listen_at_start">I\'ll start listening at opening</string>
+    <string name="i_listen_on_tap">I\'ll listen when mic is tapped</string>
+    <string name="what_next">What next?</string>
+</resources>
