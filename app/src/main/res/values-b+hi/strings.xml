@@ -255,4 +255,20 @@
     <string name="i_listen_at_start">I\'ll start listening at opening</string>
     <string name="i_listen_on_tap">I\'ll listen when mic is tapped</string>
     <string name="what_next">What next?</string>
+    <string name="draw_over_others_request">Allow me to display over other apps</string>
+    <string name="draw_overlay_direction_text">Find me in the list and allow to draw over other apps</string>
+    <string name="notification_access_direction_text">Find me in the list and allow access to notifications</string>
+    <string name="write_settings_direction_text">Find me in the list and allow me to write system settings</string>
+    <string name="draw_overlay">Draw overlay</string>
+    <string name="draw_overlay_allowed">Thanks for allowing me to draw over other apps</string>
+    <string name="draw_overlay_denied">You didn\'t allow me to draw over other apps</string>
+    <string name="battery_opt">Battery optimization</string>
+    <string name="disable_full_screen">Disable full screen</string>
+    <string name="enable_full_screen">Enable full screen</string>
+    <string name="full_screen_on">Full screen mode</string>
+    <string name="full_screen_off">Normal screen mode</string>
+    <string name="fingerprint">fingerprint</string>
+    <string name="invalid_volume_level">Invalid volume level.</string>
+    <string name="volume_level_can_harm">Volume at this level might cause harm to you</string>
+    <string name="many_wrong_attempts">Too many wrong attempts!</string>
 </resources>

@@ -7,10 +7,10 @@ class InputSpeechManager {
     private val nothing = ""
     private val space = " "
 
-    fun removeStringsIn(line:String, stringListArray: Array<Array<String>>):String{
-        var l  = line
-        for(r in stringListArray){
-            for(k in r){
+    fun removeStringsIn(line: String, stringListArray: Array<Array<String>>): String {
+        var l = line
+        for (r in stringListArray) {
+            for (k in r) {
                 l = l.replace(k, nothing)
             }
         }
@@ -22,18 +22,23 @@ class InputSpeechManager {
      * @param stringListArray:The array of list of strings from which [line] will be truncated as per the last occurrence of any string from it in [line].
      * @return: The truncated string having remaining data as string or null.
      */
-    fun removeBeforeLastStringsIn(line: String, stringListArray: Array<Array<String>>, excludeLast:Boolean= false): String {
+    fun removeBeforeLastStringsIn(
+        line: String,
+        stringListArray: Array<Array<String>>,
+        excludeLast: Boolean = false
+    ): String {
         var l = String()
         for (r in stringListArray) {
             for (k in r) {
                 if (line.contains(k)) {
-                    l = if(excludeLast) line.replaceBeforeLast(k, nothing).trim()
+                    l = if (excludeLast) line.replaceBeforeLast(k, nothing).trim()
                     else line.replaceBeforeLast(k, nothing).replace(k, nothing).trim()
                 }
             }
         }
         return l.trim()
     }
+
     /**If given [line] contains any string in given [stringListArray], return true, else false
      * @param line : The given string which is to be inspected.
      * @param stringListArray: The array of list of strings from which [line] will be inspected for occurrence.
@@ -49,11 +54,11 @@ class InputSpeechManager {
             loop@ for (k in r) {
                 return when (isSingle) {
                     true -> {
-                        if (line.contains(" $k "))
+                        if (" $line ".contains(" $k "))
                             true
                         else continue@loop
                     }
-                    false ->{
+                    false -> {
                         if (line.contains(k))
                             true
                         else continue@loop
@@ -63,34 +68,38 @@ class InputSpeechManager {
         }
         return false
     }
+
     //TODO: setting icon attribute for different themes
     //TODO: Check for substring after contained string
-    fun finallySaidSomethingFromList(line:String,stringListArray:Array<Array<String>>)
-            :Boolean = containsString(removeBeforeLastStringsIn(line, stringListArray,true).trim(), stringListArray)
+    fun finallySaidSomethingFromList(line: String, stringListArray: Array<Array<String>>)
+            : Boolean = containsString(
+        removeBeforeLastStringsIn(line, stringListArray, true).trim(),
+        stringListArray
+    )
 
 
-    fun removeDuplicateStrings(stringArray: Array<String?>):Array<String?>{
+    fun removeDuplicateStrings(stringArray: Array<String?>): Array<String?> {
         var size = stringArray.size
         var i = 0
-        while(i < size){
-            var j = i+1
-            while(j< size){
-                if(stringArray[i] == stringArray[j]){
+        while (i < size) {
+            var j = i + 1
+            while (j < size) {
+                if (stringArray[i] == stringArray[j]) {
                     stringArray[j] = nothing
                 }
                 ++j
             }
             ++i
         }
-        for (k in stringArray){
-            if(k == nothing || k == null){
+        for (k in stringArray) {
+            if (k == nothing || k == null) {
                 --size
             }
         }
         var count = 0
         val newArray = arrayOfNulls<String>(size)
-        for(k in stringArray) {
-            if(k!=nothing && k!=null){
+        for (k in stringArray) {
+            if (k != nothing && k != null) {
                 newArray[count] = k
                 ++count
             }

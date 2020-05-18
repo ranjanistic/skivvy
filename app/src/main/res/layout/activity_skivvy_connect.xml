@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/secondary_background_color"
+    tools:context=".SkivvyConnect">
+    <LinearLayout
+        android:id="@+id/message_view"
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="@dimen/minimum_separation"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/edit_text_field">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/secondary_text_color"
+                android:text="Challenge player"/>
+
+            <ListView
+                android:id="@+id/lv_paired_devices"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+            </ListView>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/secondary_text_color"
+                android:text="Make sure Device is paired"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/edit_text_field"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/send_text_btn"
+        app:layout_constraintVertical_bias="1"
+        app:hintTextColor="?attr/secondary_text_color"
+        app:hintAnimationEnabled="true"
+        app:boxStrokeWidth="4dp"
+        app:boxStrokeColor="?attr/secondary_text_color"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeWidthFocused="8dp"
+        app:startIconDrawable="@drawable/dots_in_circle"
+        android:layout_margin="4dp"
+        app:layout_constraintVertical_chainStyle="spread_inside"
+        android:hint="Type message"
+        app:layout_constraintHorizontal_weight="4"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/message_view">
+    <EditText
+        android:id="@+id/edit_text_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColorHint="?attr/secondary_text_color"
+        android:textColor="?attr/secondary_text_color"
+        android:paddingVertical="24dp"
+        android:backgroundTint="@color/dead_blue"
+        android:paddingHorizontal="@dimen/minimum_separation"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <ImageButton
+        android:id="@+id/send_text_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:scaleType="centerCrop"
+        android:padding="16dp"
+        android:paddingVertical="@dimen/minimum_separation"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/edit_text_field"
+        app:layout_constraintTop_toTopOf="@+id/edit_text_field"
+        app:layout_constraintVertical_bias="1"
+        app:layout_constraintHorizontal_weight="1"
+        android:backgroundTint="?attr/tertiary_background_color"
+        android:background="@drawable/button_square_round"
+        app:srcCompat="@drawable/dots_in_circle" />
+</androidx.constraintlayout.widget.ConstraintLayout>

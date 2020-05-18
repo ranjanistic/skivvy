@@ -15,15 +15,19 @@ class SystemFeatureManager {
     fun bluetooth(on: Boolean?): Boolean? {
         val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         if (on == null)
-            return mBluetoothAdapter.isEnabled
+            return isBluetoothOn()
         if (on) {
-            if (!mBluetoothAdapter.isEnabled)
+            if (!isBluetoothOn())
                 return mBluetoothAdapter.enable()
         } else {
-            if (mBluetoothAdapter.isEnabled)
+            if (isBluetoothOn())
                 return !mBluetoothAdapter.disable()
         }
         return null
+    }
+    fun isBluetoothOn():Boolean{
+        val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        return mBluetoothAdapter.isEnabled
     }
 
     //wifi toggle function

@@ -28,21 +28,16 @@ class Splash : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         skivvy = this.application as Skivvy
-        when {
-            skivvy.getThemeState() == R.style.LightTheme -> {
-                setTheme(R.style.SplashLight)
+        setTheme(
+            when (skivvy.getThemeState()) {
+                R.style.LightTheme -> R.style.SplashLight
+                R.style.BlackTheme -> R.style.SplashBlack
+                R.style.BlueTheme -> R.style.SplashBlue
+                else -> R.style.Splash
             }
-            skivvy.getThemeState() == R.style.BlackTheme -> {
-                setTheme(R.style.SplashBlack)
-            }
-            skivvy.getThemeState() == R.style.BlueTheme -> {
-                setTheme(R.style.SplashBlue)
-            }
-            else -> {
-                setTheme(R.style.Splash)
-            }
-        }
+        )
         context = this
         mainIntent = Intent(context, MainActivity::class.java)
         recognizeIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -77,12 +72,17 @@ class Splash : AppCompatActivity() {
         }
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finishAffinity()
+    }
+
     private fun initializeBiometric() {
         biometricPrompt = BiometricPrompt(this, executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    finish()
+                    finishAffinity()
                 }
 
                 override fun onAuthenticationFailed() {
@@ -94,7 +94,7 @@ class Splash : AppCompatActivity() {
                             getString(R.string.auth_failed),
                             Toast.LENGTH_LONG
                         ).show()
-                        finish()
+                        finishAffinity()
                     }
                 }
 
@@ -121,7 +121,7 @@ class Splash : AppCompatActivity() {
                             finish()
                             overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
                         }
-                        "fingerprint" -> {
+                        getString(R.string.fingerprint) -> {
                             if (skivvy.getBiometricStatus()) {
                                 temp.setAuthAttemptCount(3)
                                 biometricPrompt.authenticate(promptInfo)
@@ -156,7 +156,7 @@ class Splash : AppCompatActivity() {
                                     biometricPrompt.authenticate(promptInfo)
                                 } else {
                                     speakOut(getString(R.string.auth_failed))
-                                    finish()
+                                    finishAffinity()
                                 }
                             }
                         }
@@ -168,7 +168,7 @@ class Splash : AppCompatActivity() {
                 temp.setAuthAttemptCount(3)
                 biometricPrompt.authenticate(promptInfo)
             } else {
-                finish()
+                finishAffinity()
             }
         }
     }
@@ -184,27 +184,29 @@ class Splash : AppCompatActivity() {
         code: Int? = null,
         parallelReceiver: Boolean = skivvy.getParallelResponseStatus()
     ) {
-        skivvy.tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onDone(utteranceId: String) {
-                if (!parallelReceiver)
-                    code?.let { startVoiceRecIntent(code, text) }
-            }
+        skivvy.tts?.let {
+            it.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onDone(utteranceId: String) {
+                    if (!parallelReceiver)
+                        code?.let { startVoiceRecIntent(code, text) }
+                }
 
-            override fun onError(utteranceId: String) {}
-            override fun onStart(utteranceId: String) {
-                if (parallelReceiver)
-                    code?.let { startVoiceRecIntent(code, text) }
+                override fun onError(utteranceId: String) {}
+                override fun onStart(utteranceId: String) {
+                    if (parallelReceiver)
+                        code?.let { startVoiceRecIntent(code, text) }
+                }
+            })
+            if (!skivvy.getMuteStatus()) {
+                it.speak(
+                    text,
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "$code"
+                )
+            } else {
+                code?.let { startVoiceRecIntent(code, text) }
             }
-        })
-        if (!skivvy.getMuteStatus()) {
-            skivvy.tts!!.speak(
-                text,
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "$code"
-            )
-        } else {
-            code?.let { startVoiceRecIntent(code, text) }
         }
     }
 }
