@@ -584,7 +584,16 @@ class Setup : AppCompatActivity() {
             }
         }
     }
-
+    private fun restarter(){
+        startActivity(
+            Intent(
+                context,
+                MainActivity::class.java
+            ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP )
+                .setFlags( Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        )
+        finish()
+    }
     private fun setListeners() {
         settingIcon.setOnClickListener {
             finish()
@@ -694,13 +703,11 @@ class Setup : AppCompatActivity() {
                 if (fromUser) voice.urgentVolume.text = txt
                 uPercent = progress
             }
-
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 skivvy.setVoicePreference(urgentVolumeLevel = uPercent)
                 speakOut("${uPercent}%")
             }
-
         })
         var themeChosen = skivvy.getThemeState()
         appSetup.theme.setOnCheckedChangeListener { view, isChecked ->
@@ -724,13 +731,7 @@ class Setup : AppCompatActivity() {
                 else -> {
                     if (skivvy.getThemeState() != skivvy.defaultTheme) {
                         skivvy.setAppModePref(customTheme = skivvy.defaultTheme)
-                        startActivity(
-                            Intent(
-                                context,
-                                MainActivity::class.java
-                            ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                        )
-                        finish()
+                        restarter()
                     }
                     getString(R.string.customize_theme)
                 }
@@ -787,12 +788,6 @@ class Setup : AppCompatActivity() {
             )
         }
         appSetup.onStartup.setOnCheckedChangeListener { view, isChecked ->
-            startActivity(
-                Intent(
-                    context,
-                    MainActivity::class.java
-                ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            )
             skivvy.setAppModePref(onStartListen = isChecked)
             setThumbAttrs(
                 view as Switch,
@@ -806,7 +801,6 @@ class Setup : AppCompatActivity() {
                     else -> getString(R.string.i_listen_on_tap)
                 }, showToast = true
             )
-            finish()
         }
         appSetup.fullScreen.setOnCheckedChangeListener { view, isChecked ->
             skivvy.setAppModePref(fullScreen = isChecked)
@@ -822,6 +816,7 @@ class Setup : AppCompatActivity() {
                     else -> getString(R.string.full_screen_off)
                 }, showSnackbar = true
             )
+            restarter()
         }
         maths.angleUnit.setOnCheckedChangeListener { view, isChecked ->
             skivvy.setMathsPref(

@@ -271,4 +271,10 @@
     <string name="invalid_volume_level">Invalid volume level.</string>
     <string name="volume_level_can_harm">Volume at this level might cause harm to you</string>
     <string name="many_wrong_attempts">Too many wrong attempts!</string>
+    <string name="you_missed_call_from_">You missed a call from&#160;</string>
+    <string name="call_ended_with_">Call ended with&#160;</string>
+    <string name="calling_">Calling&#160;</string>
+    <string name="speaking_to_">Speaking to&#160;</string>
+    <string name="_is_calling_you">&#160;is calling you</string>
+    <string name="incoming_call_from_">Incoming call from&#160;</string>
 </resources>

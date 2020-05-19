@@ -8,10 +8,13 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
+import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.os.Build
+import android.provider.ContactsContract
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -125,15 +128,21 @@ class Skivvy : Application() {
     lateinit var compName: ComponentName
     private val hindiLocale = "hi_IN"
     //TODO: Settings grouping header
-
+    lateinit var cResolver:ContentResolver
+    var contactCursor:Cursor? = null
     @ExperimentalStdlibApi
     override fun onCreate() {
         super.onCreate()
         deviceManager =
             applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         compName = ComponentName(this, Administrator::class.java)
+        cResolver = contentResolver
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalPackages()
+            contactCursor = cResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
+        }
+        GlobalScope.launch {    //Long running task, loading contact cursor
+            contactCursor = cResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
         }
         this.tts = TextToSpeech(this, TextToSpeech.OnInitListener {
             if (it == TextToSpeech.SUCCESS) {

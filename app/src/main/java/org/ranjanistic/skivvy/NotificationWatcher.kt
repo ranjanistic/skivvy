@@ -10,7 +10,7 @@ import android.util.Log
 
 
 class NotificationWatcher : NotificationListenerService() {
-    private val tag = this.javaClass.simpleName
+    private val tag = "hellNo"
     private var nwservicereciver: NotificationWatcherReceiver? = null
     override fun onCreate() {
         super.onCreate()
@@ -27,20 +27,21 @@ class NotificationWatcher : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         Log.i(tag, "**********  onNotificationPosted")
-        Log.i(tag, "ID :" + sbn.id + "\t" + sbn.notification.tickerText + "\t" + sbn.packageName)
+        Log.i( "$tag ID: " , "${sbn.id}")
+        Log.i( "$tag ticker: " , "${sbn.notification.tickerText}")
+        Log.i( "$tag from: ", sbn.packageName)
+
         sendBroadcast(Intent("${BuildConfig.APPLICATION_ID}.NOTIFICATION_LISTENER_EXAMPLE")
-            .putExtra(
-                "notification_event", """onNotificationPosted :${sbn.packageName}""".trimIndent()
-            )
+            .putExtra("notification_event", "onNotificationPosted :${sbn.packageName}".trimIndent())
         )
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
         Log.i(tag, "********** onNOtificationRemoved")
-        Log.i(
-            tag,
-            "ID :" + sbn.id + "\t" + sbn.notification.tickerText + "\t" + sbn.packageName
-        )
+        Log.i( "$tag ID: " , "${sbn.id}")
+        Log.i( "$tag ticker: " , "${sbn.notification.tickerText}")
+        Log.i( "$tag from: ", sbn.packageName)
+
         sendBroadcast(Intent("${BuildConfig.APPLICATION_ID}.NOTIFICATION_LISTENER_EXAMPLE").putExtra(
             "notification_event", """onNotificationRemoved :${sbn.packageName}""".trimIndent()
         ))
