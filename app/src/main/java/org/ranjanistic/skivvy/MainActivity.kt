@@ -13,7 +13,6 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
-import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
 import android.location.LocationManager
 import android.media.AudioManager
@@ -26,6 +25,7 @@ import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.telecom.TelecomManager
 import android.telephony.PhoneStateListener
 import android.telephony.SmsManager
 import android.telephony.TelephonyManager
@@ -359,6 +359,9 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
 
+            skivvy.CODE_ANSWER_CALL->{
+                txt?.let{manageIncomingCall(it)}
+            }
             skivvy.CODE_SMS_REQUEST -> {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     when {
@@ -395,6 +398,7 @@ open class MainActivity : AppCompatActivity() {
             }
             skivvy.CODE_CONTACTS_REQUEST -> {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    skivvy.contactCursor = skivvy.cResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
                     if (msgCode.getMessage() != nothing && msgCode.getCode() != 0) {
                         SearchContact().execute(msgCode)
                     } else {
@@ -404,6 +408,22 @@ open class MainActivity : AppCompatActivity() {
                     errorView()
                     speakOut(getString(contact_permission_denied))
                 }
+            }
+        }
+    }
+
+    private fun manageIncomingCall(response:String){
+        when (txt) {
+            "pick up", "answer" -> {
+                feature.phoneCall(this.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager,
+                    this.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+                )
+            }
+            "abort", "cancel" -> {
+
+            }
+            "ignore" -> {
+
             }
         }
     }
@@ -479,9 +499,7 @@ open class MainActivity : AppCompatActivity() {
         if (!skivvy.nonVocalRequestCodes.contains(requestCode)) {
             if (data == null || data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0).toString().toLowerCase(skivvy.locale) == nothing) {
                 initialView(onGoingTask)
-                if (!onGoingTask) {
-                    speakOut(getString(no_input))
-                }
+                if (!onGoingTask) { speakOut(getString(no_input)) }
                 return
             } else {
                 data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.let{result = it}
@@ -491,33 +509,15 @@ open class MainActivity : AppCompatActivity() {
         when (requestCode) {
             skivvy.CODE_SPEECH_RECORD -> {
                 val temp = result[0].toLowerCase(skivvy.locale)
-                if (txt == null || txt == nothing) {
-                    txt = temp
-                } else {
-                    when (isCooperative(temp)) {
-                        false -> {
-                            speakOut(getString(okay))
-                            initialView()
-                        }
-                        //TODO: txt management and adding up to previous one, setting it to null accordingly.
-                        else -> {
-                            if (temp.contains(txt!!)) {
-                                txt = temp
-                            }
-                        }
-                    }
-                }
-                if (txt != null) {
-                    inputText.text = txt
-                    if (!inGlobalCommands(txt)) {
+                    inputText.text = temp
+                    if (!inGlobalCommands(temp)) {
                         errorView()
                         speakOut(getString(recognize_error))
                     } else {
                         this.temp.setRetryCommandCount(0)
-                        this.temp.setLastCommand(txt)
+                        this.temp.setLastCommand(temp)
                     }
                 }
-            }
             skivvy.CODE_VOICE_AUTH_CONFIRM -> {
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
@@ -711,7 +711,26 @@ open class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-
+            skivvy.CODE_ANSWER_CALL-> {
+                txt = result[0]
+                    .toLowerCase(skivvy.locale)
+                if (txt != nothing && txt != null) {
+                    if (ActivityCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.ANSWER_PHONE_CALLS
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        speakOut(getString(require_physical_permission))
+                        ActivityCompat.requestPermissions(
+                            this,
+                            arrayOf(Manifest.permission.ANSWER_PHONE_CALLS),
+                            skivvy.CODE_ANSWER_CALL
+                        )
+                    } else {
+                        manageIncomingCall(txt!!)
+                    }
+                }
+            }
             skivvy.CODE_EMAIL_CONTENT -> {
                 //val cdata = skivvy.contactDataManager
                 txt = result[0]
@@ -994,6 +1013,20 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setBrightness(value:Int){
+        if(feature.getSystemBrightness(skivvy.cResolver)==null){        //if brightness setting not found
+            speakOut(getString(brightness_inaccessible))
+        } else {
+            Settings.System.putInt(
+                skivvy.cResolver,
+                Settings.System.SCREEN_BRIGHTNESS,
+                value
+            )
+            val layoutparams: WindowManager.LayoutParams = window.attributes
+            layoutparams.screenBrightness = value / 255.toFloat()
+            window.attributes = layoutparams
+        }
+    }
     //actions invoking quick commands
     @ExperimentalStdlibApi
     private fun respondToCommand(text: String): Boolean {
@@ -1125,13 +1158,16 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             text.contains("flash") -> {
-                if (isFlashAvailable()) {
+                if (skivvy.isFlashAvailable()) {
+                    val mCameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
                     if (text.contains("off")) {
+                        feature.setFlashLight(mCameraManager,false)
                         speakOut(getString(flash_off))
-                        setFlashLight(false)
                     } else {
-                        speakOut(getString(flash_on))
-                        setFlashLight(true)
+                        if(!feature.setFlashLight(mCameraManager,false)){
+                            speakOut(getString(flash_access_error))
+                        }
+                        else speakOut(getString(flash_on))
                     }
                 } else {
                     speakOut("Flashlight not available")
@@ -1445,10 +1481,18 @@ open class MainActivity : AppCompatActivity() {
     private fun brightnessOps(action: String) {
         when {
             action.contains(skivvy.numberPattern) -> {
-                val percent = action.replace(skivvy.nonNumeralPattern, nothing).toFloat()
-                if (percent > 100F) {
-                    speakOut("Invalid brightess level")
+                val percent = action.replace(skivvy.nonNumeralPattern, nothing).toFloat().toInt()
+                if (percent > 100) {
+                    speakOut("Invalid brightness level")
                     return
+                }
+                setBrightness(percent)
+            }
+            else -> {
+                if(feature.getSystemBrightness(skivvy.cResolver)!=null){
+                    speakOut("${feature.getSystemBrightness(skivvy.cResolver)}%")
+                } else {
+                    speakOut("I couldn't access brightness")
                 }
             }
         }
@@ -2040,7 +2084,7 @@ open class MainActivity : AppCompatActivity() {
         return emails
     }
 
-    suspend fun contactNameOfPhone(number: String): String? {
+    fun contactNameOfPhone(number: String): String? {
         cur?.let {
             if (it.count > 0) {
                 while (it.moveToNext()) {
@@ -2057,7 +2101,6 @@ open class MainActivity : AppCompatActivity() {
     }
 
     fun contactImageOfPhone(number: String): Drawable? {
-        //TODO: load cursor on startup
         cur?.let {
             if (it.count > 0) {
                 while (it.moveToNext()) {
@@ -2088,7 +2131,7 @@ open class MainActivity : AppCompatActivity() {
                         it.getString(it.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
                     contact.nickName = nickNames(contact.contactID)
                     it.getString(it.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
-                        ?.let { contact.photoID = it }
+                        ?.let {it1-> contact.photoID = it1}
                     if (!isName) {
                         phoneNumbers(contact.contactID)?.contains(keyPhrase)?.let { it1 ->
                             if (it1) {
@@ -2210,21 +2253,6 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setFlashLight(status: Boolean) {
-        try {
-            val mCameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
-            val mCameraId = mCameraManager.cameraIdList[0]
-            mCameraManager.setTorchMode(mCameraId, status)
-        } catch (e: CameraAccessException) {
-            speakOut(getString(flash_access_error))
-        }
-    }
-
-    private fun isFlashAvailable(): Boolean {
-        return applicationContext.packageManager
-            .hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT)
-    }
-
     private fun saveCalculationResult(result: String) {
         getSharedPreferences(skivvy.PREF_HEAD_CALC, Context.MODE_PRIVATE).edit()
             .putString(skivvy.PREF_KEY_LAST_CALC, result).apply()
@@ -2252,6 +2280,9 @@ open class MainActivity : AppCompatActivity() {
         phoneStateListener = object : PhoneStateListener() {
             override fun onCallStateChanged(state: Int, number: String) {
                 if (state != lastState) {
+                    name = null
+                    phone = null
+                    image = null
                     if (number.isNotEmpty()) {
                         phone = formatPhoneNumber(number)
                         GlobalScope.launch {
@@ -2269,14 +2300,15 @@ open class MainActivity : AppCompatActivity() {
                     }
                     TelephonyManager.CALL_STATE_RINGING -> {        //incoming
                         onGoingTask = true
-                        speakOut(
-                            if (name != null) name + getString(_is_calling_you)
-                            else getString(incoming_call_from_) + phone,
-                            isUrgent = true
-                        )
                         successView(
                             if (image != null) image
                             else getDrawable(ic_phone_dialer)
+                        )
+                        speakOut(
+                            if (name != null) name + getString(_is_calling_you)
+                            else getString(incoming_call_from_) + phone,
+                            taskCode = skivvy.CODE_ANSWER_CALL,
+                            isUrgent = true
                         )
                     }
                     TelephonyManager.CALL_STATE_OFFHOOK -> {
@@ -2293,9 +2325,11 @@ open class MainActivity : AppCompatActivity() {
                             )
                         } else {        //dialed
                             speakOut(
-                                getString(calling_) +
-                                        if (name != null) name
-                                        else phone
+                                getString(calling_) + when {
+                                    name != null -> name
+                                    temp.getContactPresence() -> contact.displayName
+                                    else -> phone
+                                }
                             )
                         }
                     }

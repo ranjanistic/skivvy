@@ -362,7 +362,7 @@ class CalculationManager(var skivvy: Skivvy) {
                     func.replace(skivvy.textPattern, nothing).toFloat().toRadian(skivvy.getAngleUnit())
                 ))).toString()
                 func.contains("log") -> {
-                    log(func.replace(skivvy.textPattern, nothing).toFloat(), 10F).toString()
+                    log(func.replace(skivvy.textPattern, nothing).toFloat(), skivvy.getLogBase()).toString()
                 }
                 func.contains("ln") -> {
                     ln1p(func.replace(skivvy.textPattern, nothing).toFloat()).toString()
@@ -371,8 +371,7 @@ class CalculationManager(var skivvy: Skivvy) {
                     (func.replace(skivvy.textPattern, nothing).toFloat().pow(0.5F)).toString()
                 }
                 func.contains("cbrt") -> {
-                    (func.replace(skivvy.textPattern, nothing).toDouble()
-                        .pow(1 / 3.toDouble())).toString()
+                    (func.replace(skivvy.textPattern, nothing).toDouble().pow(1 / 3.toDouble())).toString()
                 }
                 func.contains("exp") -> {
                     (exp(func.replace(skivvy.textPattern, nothing).toFloat())).toString()

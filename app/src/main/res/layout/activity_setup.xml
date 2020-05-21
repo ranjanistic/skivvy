@@ -99,6 +99,7 @@
                 <include
                     android:id="@+id/batteryOptBtn"
                     layout="@layout/text_button_image"
+                    android:visibility="gone"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1" />
@@ -331,6 +332,48 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/mathematics_group_head" />
 
+            <LinearLayout
+                android:id="@+id/custom_log_base"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/angleUnitBtn" >
+                <include
+                    android:id="@+id/setCustomLogBase"
+                    layout="@layout/switch_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/base_separation" />
+                <TextView
+                    android:id="@+id/save_log_base"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginHorizontal="@dimen/minimum_separation"
+                    android:layout_marginBottom="@dimen/minimum_separation"
+                    android:background="@drawable/button_square_round"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:clickable="true"
+                    android:elevation="@dimen/base_separation"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:paddingHorizontal="@dimen/minimum_separation"
+                    android:paddingVertical="4dp"
+                    android:text="@string/save_log_base"
+                    android:textColor="@color/pitch_white"
+                    android:textSize="16sp" />
+
+                <EditText
+                    android:id="@+id/logBaseInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:hint="@string/enter_base_for_log" />
+            </LinearLayout>
+
             <include
                 android:id="@+id/security_group_head"
                 layout="@layout/text_head_top_round"
@@ -340,7 +383,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/angleUnitBtn" />
+                app:layout_constraintTop_toBottomOf="@id/custom_log_base" />
 
             <include
                 android:id="@+id/biometricsBtn"

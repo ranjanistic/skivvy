@@ -73,6 +73,7 @@ class Skivvy : Application() {
     val CODE_VOICE_AUTH_CONFIRM = 19
     val CODE_BIOMETRIC_CONFIRM = 20
     val CODE_VOLUME_CONFIRM = 21
+    val CODE_ANSWER_CALL = 22
 
     val CODE_LOCATION_SERVICE = 100
     val CODE_DEVICE_ADMIN = 102
@@ -101,8 +102,10 @@ class Skivvy : Application() {
     val PREF_KEY_HANDY = "handSide"
     val PREF_KEY_START_TALK = "talkOnStart"
     val PREF_KEY_FULL_SCREEN = "fullscreen"
+
     val PREF_HEAD_MATHS = "mathsSetup"
     val PREF_KEY_ANGLE_UNIT = "angleUnit"
+    val PREF_KEY_LOG_BASE = "logBase"
 
     val PREF_HEAD_VOICE = "voiceSetup"
     val PREF_KEY_MUTE_UNMUTE = "muteStatus"
@@ -139,10 +142,11 @@ class Skivvy : Application() {
         cResolver = contentResolver
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalPackages()
-            contactCursor = cResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
         }
-        GlobalScope.launch {    //Long running task, loading contact cursor
-            contactCursor = cResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
+        if(hasPermissions(this)) {
+            GlobalScope.launch {    //Long running task, loading contact cursor
+                contactCursor = cResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
+            }
         }
         this.tts = TextToSpeech(this, TextToSpeech.OnInitListener {
             if (it == TextToSpeech.SUCCESS) {
@@ -267,25 +271,29 @@ class Skivvy : Application() {
             .getBoolean(this.PREF_KEY_FULL_SCREEN, false)
 
     //Mathematics and calculation preferences
-    fun setMathsPref(angleUnit: String? = null) {
+    fun setMathsPref(angleUnit: String? = null, logBase:Float? = null) {
         val editor = getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE).edit()
         angleUnit?.let { editor.putString(this.PREF_KEY_ANGLE_UNIT, it).apply() }
+        logBase?.let{editor.putFloat(this.PREF_KEY_LOG_BASE,it).apply()}
     }
 
     fun getAngleUnit(): String =
-        getSharedPreferences(this.PREF_HEAD_MATHS, AppCompatActivity.MODE_PRIVATE)
+        getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE)
             .getString(this.PREF_KEY_ANGLE_UNIT, this.degree)!!
-
+    fun getLogBase():Float = getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE).getFloat(this.PREF_KEY_LOG_BASE,10F)
+    val nothing = ""
     //Security preferences
     fun setSecurityPref(
         biometricOn: Boolean? = null,
         vocalAuthOn: Boolean? = null,
-        vocalAuthPhrase: String? = null
+        vocalAuthPhrase: String? = nothing
     ) {
         val editor = getSharedPreferences(this.PREF_HEAD_SECURITY, MODE_PRIVATE).edit()
         biometricOn?.let { editor.putBoolean(this.PREF_KEY_BIOMETRIC, it).apply() }
         vocalAuthOn?.let { editor.putBoolean(this.PREF_KEY_VOCAL_AUTH, it).apply() }
-        vocalAuthPhrase?.let { editor.putString(this.PREF_KEY_VOCAL_PHRASE, it).apply() }
+        if(vocalAuthPhrase!=nothing){
+            editor.putString(this.PREF_KEY_VOCAL_PHRASE, vocalAuthPhrase).apply()
+        }
     }
 
     fun getBiometricStatus(): Boolean =
@@ -303,6 +311,11 @@ class Skivvy : Application() {
     fun checkBioMetrics(): Boolean = when (BiometricManager.from(this).canAuthenticate()) {
         BiometricManager.BIOMETRIC_SUCCESS -> true
         else -> false
+    }
+
+    fun isFlashAvailable(): Boolean {
+        return applicationContext.packageManager
+            .hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT)
     }
 
     private fun createNotificationChannel() {

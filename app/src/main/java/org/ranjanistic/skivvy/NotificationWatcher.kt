@@ -16,7 +16,7 @@ class NotificationWatcher : NotificationListenerService() {
         super.onCreate()
         nwservicereciver = NotificationWatcherReceiver()
         val filter = IntentFilter()
-        filter.addAction("${BuildConfig.APPLICATION_ID}.NOTIFICATION_LISTENER_SERVICE_EXAMPLE")
+        filter.addAction("${BuildConfig.APPLICATION_ID}.NOTIFICATION_LISTENER_SERVICE")
         registerReceiver(nwservicereciver, filter)
     }
 
@@ -24,23 +24,24 @@ class NotificationWatcher : NotificationListenerService() {
         super.onDestroy()
         unregisterReceiver(nwservicereciver)
     }
-
+    var i = 0
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        Log.i(tag, "**********  onNotificationPosted")
-        Log.i( "$tag ID: " , "${sbn.id}")
-        Log.i( "$tag ticker: " , "${sbn.notification.tickerText}")
-        Log.i( "$tag from: ", sbn.packageName)
-
+        ++i
+        Log.i( "$tag $i ID: " , "${sbn.id}")
+        Log.i( "$tag $i ticker: " , "${sbn.notification.tickerText}")
+        Log.i( "$tag $i from: ", sbn.packageName)
+        Log.i( "$tag $i ongoing: ", sbn.isOngoing.toString())
+        Log.i( "$tag $i from: ", sbn.postTime.toString())
         sendBroadcast(Intent("${BuildConfig.APPLICATION_ID}.NOTIFICATION_LISTENER_EXAMPLE")
             .putExtra("notification_event", "onNotificationPosted :${sbn.packageName}".trimIndent())
         )
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
-        Log.i(tag, "********** onNOtificationRemoved")
-        Log.i( "$tag ID: " , "${sbn.id}")
-        Log.i( "$tag ticker: " , "${sbn.notification.tickerText}")
-        Log.i( "$tag from: ", sbn.packageName)
+        val j = i
+        Log.i( "$tag $j ID: " , "${sbn.id}")
+        Log.i( "$tag $j ticker: " , "${sbn.notification.tickerText}")
+        Log.i( "$tag $j from: ", sbn.packageName)
 
         sendBroadcast(Intent("${BuildConfig.APPLICATION_ID}.NOTIFICATION_LISTENER_EXAMPLE").putExtra(
             "notification_event", """onNotificationRemoved :${sbn.packageName}""".trimIndent()

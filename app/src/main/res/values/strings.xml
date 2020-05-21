@@ -330,4 +330,7 @@
     <string name="speaking_to_">Speaking to&#160;</string>
     <string name="_is_calling_you">&#160;is calling you</string>
     <string name="incoming_call_from_">Incoming call from&#160;</string>
+    <string name="brightness_inaccessible">I couldn\'t access brightness</string>
+    <string name="enter_base_for_log">Custom base for Log calculation</string>
+    <string name="save_log_base">Save base</string>
 </resources>

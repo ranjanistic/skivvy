@@ -339,8 +339,7 @@ class Setup : AppCompatActivity() {
         textViews: Array<TextView>,
         textIDs: Array<Int>,
         texts: Array<String>? = null,
-        drawableIDs: Array<Int>
-    ) {
+        drawableIDs: Array<Int>) {
         for ((index, access) in textViews.withIndex()) {
             if (texts == null) {
                 access.text = getString(textIDs[index])
@@ -381,7 +380,7 @@ class Setup : AppCompatActivity() {
                 special.writeSettings,
                 special.accessNotifications,
                 special.drawOver,
-                special.batteryOptimize,
+//                special.batteryOptimize,
                 childLayout.accessPermitGrid
             ),
             eachVisible = arrayOf(
@@ -390,7 +389,7 @@ class Setup : AppCompatActivity() {
                 !Settings.System.canWrite(context),
                 !isNotificationServiceRunning(),
                 !canDrawOverOtherApps(),
-                !isOptedOutBatteryOptimization(),
+//                !isOptedOutBatteryOptimization(),
                 !hasAllUserPermits()
             )
         )
@@ -584,13 +583,13 @@ class Setup : AppCompatActivity() {
             }
         }
     }
+    //TODO: log base selector
     private fun restarter(){
         startActivity(
             Intent(
                 context,
                 MainActivity::class.java
-            ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP )
-                .setFlags( Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
         finish()
     }
@@ -1140,7 +1139,7 @@ class Setup : AppCompatActivity() {
                 )
             }
             skivvy.CODE_BATTERY_OPT -> {
-                setVisibilityOf(special.batteryOptimize, visible = !isOptedOutBatteryOptimization())
+                //setVisibilityOf(special.batteryOptimize, visible = !isOptedOutBatteryOptimization())
             }
         }
     }
@@ -1179,14 +1178,13 @@ class Setup : AppCompatActivity() {
         security.biometricPrompt = BiometricPrompt(this, security.executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(
-                    result: BiometricPrompt.AuthenticationResult
-                ) {
+                    result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
                     when (code) {
                         skivvy.CODE_VOICE_AUTH_CONFIRM -> {
+                            skivvy.setSecurityPref(vocalAuthPhrase = null)
                             speakOut(getString(R.string.secret_phrase_deleted))
                             defaultVoiceAuthUIState()
-                            skivvy.setSecurityPref(vocalAuthPhrase = null)
                         }
                         skivvy.CODE_BIOMETRIC_CONFIRM -> {
                             speakOut(getString(R.string.fingerprint_off))

@@ -1,14 +1,25 @@
 package org.ranjanistic.skivvy.manager
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.content.ContentResolver
+import android.content.Context
+import android.content.pm.PackageManager
+import android.hardware.camera2.CameraAccessException
+import android.hardware.camera2.CameraManager
 import android.media.AudioManager
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.provider.Settings
 import android.provider.Settings.SettingNotFoundException
+import android.telecom.TelecomManager
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.Window
 import android.view.WindowManager
+import androidx.core.app.ActivityCompat
+
 
 class SystemFeatureManager {
     //bluetooth toggle function
@@ -62,6 +73,29 @@ class SystemFeatureManager {
         )
     }
 
+    fun setFlashLight(cameraManager: CameraManager, status: Boolean):Boolean{
+        try {
+            val mCameraId = cameraManager.cameraIdList[0]
+            cameraManager.setTorchMode(mCameraId, status)
+        } catch (e: CameraAccessException) {
+            return false
+        }
+        return true
+    }
+
+    @SuppressLint("MissingPermission")
+    fun phoneCall(telephonyManager: TelephonyManager?, telecomManager: TelecomManager?){
+        val LOG_TAG = "TelephonyAnswer"
+        try { //reflection
+            telephonyManager?.javaClass?.getMethod("answerRingingCall")?.invoke(telephonyManager)
+        } catch (e: Exception) {
+            Log.d(LOG_TAG, "Unable to use the Telephony Manager directly.", e)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                telecomManager?.acceptRingingCall()
+            }
+        }
+    }
+
     fun getSystemBrightness(contentResolver: ContentResolver):Int?{
         return try {
             // To handle the auto
@@ -73,10 +107,10 @@ class SystemFeatureManager {
             //Get the current system brightness
             Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS)
         } catch (e: SettingNotFoundException) {
-            Log.e("Error", "Cannot access system brightness")
             null
         }
     }
+
     //TODO: brightness function
     fun setBrightness(brightness:Int, window: Window, contentResolver: ContentResolver) {
         //Set the system brightness using the brightness variable value

@@ -28,7 +28,6 @@ class Splash : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         skivvy = this.application as Skivvy
         setTheme(
             when (skivvy.getThemeState()) {
@@ -40,23 +39,23 @@ class Splash : AppCompatActivity() {
         )
         context = this
         mainIntent = Intent(context, MainActivity::class.java)
-        recognizeIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            .putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
-        skivvy.tts = TextToSpeech(skivvy, TextToSpeech.OnInitListener {
-            if (it == TextToSpeech.SUCCESS) {
-                skivvy.tts!!.language = skivvy.locale
-            } else
-                Toast.makeText(skivvy, getString(R.string.output_error), Toast.LENGTH_SHORT).show()
-        })
         if (!skivvy.getBiometricStatus() && !skivvy.getPhraseKeyStatus()) {
             startActivity(mainIntent)
             finish()
             overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
         } else {
+            recognizeIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                .putExtra(
+                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                    RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                )
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
+            skivvy.tts = TextToSpeech(skivvy, TextToSpeech.OnInitListener {
+                if (it == TextToSpeech.SUCCESS) {
+                    skivvy.tts!!.language = skivvy.locale
+                } else
+                    Toast.makeText(skivvy, getString(R.string.output_error), Toast.LENGTH_SHORT).show()
+            })
             executor = ContextCompat.getMainExecutor(context)
             promptInfo = BiometricPrompt.PromptInfo.Builder()
                 .setTitle(getString(R.string.auth_demand_title))
@@ -134,6 +133,10 @@ class Splash : AppCompatActivity() {
                                 else
                                     speakOut(getString(R.string.biometric_is_off))
                             }
+                        }
+                        "forgot"->{
+                            temp.setAuthAttemptCount(3)
+                            biometricPrompt.authenticate(promptInfo)
                         }
                         else -> {
                             temp.setAuthAttemptCount(temp.getAuthAttemptCount() - 1)
