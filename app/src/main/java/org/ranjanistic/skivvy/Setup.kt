@@ -57,7 +57,6 @@ class Setup : AppCompatActivity() {
         lateinit var handy: Switch
         lateinit var onStartup: Switch
         lateinit var fullScreen: Switch
-        lateinit var training: Switch
     }
 
     private class Maths {
@@ -168,7 +167,6 @@ class Setup : AppCompatActivity() {
         childLayout.scrollView = findViewById(R.id.settingScrollView)
         childLayout.settingsContainer = findViewById(R.id.preferences_container)
         childLayout.accessPermitGrid = findViewById(R.id.accessGrid)
-        appSetup.training = findViewById(R.id.trainingModeBtn)
         voice.mute = findViewById(R.id.muteUnmuteBtn)
         voice.normalizeVolume = findViewById(R.id.normalizeVolume)
         voice.normalizeSeek = findViewById(R.id.normal_volume_seek)
@@ -274,7 +272,6 @@ class Setup : AppCompatActivity() {
             appSetup.handy,
             appSetup.onStartup,
             appSetup.fullScreen,
-            appSetup.training,
             maths.angleUnit,
             security.biometrics,
             security.voiceAuth
@@ -290,7 +287,6 @@ class Setup : AppCompatActivity() {
             skivvy.getLeftHandy(),
             skivvy.shouldListenStartup(),
             skivvy.shouldFullScreen(),
-            skivvy.getTrainingStatus(),
             skivvy.getAngleUnit() == skivvy.radian,
             skivvy.getBiometricStatus(),
             skivvy.getPhraseKeyStatus()
@@ -306,7 +302,6 @@ class Setup : AppCompatActivity() {
             getString(R.string.left_handy),
             getString(R.string.listen_on_click),
             getString(R.string.disable_full_screen),
-            getString(R.string.deactivate_training_text),
             getString(R.string.unit_radian_text),
             getString(R.string.disable_fingerprint),
             getString(R.string.disable_vocal_authentication)
@@ -320,7 +315,6 @@ class Setup : AppCompatActivity() {
             getString(R.string.right_handy),
             getString(R.string.listen_on_start),
             getString(R.string.enable_full_screen),
-            getString(R.string.activate_training_text),
             getString(R.string.unit_degree_text),
             getString(R.string.enable_fingerprint),
             getString(R.string.enable_vocal_authentication)
@@ -598,30 +592,15 @@ class Setup : AppCompatActivity() {
             finish()
             overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
         }
-        childLayout.scrollView.viewTreeObserver
-            .addOnScrollChangedListener {
-                val alpha: Float =
-                    childLayout.scrollView.scrollY.toFloat() / window.decorView.height
-                settingIcon.alpha = (1 - alpha * 8F)
-                settingIcon.translationY = alpha * 500
-                settingIcon.translationZ = 0 - alpha * 500
-                noteView.alpha = (1 - alpha * 8F)
-                noteView.translationY = alpha * 500
-                noteView.translationZ = 0 - alpha * 500
-            }
-
-        appSetup.training.setOnCheckedChangeListener { view, isChecked ->
-            skivvy.setAppModePref(isTraining = isChecked)
-            setThumbAttrs(
-                view as Switch,
-                isChecked,
-                getString(R.string.deactivate_training_text),
-                getString(R.string.activate_training_text)
-            )
-            if (isChecked) {
-                speakOut(getString(R.string.activate_training_text))
-                finish()
-            } else speakOut(getString(R.string.deactivate_training_text))
+        childLayout.scrollView.viewTreeObserver.addOnScrollChangedListener {
+            val alpha: Float =
+                childLayout.scrollView.scrollY.toFloat() / window.decorView.height
+            settingIcon.alpha = (1 - alpha * 8F)
+            settingIcon.translationY = alpha * 500
+            settingIcon.translationZ = 0 - alpha * 500
+            noteView.alpha = (1 - alpha * 8F)
+            noteView.translationY = alpha * 500
+            noteView.translationZ = 0 - alpha * 500
         }
         voice.mute.setOnCheckedChangeListener { view, isChecked ->
             skivvy.setVoicePreference(voiceMute = isChecked)
@@ -747,13 +726,7 @@ class Setup : AppCompatActivity() {
         appSetup.saveTheme.setOnClickListener {
             if (themeChosen != skivvy.getThemeState()) {
                 skivvy.setAppModePref(customTheme = themeChosen)
-                startActivity(
-                    Intent(
-                        context,
-                        MainActivity::class.java
-                    ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                )
-                finish()
+                restarter()
             }
         }
         appSetup.response.setOnCheckedChangeListener { view, isChecked ->

@@ -41,6 +41,7 @@ class Skivvy : Application() {
         Manifest.permission.WRITE_CONTACTS,
         Manifest.permission.READ_CONTACTS,
         Manifest.permission.CALL_PHONE,
+        Manifest.permission.ANSWER_PHONE_CALLS,
         Manifest.permission.READ_CALL_LOG,
         Manifest.permission.WRITE_CALENDAR,
         Manifest.permission.READ_CALENDAR,
@@ -95,7 +96,6 @@ class Skivvy : Application() {
     val PREF_KEY_VOCAL_PHRASE = "voicePhrase"
 
     val PREF_HEAD_APP_SETUP = "appSetup"
-    val PREF_KEY_TRAINING = "training"
     val PREF_KEY_THEME = "theme"
     val PREF_KEY_CUSTOM_THEME = "customTheme"
     val PREF_KEY_PARLLEL_TALK = "parallelResponse"
@@ -218,7 +218,6 @@ class Skivvy : Application() {
 
     //App setup and UI preferences
     fun setAppModePref(
-        isTraining: Boolean? = null,
         isCustomTheme: Boolean? = null,
         customTheme: Int? = null,
         parallelListen: Boolean? = null,
@@ -227,7 +226,6 @@ class Skivvy : Application() {
         fullScreen: Boolean? = null
     ) {
         val editor = getSharedPreferences(this.PREF_HEAD_APP_SETUP, MODE_PRIVATE).edit()
-        isTraining?.let { editor.putBoolean(this.PREF_KEY_TRAINING, it).apply() }
         isCustomTheme?.let { editor.putBoolean(this.PREF_KEY_CUSTOM_THEME, it).apply() }
         customTheme?.let { editor.putInt(this.PREF_KEY_THEME, it).apply() }
         parallelListen?.let { editor.putBoolean(this.PREF_KEY_PARLLEL_TALK, it).apply() }
@@ -235,10 +233,6 @@ class Skivvy : Application() {
         onStartListen?.let { editor.putBoolean(this.PREF_KEY_START_TALK, it).apply() }
         fullScreen?.let { editor.putBoolean(this.PREF_KEY_FULL_SCREEN, it).apply() }
     }
-
-    fun getTrainingStatus(): Boolean =
-        getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
-            .getBoolean(this.PREF_KEY_TRAINING, false)
 
     fun isCustomTheme(): Boolean =
         getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)

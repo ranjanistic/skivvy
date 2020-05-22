@@ -104,15 +104,6 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1" />
             </GridLayout>
-            <include
-                android:id="@+id/trainingModeBtn"
-                layout="@layout/switch_layout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/base_separation"
-                android:visibility="gone"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
 
             <include
                 android:id="@+id/voice_group_head"

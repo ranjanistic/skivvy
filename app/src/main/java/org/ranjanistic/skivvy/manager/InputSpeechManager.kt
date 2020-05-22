@@ -1,5 +1,6 @@
 package org.ranjanistic.skivvy.manager
 
+import java.util.*
 import kotlin.math.PI
 
 class InputSpeechManager {
@@ -37,6 +38,16 @@ class InputSpeechManager {
             }
         }
         return l.trim()
+    }
+
+    fun isStringInArray(line:String, stringListArray: Array<Array<String>>):Boolean{
+        for(r in stringListArray){
+            for(k in r){
+                if(k.toLowerCase(Locale.getDefault()) == line.toLowerCase(Locale.getDefault()))
+                    return true
+            }
+        }
+        return false
     }
 
     /**If given [line] contains any string in given [stringListArray], return true, else false

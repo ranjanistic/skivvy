@@ -142,7 +142,7 @@
     <string name="subject_added">Subject added.&#160;</string>
     <string name="what_is_body">What\'s the body?</string>
     <string name="body_added">Body added.&#160;</string>
-    <string name="preparing_email">Preparing email to send</string>
+    <string name="preparing_email">Preparing email to send.</string>
     <string name="biometric_auth_explanation">Authenticate yourself to proceed further.
         This is required when you are about to perform a sensitive action directly affecting Skivvy\'s functions, or your real life.</string>
     <string name="invalid_expression">Invalid expression.</string>

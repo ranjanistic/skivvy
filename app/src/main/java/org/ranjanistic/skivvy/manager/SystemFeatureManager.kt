@@ -84,16 +84,28 @@ class SystemFeatureManager {
     }
 
     @SuppressLint("MissingPermission")
-    fun phoneCall(telephonyManager: TelephonyManager?, telecomManager: TelecomManager?){
-        val LOG_TAG = "TelephonyAnswer"
-        try { //reflection
-            telephonyManager?.javaClass?.getMethod("answerRingingCall")?.invoke(telephonyManager)
-        } catch (e: Exception) {
-            Log.d(LOG_TAG, "Unable to use the Telephony Manager directly.", e)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                telecomManager?.acceptRingingCall()
+    fun phoneCall(telephonyManager: TelephonyManager?, telecomManager: TelecomManager?, pickUp:Boolean):Boolean{
+        when(pickUp){
+            true->{     //means answer call
+                try { //reflection
+                    telephonyManager?.javaClass?.getMethod("answerRingingCall")?.invoke(telephonyManager)
+                } catch (e: Exception) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        try {
+                            telecomManager?.let {
+                                it.acceptRingingCall()
+                                it.showInCallScreen(false)
+                            }
+                        } catch (e:Exception){
+                            return false
+                        }
+                    } else return false
+                }
+            }
+            false->{        //means abort call
             }
         }
+        return true
     }
 
     fun getSystemBrightness(contentResolver: ContentResolver):Int?{

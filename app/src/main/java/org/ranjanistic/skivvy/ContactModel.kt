@@ -1,7 +1,5 @@
 package org.ranjanistic.skivvy
 
-import java.util.jar.Attributes
-
 class ContactModel {
     var contactID:String = String()
     var photoID:String = String()
