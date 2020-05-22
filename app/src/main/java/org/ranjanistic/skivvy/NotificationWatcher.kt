@@ -27,11 +27,12 @@ class NotificationWatcher : NotificationListenerService() {
     var i = 0
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         ++i
+        Log.i( "$tag $i ID: " , "POSTED")
         Log.i( "$tag $i ID: " , "${sbn.id}")
         Log.i( "$tag $i ticker: " , "${sbn.notification.tickerText}")
         Log.i( "$tag $i from: ", sbn.packageName)
         Log.i( "$tag $i ongoing: ", sbn.isOngoing.toString())
-        Log.i( "$tag $i from: ", sbn.postTime.toString())
+        Log.i( "$tag $i time: ", sbn.postTime.toString())
         sendBroadcast(Intent("${BuildConfig.APPLICATION_ID}.NOTIFICATION_LISTENER_EXAMPLE")
             .putExtra("notification_event", "onNotificationPosted :${sbn.packageName}".trimIndent())
         )
@@ -39,6 +40,7 @@ class NotificationWatcher : NotificationListenerService() {
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
         val j = i
+        Log.i( "$tag $j ID: " , "REMOVED")
         Log.i( "$tag $j ID: " , "${sbn.id}")
         Log.i( "$tag $j ticker: " , "${sbn.notification.tickerText}")
         Log.i( "$tag $j from: ", sbn.packageName)

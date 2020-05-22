@@ -122,7 +122,6 @@ class Skivvy : Application() {
     val radian = "rad"
     var pathToFile = ""
     val defaultTheme = R.style.DarkTheme
-
     //default objects
     var tts: TextToSpeech? = null
     var packageDataManager: PackageDataManager =
@@ -142,11 +141,6 @@ class Skivvy : Application() {
         cResolver = contentResolver
         GlobalScope.launch {    //Long running task, getting all packages
             getLocalPackages()
-        }
-        if(hasPermissions(this)) {
-            GlobalScope.launch {    //Long running task, loading contact cursor
-                contactCursor = cResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
-            }
         }
         this.tts = TextToSpeech(this, TextToSpeech.OnInitListener {
             if (it == TextToSpeech.SUCCESS) {
@@ -333,6 +327,21 @@ class Skivvy : Application() {
 
     fun isLocaleHindi(): Boolean = this.locale.toString() == this.hindiLocale
 
+    fun hasThisPermission(context:Context, code: Int): Boolean {
+        return PackageManager.PERMISSION_GRANTED ==
+                ActivityCompat.checkSelfPermission(
+                    context, when (code) {
+                        this.CODE_CONTACTS_REQUEST -> Manifest.permission.READ_CONTACTS
+                        this.CODE_CALL_REQUEST -> Manifest.permission.CALL_PHONE
+                        this.CODE_ANSWER_CALL -> Manifest.permission.ANSWER_PHONE_CALLS
+                        this.CODE_SMS_REQUEST -> Manifest.permission.SEND_SMS
+                        this.CODE_STORAGE_REQUEST -> Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        this.CODE_CALENDER_REQUEST -> Manifest.permission.READ_CALENDAR
+                        this.CODE_CALL_LOG_REQUEST ->Manifest.permission.READ_CALL_LOG
+                        else -> nothing
+                    }
+                )
+    }
     fun hasPermissions(context: Context): Boolean = this.permissions.all {
         ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }

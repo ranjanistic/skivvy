@@ -321,6 +321,12 @@ class CalculationManager(var skivvy: Skivvy) {
         }
     }
 
+    //TODO:Unit converter
+    fun convert(value:Float, fromUnit:String, toUnit:String):String{
+        var convertedValue = 0
+        return "$convertedValue $toUnit"
+    }
+
     /**
      * This performs mathematical operations between two operands with given operator
      * @param operand1 : The first operand
