@@ -59,6 +59,12 @@ class Skivvy : Application() {
     val textPattern = "[a-zA-Z]".toRegex()
     val emailPattern = "[a-zA-Z0-9._-]+@[a-z.]+\\.+[a-z]+".toRegex()
     val nonNumeralPattern = "[^0-9]".toRegex()
+    val nothing = ""
+    val space = " "
+    val actionNotification = BuildConfig.APPLICATION_ID + "NOTIFICATION_LISTENER_SERVICE"
+    val notificationPackageName = "notificationPackageName"
+    val notificationTicker = "notificationTicker"
+    val notificationTime = "notificationTime"
 
     //action codes
     val CODE_TRAINING_MODE = 9
@@ -269,7 +275,6 @@ class Skivvy : Application() {
         getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE)
             .getString(this.PREF_KEY_ANGLE_UNIT, this.degree)!!
     fun getLogBase():Float = getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE).getFloat(this.PREF_KEY_LOG_BASE,10F)
-    val nothing = ""
     //Security preferences
     fun setSecurityPref(
         biometricOn: Boolean? = null,

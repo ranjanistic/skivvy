@@ -47,8 +47,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.ranjanistic.skivvy.R.drawable.*
 import org.ranjanistic.skivvy.R.string.*
 import org.ranjanistic.skivvy.manager.*
@@ -88,17 +86,17 @@ open class MainActivity : AppCompatActivity() {
         lateinit var fadeOnFast: Animation
     }
 
-    private var lastTxt:String? = null
     private val anim = Animations()
-    private var cur: Cursor? = null
+
+    private var lastTxt: String? = null
     private var onGoingTask: Boolean = false
     private lateinit var receiver: ImageButton
     private lateinit var setting: ImageButton
     private lateinit var loading: ImageView
     private lateinit var backfall: ImageView
     private lateinit var icon: ImageView
-    private val nothing = ""
-    private val space = " "
+    private var nothing = String()
+    private var space = String()
     private var txt: String? = null
     private lateinit var context: Context
     private lateinit var calculation: CalculationManager
@@ -110,13 +108,13 @@ open class MainActivity : AppCompatActivity() {
     private var contact = ContactModel()
     private var temp: TempDataManager = TempDataManager()
     private var feature: SystemFeatureManager = SystemFeatureManager()
+    private lateinit var intentFilter: IntentFilter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         context = this
         skivvy = this.application as Skivvy
         setTheme(skivvy.getThemeState())
         setContentView(R.layout.activity_homescreen)
-        this.registerReceiver(this.mBatInfoReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         window.statusBarColor = when (skivvy.shouldFullScreen()) {
             true -> ContextCompat.getColor(context, android.R.color.transparent)
             else -> getSysBarColorByTheme(context, true)
@@ -131,16 +129,6 @@ open class MainActivity : AppCompatActivity() {
         initialView()
         resetVariables()
         setListeners()
-        if (skivvy.hasThisPermission(context, skivvy.CODE_CONTACTS_REQUEST)) {
-            skivvy.contactCursor = skivvy.cResolver.query(
-                ContactsContract.Contacts.CONTENT_URI,
-                null,
-                null,
-                null,
-                null
-            )
-            cur = skivvy.contactCursor
-        }
         skivvy.tts = TextToSpeech(this, TextToSpeech.OnInitListener {
             if (it == TextToSpeech.SUCCESS) {
                 skivvy.tts?.language = skivvy.locale
@@ -188,6 +176,8 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun setViewAndDefaults() {
+        space = skivvy.space
+        nothing = skivvy.nothing
         setting = findViewById(R.id.setting)
         outputText = findViewById(R.id.textOutput)
         //TODO: Handy view
@@ -281,7 +271,7 @@ open class MainActivity : AppCompatActivity() {
         receiver.setOnClickListener {
             initialView(onGoingTask)
             if (!onGoingTask) {
-                speakOut(nothing,skivvy.CODE_SPEECH_RECORD,parallelReceiver = true)
+                speakOut(nothing, skivvy.CODE_SPEECH_RECORD, parallelReceiver = true)
             } else {
                 setFeedback(outputText.text.toString())
                 speakOut(getString(what_next), skivvy.CODE_SPEECH_RECORD, parallelReceiver = true)
@@ -302,7 +292,6 @@ open class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         hideSysUI()
-        cur?.moveToFirst()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -313,7 +302,8 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        cur?.moveToFirst()
+        this.registerReceiver(this.mBatInfoReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        this.registerReceiver(this.mNotificationReceiver, IntentFilter(skivvy.actionNotification))
     }
 
     private fun hideSysUI() {
@@ -382,11 +372,13 @@ open class MainActivity : AppCompatActivity() {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     ArrangeViaLogs().execute(contact.displayName)
                 } else {
-                    speakOut(
-                        getString(should_i_call) + contact.displayName +
-                                " at ${contact.phoneList!![temp.getPhoneIndex()]}?",
-                        skivvy.CODE_CALL_CONF
-                    )
+                    contact.phoneList?.let {
+                        speakOut(
+                            getString(should_i_call) + contact.displayName +
+                                    " at ${it[temp.getPhoneIndex()]}?",
+                            skivvy.CODE_CALL_CONF
+                        )
+                    }
                 }
             }
             skivvy.CODE_ANSWER_CALL -> {
@@ -428,10 +420,6 @@ open class MainActivity : AppCompatActivity() {
             }
             skivvy.CODE_CONTACTS_REQUEST -> {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    skivvy.contactCursor = skivvy.cResolver.query(
-                        ContactsContract.Contacts.CONTENT_URI, null, null, null, null
-                    )
-                    cur = skivvy.contactCursor
                     if (msgCode.getMessage() != nothing && msgCode.getCode() != 0) {
                         SearchContact().execute(msgCode)
                     } else {
@@ -445,43 +433,55 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun isAcceptingCall(response:String):Boolean?{
-        val ignorance = arrayOf("ignore","standby")
-        val acceptance = arrayOf("pick up", "pickup","answer", "accept")
+    private fun isAcceptingCall(response: String): Boolean? {
+        val ignorance = arrayOf("ignore", "standby")
+        val acceptance = arrayOf("pick up", "pickup", "answer", "accept")
         val abortions = arrayOf("abort", "discard", "cut the call", "call cut", "reject")
-        return when{
+        return when {
             input.containsString(
                 input.removeBeforeLastStringsIn(
                     response, arrayOf(ignorance, abortions)
                 ), arrayOf(acceptance)
-            )->true
+            ) -> {
+                Log.d("isAcception", "true")
+                true
+            }
             input.containsString(
                 input.removeBeforeLastStringsIn(
                     response, arrayOf(ignorance, acceptance)
                 ), arrayOf(abortions)
-            )->false
+            ) -> {
+                Log.d("isAcception", "false")
+                false
+            }
             input.containsString(
                 input.removeBeforeLastStringsIn(
                     response, arrayOf(abortions, acceptance)
                 ), arrayOf(ignorance)
-            )->null
-            else->null
+            ) -> {
+                Log.d("isAcception", "null")
+                null
+            }
+            else -> {
+                Log.d("isAcception", "nullElse")
+                null
+            }
         }
     }
 
     private fun manageIncomingCall(response: String) {
-        when(isAcceptingCall(response)) {
-            null-> {        //ignoring
+        when (isAcceptingCall(response)) {
+            null -> {        //ignoring
                 return
             }
-            else ->{
-                if(!isAcceptingCall(response)?.let {
-                        feature.phoneCall(
+            else -> {
+                if (!isAcceptingCall(response)?.let {
+                        feature.respondToCall(
                             this.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager,
                             this.getSystemService(Context.TELECOM_SERVICE) as TelecomManager,
-                            it      //TODO: rejecting calls
+                            it
                         )
-                    }!!){
+                    }!!) {
                     speakOut("Can't control calling on your phone.", isFeedback = true)
                 }
             }
@@ -558,13 +558,13 @@ open class MainActivity : AppCompatActivity() {
             } else {
                 data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.let { result = it }
                 inputText.text = result[0]
+                txt = result[0].toLowerCase(skivvy.locale)
             }
         }
-        txt = result[0].toLowerCase(skivvy.locale)
         when (requestCode) {
             skivvy.CODE_SPEECH_RECORD -> {
-                if(lastTxt!=null)
-                    txt= lastTxt + space + txt
+                if (lastTxt != null)
+                    txt = lastTxt + space + txt
                 inputText.text = txt
                 if (!inGlobalCommands(txt)) {
                     errorView()
@@ -690,7 +690,7 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             skivvy.CODE_CALL_CONF -> {
-                
+
                 when (isCooperative(txt!!)) {
                     true -> {
                         if (!skivvy.hasThisPermission(context, skivvy.CODE_CALL_REQUEST)) {
@@ -761,7 +761,6 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             skivvy.CODE_ANSWER_CALL -> {
-                
                 if (txt != nothing && txt != null) {
                     if (!skivvy.hasThisPermission(context, skivvy.CODE_ANSWER_CALL)) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -775,8 +774,12 @@ open class MainActivity : AppCompatActivity() {
             skivvy.CODE_EMAIL_CONTENT -> {
                 txt = result[0]
                     .toLowerCase(skivvy.locale)
-                if (txt!=null){
-                    if(input.isStringInArray(txt!!, arrayOf(resources.getStringArray(R.array.disruptions)))) {
+                if (txt != null) {
+                    if (input.isStringInArray(
+                            txt!!,
+                            arrayOf(resources.getStringArray(R.array.disruptions))
+                        )
+                    ) {
                         initialView()
                         speakOut(getString(okay))
                     } else {
@@ -798,7 +801,7 @@ open class MainActivity : AppCompatActivity() {
                                     getString(body_added) +
                                             getString(should_i_email) + "${contact.displayName}${space}" +
                                             getLocalisedString(
-                                                  "at ${contact.emailList!![temp.getEmailIndex()]}?",
+                                                "at ${contact.emailList!![temp.getEmailIndex()]}?",
                                                 "को ${contact.emailList!![temp.getEmailIndex()]}${getString(
                                                     at
                                                 )}?"
@@ -1061,7 +1064,7 @@ open class MainActivity : AppCompatActivity() {
         )
         val deviceNames = arrayOf("screen", "phone", "device", "system", "yourself")
         when {
-            text.contains("battery level") || text.contains("battery status")||text.contains("battery")-> {
+            text.contains("battery level") || text.contains("battery status") || text.contains("battery") -> {
                 speakOut("Battery at $batteryLevel%.")
             }
             text.contains("setup") || text.contains("set up") -> {
@@ -2017,7 +2020,11 @@ open class MainActivity : AppCompatActivity() {
                                                 _phone_nums_of_
                                             ) + result.displayName, !onGoingTask
                                         )
-                                        if(skivvy.hasThisPermission(context,skivvy.CODE_CALL_LOG_REQUEST)) {
+                                        if (skivvy.hasThisPermission(
+                                                context,
+                                                skivvy.CODE_CALL_LOG_REQUEST
+                                            )
+                                        ) {
                                             ArrangeViaLogs().execute(result.displayName)        //to arrange phone list according to recently called
                                         } else {
                                             speakOut("I can call ${result.displayName} at their recent number, if you allow me to access call logs.")
@@ -2073,156 +2080,160 @@ open class MainActivity : AppCompatActivity() {
 
 //TODO: match strings with first letter and so on
 
-    private fun phoneNumbers(contactID: String): Array<String?>? {
-        var phones: Array<String?>? = null
-        val pCur: Cursor? = skivvy.cResolver.query(
-            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            null,
-            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-            arrayOf(contactID),
-            null
-        )
-        pCur!!.moveToFirst()
-        if (pCur.count == 0)
-            phones = null
-        else {
-            phones = arrayOfNulls(pCur.count)
-            var k = 0
-            while (k < pCur.count) {
-                phones[k] = formatPhoneNumber(
-                    pCur.getString(
-                        pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                    )
-                )
-                pCur.moveToNext()
-                ++k
-            }
-            return input.removeDuplicateStrings(phones)
-        }
-        pCur.close()
-        return phones
-    }
-
-    private fun nickNames(contactID: String): Array<String?>? {
+    // for nicknames
+    private fun getNicknamesOf(contactID: String): Array<String?>? {
         var nickNames: Array<String?>? = null
-        val nickCur: Cursor? = skivvy.cResolver.query(        //for nicknames
+        val cursor: Cursor? = skivvy.cResolver.query(
             ContactsContract.Data.CONTENT_URI,
-            null,
+            arrayOf(ContactsContract.CommonDataKinds.Nickname.NAME),
             ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
             arrayOf(
                 contactID, ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE
             ),
             null
         )
-        if (nickCur!!.count > 0) {
+        cursor?.let {
+            if (it.count == 0) return null
             var nc = 0
-            nickNames = arrayOfNulls(nickCur.count)
-            while (nickCur.moveToNext()) {
-                nickNames[nc] =
-                    nickCur.getString(nickCur.getColumnIndex(ContactsContract.CommonDataKinds.Nickname.NAME))
-                        ?.toLowerCase(skivvy.locale)
+            nickNames = arrayOfNulls(it.count)
+            while (it.moveToNext()) {
+                nickNames!![nc] = it.getString(0)?.toLowerCase(skivvy.locale)
                 ++nc
             }
-            nickNames = input.removeDuplicateStrings(nickNames)
+            it.close()
+            return input.removeDuplicateStrings(nickNames!!)
         }
-        nickCur.close()
+        cursor?.close()
         return nickNames
     }
 
-    private fun emailIDs(contactID: String): Array<String?>? {
+    private fun getPhoneNumbersOf(contactID: String): Array<String?>? {
+        var phones: Array<String?>? = null
+        val cursor: Cursor? = skivvy.cResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
+            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+            arrayOf(contactID),
+            null
+        )
+        cursor?.let {
+            if (it.count == 0) return null
+            phones = arrayOfNulls(it.count)
+            var k = 0
+            while (it.moveToNext()) {
+                phones!![k] = formatPhoneNumber(it.getString(0))
+                ++k
+            }
+            it.close()
+            return input.removeDuplicateStrings(phones!!)
+        }
+        cursor?.close()
+        return phones
+    }
+
+    private fun getEmailIDsOf(contactID: String): Array<String?>? {
         var emails: Array<String?>? = null
-        val eCur: Cursor? = skivvy.cResolver.query(
+        val cursor: Cursor? = skivvy.cResolver.query(
             ContactsContract.CommonDataKinds.Email.CONTENT_URI,
-            null,
+            arrayOf(ContactsContract.CommonDataKinds.Email.DATA),
             ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
             arrayOf(contactID),
             null
         )
-        eCur!!.moveToFirst()
-        if (eCur.count > 0) {
-            emails = arrayOfNulls(eCur.count)
+        cursor?.let {
+            if (it.count == 0) return null
+            emails = arrayOfNulls(it.count)
             var k = 0
-            while (k < eCur.count) {
-                emails[k] =
-                    eCur.getString(eCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA))
-                eCur.moveToNext()
+            while (it.moveToNext()) {
+                emails!![k] = it.getString(0)
                 ++k
             }
-            return input.removeDuplicateStrings(emails)
-        } else emails = null
-        eCur.close()
+            it.close()
+            return input.removeDuplicateStrings(emails!!)
+        }
+        cursor?.close()
         return emails
     }
 
-    fun contactNameOfPhone(number: String): String? {
-        cur?.let {
-            if (it.count > 0) {
-                while (it.moveToNext()) {
-                    phoneNumbers(it.getString(it.getColumnIndex(ContactsContract.Contacts._ID)))?.contains(
-                        number
-                    )?.let { it1 ->
-                        if (it1) return it.getString(it.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-                    }
-                }
-            }
-            it.moveToFirst()
-        }
-        return null
+    private fun getContactIdOfNumber(number: String): String? {
+        return skivvy.cResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            arrayOf(ContactsContract.CommonDataKinds.Phone.CONTACT_ID),
+            formatPhoneNumber(ContactsContract.CommonDataKinds.Phone.NUMBER) + " = ?", arrayOf(
+                formatPhoneNumber(number)
+            ),
+            null
+        )?.getString(0)
     }
 
-    fun contactImageOfPhone(number: String): Drawable? {
-        cur?.let {
-            if (it.count > 0) {
-                while (it.moveToNext()) {
-                    phoneNumbers(it.getString(it.getColumnIndex(ContactsContract.Contacts._ID)))?.contains(
-                        number
-                    )?.let { it1 ->
-                        if (it1)
-                            return it.getString(it.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
-                                ?.let { it2 ->
-                                    cropToCircle(it2)
-                                }
-                    }
-                }
-            }
-            it.moveToFirst()
-        }
-        return null
+
+    fun getContactNameOfNumber(number: String): String? {
+        return skivvy.cResolver.query(
+            ContactsContract.Contacts.CONTENT_URI,
+            arrayOf(ContactsContract.Contacts.DISPLAY_NAME),
+            ContactsContract.Contacts._ID + " = ?",
+            arrayOf(getContactIdOfNumber(number)),
+            null
+        )?.getString(0)
     }
 
-    //TODO: Create suitable projection and search argument for cursor, plus contact image gives random output when not available for a certain contact.
-    private fun contactOps(
-        keyPhrase: String,
-        isName: Boolean = true
-    ): ContactModel? {
-        cur?.let {
+    private fun getContactImageOfNumber(number: String): Drawable? {
+        return cropToCircle(
+            skivvy.cResolver.query(
+                ContactsContract.Contacts.CONTENT_URI,
+                arrayOf(ContactsContract.Contacts.PHOTO_URI),
+                ContactsContract.Contacts._ID + " = ?",
+                arrayOf(getContactIdOfNumber(number)),
+                null
+            )?.getString(0)
+        )
+    }
+
+    //TODO: Create suitable projection and search argument for cursor
+    private fun contactOps(keyPhrase: String): ContactModel? {
+        val cursor: Cursor? = skivvy.cResolver.query(
+            ContactsContract.Contacts.CONTENT_URI,
+            arrayOf(
+                ContactsContract.Contacts._ID,
+                ContactsContract.Contacts.DISPLAY_NAME,
+                ContactsContract.Contacts.PHOTO_URI
+            ),
+            null,
+            null,
+            null
+        )
+        cursor?.let {
             if (it.count > 0) {
                 while (it.moveToNext()) {
-                    contact.contactID = it.getString(it.getColumnIndex(ContactsContract.Contacts._ID))
-                    contact.displayName = it.getString(it.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-                    contact.nickName = nickNames(contact.contactID)
+                    contact.contactID = it.getString(0)
+                    contact.displayName = it.getString(1)
+                    contact.nickName = getNicknamesOf(contact.contactID)
                     temp.setContactReceived(keyPhrase.trim())
                     if (temp.getContactReceived() == contact.displayName.toLowerCase(skivvy.locale)
-                        || temp.getContactReceived() == contact.displayName.substringBefore(space).toLowerCase(skivvy.locale)
-                        || !contact.nickName.isNullOrEmpty() && contact.nickName!!.contains(temp.getContactReceived())) {
+                        || temp.getContactReceived() == contact.displayName.substringBefore(space)
+                            .toLowerCase(skivvy.locale)
+                        || !contact.nickName.isNullOrEmpty() && contact.nickName!!.contains(temp.getContactReceived())
+                    ) {
                         temp.setContactPresence(true)
-                        it.getString(it.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
-                            ?.let { uri -> contact.photoID = uri }
-                        contact.emailList = emailIDs(contact.contactID)
-                        contact.phoneList = phoneNumbers(contact.contactID)
+                        it.getString(2)?.let { uri -> contact.photoID = uri }
+                        contact.emailList = getEmailIDsOf(contact.contactID)
+                        contact.phoneList = getPhoneNumbersOf(contact.contactID)
                         break
                     } else temp.setContactPresence(false)
                 }
-                it.moveToFirst()
+                it.close()
                 return contact
             } else {
+                it.close()
                 return null
             }
         }
+        cursor?.close()
         return null
     }
 
-    private fun cropToCircle(uri: String): RoundedBitmapDrawable? {
+    private fun cropToCircle(uri: String?): RoundedBitmapDrawable? {
+        if (uri == null) return null
         val rb: RoundedBitmapDrawable =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 RoundedBitmapDrawableFactory.create(
@@ -2339,6 +2350,21 @@ open class MainActivity : AppCompatActivity() {
 
     }
 
+    inner class FindContactIncoming : AsyncTask<String, Void, Boolean>() {
+        override fun doInBackground(vararg params: String?): Boolean {
+            params[0]?.let {
+                name = getContactNameOfNumber(it)
+                image = getContactImageOfNumber(it)
+                return true
+            }
+            return false
+        }
+
+        override fun onPostExecute(result: Boolean?) {
+            super.onPostExecute(result)
+        }
+    }
+
     var name: String? = null
     var phone: String? = null
     var image: Drawable? = null
@@ -2349,12 +2375,7 @@ open class MainActivity : AppCompatActivity() {
                 if (state != lastState) {
                     if (number.isNotEmpty()) {
                         phone = formatPhoneNumber(number)
-                        GlobalScope.launch {
-                            phone?.let {
-                                name = contactNameOfPhone(it)
-                                image = contactImageOfPhone(it)
-                            }
-                        }
+                        FindContactIncoming().execute(phone)
                     }
                 }
                 when (state) {
@@ -2379,9 +2400,8 @@ open class MainActivity : AppCompatActivity() {
                         onGoingTask = true
                         if (lastState == TelephonyManager.CALL_STATE_RINGING) {     //user picked up
                             speakOut(
-                                getString(speaking_to_) +
-                                        if (name != null) name
-                                        else phone
+                                getString(speaking_to_) + if (name != null) name
+                                else phone
                             )
                             waitingView(
                                 if (image != null) image
@@ -2401,9 +2421,8 @@ open class MainActivity : AppCompatActivity() {
                         onGoingTask = false
                         if (lastState == TelephonyManager.CALL_STATE_RINGING) {     //missed call
                             speakOut(
-                                getString(you_missed_call_from_) +
-                                        if (name != null) name
-                                        else phone
+                                getString(you_missed_call_from_) + if (name != null) name
+                                else phone
                             )
                             errorView(
                                 if (image != null) image
@@ -2411,12 +2430,11 @@ open class MainActivity : AppCompatActivity() {
                             )
                         } else if (lastState == TelephonyManager.CALL_STATE_OFFHOOK) {      //call ended
                             speakOut(
-                                getString(call_ended_with_) +
-                                        when {
-                                            name != null -> name
-                                            temp.getContactPresence() -> contact.displayName
-                                            else -> phone
-                                        }
+                                getString(call_ended_with_) + when {
+                                    name != null -> name
+                                    temp.getContactPresence() -> contact.displayName
+                                    else -> phone
+                                }
                             )
                         }
                         name = null
@@ -2433,14 +2451,34 @@ open class MainActivity : AppCompatActivity() {
         )
     }
 
-    var batteryLevel:Int = 0
+    var batteryLevel: Int = 0
     private val mBatInfoReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctxt: Context?, intent: Intent) {
             batteryLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0)
-            when(batteryLevel){
-                100->speakOut("Battery is full, you may remove charger now.", isFeedback = true)
-                15->speakOut("Battery is low, device might need charging.", isFeedback = true, isUrgent = true)
-                5->speakOut("Battery critically low, needs charging now!", isFeedback = true, isUrgent = true)
+            when (batteryLevel) {
+                100 -> speakOut("Battery is full, you may remove charger now.", isFeedback = true)
+                15 -> speakOut(
+                    "Battery is low, device might need charging.",
+                    isFeedback = true,
+                    isUrgent = true
+                )
+                5 -> speakOut(
+                    "Battery critically low, needs charging now!",
+                    isFeedback = true,
+                    isUrgent = true
+                )
+            }
+        }
+    }
+    var lastTimeNotif: String? = null
+    private val mNotificationReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent) {
+            val from = intent.getStringExtra(skivvy.notificationPackageName)
+            val msg = intent.getStringExtra(skivvy.notificationTicker)
+            val time = intent.getStringExtra(skivvy.notificationTime)
+            if (time != lastTimeNotif) {
+                msg?.let { speakOut("$it on $from") }
+                lastTimeNotif = time
             }
         }
     }
@@ -2450,8 +2488,7 @@ open class MainActivity : AppCompatActivity() {
         speakOut(getString(exit_msg))
         loading.startAnimation(anim.zoomInRotate)
         this.unregisterReceiver(this.mBatInfoReceiver)
-        cur?.close()
-        skivvy.contactCursor?.close()
+        this.unregisterReceiver(this.mNotificationReceiver)
         skivvy.tts?.let {
             it.stop()
             it.shutdown()
@@ -2508,7 +2545,7 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun isInitiative(response:String):Boolean?{
+    private fun isInitiative(response: String): Boolean? {
         return when {
             input.containsString(
                 input.removeBeforeLastStringsIn(
@@ -2518,8 +2555,10 @@ open class MainActivity : AppCompatActivity() {
                         resources.getStringArray(R.array.initiators)
                     )
                 ),
-                arrayOf(resources.getStringArray(R.array.denials),
-                    resources.getStringArray(R.array.disruptions))
+                arrayOf(
+                    resources.getStringArray(R.array.denials),
+                    resources.getStringArray(R.array.disruptions)
+                )
             ) -> false      //if denial was the last response in string
             input.containsString(
                 input.removeBeforeLastStringsIn(
@@ -2529,24 +2568,31 @@ open class MainActivity : AppCompatActivity() {
                         resources.getStringArray(R.array.disruptions)
                     )
                 ),
-                arrayOf(resources.getStringArray(R.array.initiators),
-                    resources.getStringArray(R.array.acceptances))
+                arrayOf(
+                    resources.getStringArray(R.array.initiators),
+                    resources.getStringArray(R.array.acceptances)
+                )
             ) -> true       //if acceptance was the last response in string
             input.containsString(
                 response,
-                arrayOf(resources.getStringArray(R.array.denials),
-                    resources.getStringArray(R.array.disruptions)),
+                arrayOf(
+                    resources.getStringArray(R.array.denials),
+                    resources.getStringArray(R.array.disruptions)
+                ),
                 isSingle = true
             ) -> false      //if response contains denial/cancellation
             input.containsString(
                 response,
-                arrayOf(resources.getStringArray(R.array.initiators),
-                        resources.getStringArray(R.array.acceptances)),
+                arrayOf(
+                    resources.getStringArray(R.array.initiators),
+                    resources.getStringArray(R.array.acceptances)
+                ),
                 isSingle = true
             ) -> true      //if response contains acceptance/initiatives
-            else->null
+            else -> null
         }
     }
+
     private fun isDisruptive(response: String): Boolean {
         return when {
             input.containsString(
@@ -2645,11 +2691,13 @@ open class MainActivity : AppCompatActivity() {
             it.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onDone(utteranceId: String) {
                     if (!parallelReceiver)
-                        taskCode?.let {code-> startVoiceRecIntent(code, text) }
+                        taskCode?.let { code -> startVoiceRecIntent(code, text) }
                 }
+
                 override fun onError(utteranceId: String) {
                     taskCode?.let { code -> startVoiceRecIntent(code, text) }
                 }
+
                 override fun onStart(utteranceId: String) {
                     if (parallelReceiver)
                         taskCode?.let { code -> startVoiceRecIntent(code, text) }
@@ -2777,7 +2825,7 @@ open class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                if(contact.phoneList!![0] == number) break
+                if (contact.phoneList!![0] == number) break
             }
             it.close()
         }
