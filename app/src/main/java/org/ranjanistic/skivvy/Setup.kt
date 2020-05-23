@@ -57,6 +57,7 @@ class Setup : AppCompatActivity() {
         lateinit var handy: Switch
         lateinit var onStartup: Switch
         lateinit var fullScreen: Switch
+        lateinit var notifications: Switch
     }
 
     private class Maths {
@@ -179,6 +180,7 @@ class Setup : AppCompatActivity() {
         appSetup.handy = findViewById(R.id.handDirectionBtn)
         appSetup.onStartup = findViewById(R.id.recordOnStart)
         appSetup.fullScreen = findViewById(R.id.fullScreenMode)
+        appSetup.notifications = findViewById(R.id.showNotification)
         maths.angleUnit = findViewById(R.id.angleUnitBtn)
         security.biometrics = findViewById(R.id.biometricsBtn)
         security.voiceAuth = findViewById(R.id.voice_auth_switch)
@@ -272,6 +274,7 @@ class Setup : AppCompatActivity() {
             appSetup.handy,
             appSetup.onStartup,
             appSetup.fullScreen,
+            appSetup.notifications,
             maths.angleUnit,
             security.biometrics,
             security.voiceAuth
@@ -287,6 +290,7 @@ class Setup : AppCompatActivity() {
             skivvy.getLeftHandy(),
             skivvy.shouldListenStartup(),
             skivvy.shouldFullScreen(),
+            skivvy.showNotifications(),
             skivvy.getAngleUnit() == skivvy.radian,
             skivvy.getBiometricStatus(),
             skivvy.getPhraseKeyStatus()
@@ -302,6 +306,7 @@ class Setup : AppCompatActivity() {
             getString(R.string.left_handy),
             getString(R.string.listen_on_click),
             getString(R.string.disable_full_screen),
+            getString(R.string.notifications_on),
             getString(R.string.unit_radian_text),
             getString(R.string.disable_fingerprint),
             getString(R.string.disable_vocal_authentication)
@@ -315,6 +320,7 @@ class Setup : AppCompatActivity() {
             getString(R.string.right_handy),
             getString(R.string.listen_on_start),
             getString(R.string.enable_full_screen),
+            getString(R.string.notifications_off),
             getString(R.string.unit_degree_text),
             getString(R.string.enable_fingerprint),
             getString(R.string.enable_vocal_authentication)
@@ -789,6 +795,21 @@ class Setup : AppCompatActivity() {
                 }, showSnackbar = true
             )
             restarter()
+        }
+        appSetup.notifications.setOnCheckedChangeListener { view, isChecked ->
+            skivvy.setAppModePref(showNotification = isChecked)
+            setThumbAttrs(
+                view as Switch,
+                isChecked,
+                getString(R.string.notifications_on),
+                getString(R.string.notifications_off)
+            )
+            speakOut(
+                when (isChecked) {
+                    true -> getString(R.string.notifications_on)
+                    else -> getString(R.string.notifications_off)
+                }, showSnackbar = true
+            )
         }
         maths.angleUnit.setOnCheckedChangeListener { view, isChecked ->
             skivvy.setMathsPref(

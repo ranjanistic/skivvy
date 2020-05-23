@@ -44,6 +44,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
@@ -113,6 +114,7 @@ open class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         context = this
         skivvy = this.application as Skivvy
+        skivvy.isHomePageRunning = true
         setTheme(skivvy.getThemeState())
         setContentView(R.layout.activity_homescreen)
         window.statusBarColor = when (skivvy.shouldFullScreen()) {
@@ -140,6 +142,9 @@ open class MainActivity : AppCompatActivity() {
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
             )
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
+        if (isNotificationServiceRunning() && skivvy.showNotifications()) {
+            startService(Intent(this, NotificationWatcher::class.java))
+        }
         setOutput(getString(im_ready))
         if (skivvy.shouldListenStartup())
             startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
@@ -273,8 +278,13 @@ open class MainActivity : AppCompatActivity() {
             if (!onGoingTask) {
                 speakOut(nothing, skivvy.CODE_SPEECH_RECORD, parallelReceiver = true)
             } else {
-                setFeedback(outputText.text.toString())
-                speakOut(getString(what_next), skivvy.CODE_SPEECH_RECORD, parallelReceiver = true)
+                val out = outputText.text.toString()
+                val feed = feedback.text.toString()
+                if (out != getString(what_next) || out != getString(im_ready))
+                    if (feed == getString(what_next) || feed == getString(im_ready) || feed == nothing)
+                        feedback.text = out
+                onGoingTask = true
+                startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
             }
         }
         anim.extendDownStartSetup.setAnimationListener(object :
@@ -501,9 +511,17 @@ open class MainActivity : AppCompatActivity() {
                 finishAnimate()
             }
             KeyEvent.KEYCODE_HEADSETHOOK -> {
-                speakOut(nothing)
                 initialView(onGoingTask)
-                startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
+                if (!onGoingTask) {
+                    speakOut(nothing, skivvy.CODE_SPEECH_RECORD, parallelReceiver = true)
+                } else {
+                    setFeedback(outputText.text.toString())
+                    speakOut(
+                        getString(what_next),
+                        skivvy.CODE_SPEECH_RECORD,
+                        parallelReceiver = true
+                    )
+                }
             }
             KeyEvent.KEYCODE_VOLUME_UP -> {
                 setFeedback(
@@ -553,6 +571,12 @@ open class MainActivity : AppCompatActivity() {
                 initialView(onGoingTask)
                 if (!onGoingTask) {
                     speakOut(getString(no_input))
+                } else {
+                    val feed = feedback.text.toString()
+                    if (feed != getString(im_ready) || feed != getString(what_next)) {
+                        outputText.text = feed
+                        setFeedback(nothing)
+                    }
                 }
                 return
             } else {
@@ -2158,10 +2182,12 @@ open class MainActivity : AppCompatActivity() {
     private fun getContactIdOfNumber(number: String): String? {
         return skivvy.cResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            arrayOf(ContactsContract.CommonDataKinds.Phone.CONTACT_ID),
-            formatPhoneNumber(ContactsContract.CommonDataKinds.Phone.NUMBER) + " = ?", arrayOf(
-                formatPhoneNumber(number)
+            arrayOf(
+                ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+                ContactsContract.CommonDataKinds.Phone.NUMBER
             ),
+            formatPhoneNumber(ContactsContract.CommonDataKinds.Phone.NUMBER) + " = ?",
+            arrayOf(formatPhoneNumber(number)),
             null
         )?.getString(0)
     }
@@ -2359,7 +2385,6 @@ open class MainActivity : AppCompatActivity() {
             }
             return false
         }
-
         override fun onPostExecute(result: Boolean?) {
             super.onPostExecute(result)
         }
@@ -2455,33 +2480,52 @@ open class MainActivity : AppCompatActivity() {
     private val mBatInfoReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctxt: Context?, intent: Intent) {
             batteryLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0)
-            when (batteryLevel) {
-                100 -> speakOut("Battery is full, you may remove charger now.", isFeedback = true)
-                15 -> speakOut(
-                    "Battery is low, device might need charging.",
-                    isFeedback = true,
-                    isUrgent = true
-                )
-                5 -> speakOut(
-                    "Battery critically low, needs charging now!",
-                    isFeedback = true,
-                    isUrgent = true
-                )
+            if (!onGoingTask) {
+                when (batteryLevel) {
+                    100 -> speakOut(
+                        "Battery is full, you may remove charger now.",
+                        isFeedback = true
+                    )
+                    15 -> speakOut(
+                        "Battery is low, device might need charging.",
+                        isFeedback = true,
+                        isUrgent = true
+                    )
+                    5 -> speakOut(
+                        "Battery critically low, needs charging now!",
+                        isFeedback = true,
+                        isUrgent = true
+                    )
+                }
             }
         }
     }
     var lastTimeNotif: String? = null
+    var lastMsgNotif: String? = null
+    var lastNotifFrom: String? = null
     private val mNotificationReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
-            val from = intent.getStringExtra(skivvy.notificationPackageName)
+            val from = intent.getStringExtra(skivvy.notificationAppName)
             val msg = intent.getStringExtra(skivvy.notificationTicker)
             val time = intent.getStringExtra(skivvy.notificationTime)
-            if (time != lastTimeNotif) {
-                msg?.let { speakOut("$it on $from") }
+            val ongoing = intent.getBooleanExtra(skivvy.notificationOngoing, false)
+            if (outputText.text.toString() == lastMsgNotif && msg != lastMsgNotif) {
+                setFeedback(nothing)
+                outputText.text = msg
+            }
+            if (time != lastTimeNotif && msg != lastMsgNotif || ongoing != onGoingTask) {
+                msg?.let { speakOut("$it, on $from", isFeedback = ongoing) }
                 lastTimeNotif = time
+                lastMsgNotif = msg
+                lastNotifFrom = from
+                val pData = PackageDataManager(skivvy)
+                waitingView(pData.iconOfPackage(appName = from))
+                onGoingTask = if (ongoing) ongoing
+                else false
             }
         }
     }
+    //TODO: create array of ongoingTasks boolean variable, to check multiple ongoing tasks at same time.
 
     //TODO: notification content display
     override fun onDestroy() {
@@ -2493,11 +2537,13 @@ open class MainActivity : AppCompatActivity() {
             it.stop()
             it.shutdown()
         }
+        skivvy.isHomePageRunning = false
         super.onDestroy()
     }
 
     override fun onBackPressed() {
         super.onBackPressed()
+        skivvy.isHomePageRunning = false
         speakOut(getString(exit_msg))
     }
 
@@ -2505,9 +2551,6 @@ open class MainActivity : AppCompatActivity() {
      * Following function checks whether the given string has last response as acceptance or denial
      * @param response : the given string of response
      * @return : returns boolean value according to content of given response (true for positive, false for negative, null for invalid response)
-     * @note: The space is padded in [response] whenever it is singular (i.e., with no spaces),
-     * because it should not be a substring of any other string.
-     * For example - 'no' in knowledge cannot be treated as a valid response.
      * TODO: extend this to other types of responses too.
      */
     private fun isCooperative(response: String): Boolean? {
@@ -2833,6 +2876,8 @@ open class MainActivity : AppCompatActivity() {
         return contact.phoneList
     }
 
+    private fun isNotificationServiceRunning(): Boolean =
+        NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
     private fun getLocalisedString(eng: String, hindi: String): String {
         if (skivvy.isLocaleHindi()) {
             return hindi

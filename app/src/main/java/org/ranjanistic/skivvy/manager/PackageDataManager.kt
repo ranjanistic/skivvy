@@ -3,6 +3,8 @@ package org.ranjanistic.skivvy.manager
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import org.ranjanistic.skivvy.Skivvy
+import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * Device packages manager class, to hold the details of packages
@@ -57,6 +59,33 @@ class PackageDataManager(val skivvy: Skivvy) {
 
     fun getPackageIcon(index: Int): Drawable? {
         return packagesIcon[index]
+    }
+
+    @ExperimentalStdlibApi
+    fun appNameOfPackage(packageName: String): String? {
+        var index = 0
+        while (index < pData.getTotalPackages()) {
+            if (packageName == pData.getPackageName(index))
+                pData.getPackageAppName(index)?.let { return it.capitalize(skivvy.locale) }
+            ++index
+        }
+        return null
+    }
+
+    fun iconOfPackage(packageName: String? = null, appName: String? = null): Drawable? {
+        var index = 0
+        while (index < pData.getTotalPackages()) {
+            if (packageName != null) {
+                if (packageName == pData.getPackageName(index))
+                    pData.getPackageIcon(index)?.let { return it }
+            }
+            if (appName != null) {
+                if (appName == pData.getPackageAppName(index))
+                    pData.getPackageIcon(index)?.let { return it }
+            }
+            ++index
+        }
+        return null
     }
 
     fun isThereAnyAppNamed(name: String, startFrom: Int = 0): Boolean {

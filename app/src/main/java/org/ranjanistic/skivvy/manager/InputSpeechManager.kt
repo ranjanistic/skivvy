@@ -55,6 +55,9 @@ class InputSpeechManager {
      * @param stringListArray: The array of list of strings from which [line] will be inspected for occurrence.
      * @param isSingle: If given [line] is to be treated as single response or not (avoids possibility of multiple valid responses in string).
      * @return: Returns boolean according to the occurrence of any string from [stringListArray] in given [line].
+     * @note: The space is padded in [line] whenever it is singular [isSingle] (i.e., with no spaces),
+     * and it shouldn't be a substring of any other string.
+     * For example - 'no' in knowledge cannot be treated as a valid response, therefore ' no ' is checked for occurrence.
      */
     fun containsString(
         line: String,

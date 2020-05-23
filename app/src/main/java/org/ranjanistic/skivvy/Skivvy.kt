@@ -62,10 +62,11 @@ class Skivvy : Application() {
     val nothing = ""
     val space = " "
     val actionNotification = BuildConfig.APPLICATION_ID + "NOTIFICATION_LISTENER_SERVICE"
-    val notificationPackageName = "notificationPackageName"
+    val notificationAppName = "notificationAppName"
     val notificationTicker = "notificationTicker"
     val notificationTime = "notificationTime"
-
+    val notificationOngoing = "notificationOngoing"
+    var isHomePageRunning = false
     //action codes
     val CODE_TRAINING_MODE = 9
     val CODE_SPEECH_RECORD = 10
@@ -108,6 +109,7 @@ class Skivvy : Application() {
     val PREF_KEY_HANDY = "handSide"
     val PREF_KEY_START_TALK = "talkOnStart"
     val PREF_KEY_FULL_SCREEN = "fullscreen"
+    val PREF_KEY_NOTIFY = "showNotifications"
 
     val PREF_HEAD_MATHS = "mathsSetup"
     val PREF_KEY_ANGLE_UNIT = "angleUnit"
@@ -135,9 +137,8 @@ class Skivvy : Application() {
     lateinit var deviceManager: DevicePolicyManager
     lateinit var compName: ComponentName
     private val hindiLocale = "hi_IN"
-    //TODO: Settings grouping header
+
     lateinit var cResolver:ContentResolver
-    var contactCursor:Cursor? = null
     @ExperimentalStdlibApi
     override fun onCreate() {
         super.onCreate()
@@ -229,7 +230,8 @@ class Skivvy : Application() {
         parallelListen: Boolean? = null,
         leftHandy: Boolean? = null,
         onStartListen: Boolean? = null,
-        fullScreen: Boolean? = null
+        fullScreen: Boolean? = null,
+        showNotification: Boolean? = null
     ) {
         val editor = getSharedPreferences(this.PREF_HEAD_APP_SETUP, MODE_PRIVATE).edit()
         isCustomTheme?.let { editor.putBoolean(this.PREF_KEY_CUSTOM_THEME, it).apply() }
@@ -238,6 +240,7 @@ class Skivvy : Application() {
         leftHandy?.let { editor.putBoolean(this.PREF_KEY_HANDY, it).apply() }
         onStartListen?.let { editor.putBoolean(this.PREF_KEY_START_TALK, it).apply() }
         fullScreen?.let { editor.putBoolean(this.PREF_KEY_FULL_SCREEN, it).apply() }
+        showNotification?.let { editor.putBoolean(this.PREF_KEY_NOTIFY, it).apply() }
     }
 
     fun isCustomTheme(): Boolean =
@@ -264,6 +267,9 @@ class Skivvy : Application() {
         getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_FULL_SCREEN, false)
 
+    fun showNotifications(): Boolean =
+        getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_NOTIFY, false)
     //Mathematics and calculation preferences
     fun setMathsPref(angleUnit: String? = null, logBase:Float? = null) {
         val editor = getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE).edit()

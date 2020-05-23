@@ -333,4 +333,6 @@
     <string name="brightness_inaccessible">I couldn\'t access brightness</string>
     <string name="enter_base_for_log">Custom base for Log calculation</string>
     <string name="save_log_base">Save base</string>
+    <string name="notifications_on">Reading notifications</string>
+    <string name="notifications_off">Not reading notifications</string>
 </resources>
