@@ -331,8 +331,10 @@
     <string name="_is_calling_you">&#160;is calling you</string>
     <string name="incoming_call_from_">Incoming call from&#160;</string>
     <string name="brightness_inaccessible">I couldn\'t access brightness</string>
-    <string name="enter_base_for_log">Custom base for Log calculation</string>
+    <string name="enter_base_for_log">Custom base</string>
     <string name="save_log_base">Save base</string>
     <string name="notifications_on">Reading notifications</string>
     <string name="notifications_off">Not reading notifications</string>
+    <string name="log_base_is_">Log base is&#160;</string>
+    <string name="invalid_log_base">Invalid base value</string>
 </resources>

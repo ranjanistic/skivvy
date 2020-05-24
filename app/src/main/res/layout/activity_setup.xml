@@ -242,24 +242,14 @@
                         android:layout_height="wrap_content" />
                 </RadioGroup>
 
-                <TextView
+                <include
                     android:id="@+id/save_theme"
+                    layout="@layout/text_button_chip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
                     android:layout_marginHorizontal="@dimen/minimum_separation"
-                    android:layout_marginBottom="@dimen/minimum_separation"
-                    android:background="@drawable/button_square_round"
-                    android:backgroundTint="@color/colorPrimary"
-                    android:clickable="true"
-                    android:elevation="@dimen/base_separation"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:paddingHorizontal="@dimen/minimum_separation"
-                    android:paddingVertical="4dp"
-                    android:text="@string/save_apply"
-                    android:textColor="@color/pitch_white"
-                    android:textSize="16sp" />
+                    android:layout_marginBottom="@dimen/minimum_separation" />
             </LinearLayout>
 
             <include
@@ -333,46 +323,56 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/mathematics_group_head" />
 
-            <LinearLayout
-                android:id="@+id/custom_log_base"
+            <TextView
+                android:id="@+id/logBaseText"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginTop="@dimen/base_separation"
+                android:background="@drawable/button_square_round_top"
+                android:backgroundTint="?attr/fluid_button_color"
+                android:fontFamily="@font/jost_light"
+                android:padding="@dimen/secondary_separation"
+                android:textColor="?attr/fluid_button_text_color"
+                android:textSize="@dimen/normal_text_size"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/angleUnitBtn" />
+
+            <LinearLayout
+                android:id="@+id/logBaseEditor"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:layout_marginBottom="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/angleUnitBtn" >
-                <include
-                    android:id="@+id/setCustomLogBase"
-                    layout="@layout/switch_layout"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/base_separation" />
-                <TextView
-                    android:id="@+id/save_log_base"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_marginHorizontal="@dimen/minimum_separation"
-                    android:layout_marginBottom="@dimen/minimum_separation"
-                    android:background="@drawable/button_square_round"
-                    android:backgroundTint="@color/colorPrimary"
-                    android:clickable="true"
-                    android:elevation="@dimen/base_separation"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:paddingHorizontal="@dimen/minimum_separation"
-                    android:paddingVertical="4dp"
-                    android:text="@string/save_log_base"
-                    android:textColor="@color/pitch_white"
-                    android:textSize="16sp" />
-
+                app:layout_constraintTop_toBottomOf="@id/logBaseText">
                 <EditText
                     android:id="@+id/logBaseInput"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:inputType="number"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_margin="@dimen/minimum_separation"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:gravity="center"
+                    android:textColor="?attr/fluid_button_text_color"
+                    android:textColorHint="?attr/secondary_text_color"
+                    android:textSize="@dimen/normal_text_size"
                     android:hint="@string/enter_base_for_log" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <include
+                    android:id="@+id/saveLogBase"
+                    layout="@layout/text_button_chip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|center_vertical"
+                    android:layout_marginEnd="@dimen/minimum_separation" />
             </LinearLayout>
 
             <include
@@ -384,7 +384,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/custom_log_base" />
+                app:layout_constraintTop_toBottomOf="@id/logBaseEditor" />
 
             <include
                 android:id="@+id/biometricsBtn"

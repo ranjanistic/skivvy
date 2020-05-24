@@ -142,9 +142,6 @@ open class MainActivity : AppCompatActivity() {
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
             )
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
-        if (isNotificationServiceRunning() && skivvy.showNotifications()) {
-            startService(Intent(this, NotificationWatcher::class.java))
-        }
         setOutput(getString(im_ready))
         if (skivvy.shouldListenStartup())
             startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
@@ -314,6 +311,10 @@ open class MainActivity : AppCompatActivity() {
         super.onStart()
         this.registerReceiver(this.mBatInfoReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         this.registerReceiver(this.mNotificationReceiver, IntentFilter(skivvy.actionNotification))
+        if (isNotificationServiceRunning() && skivvy.showNotifications()) {
+            startService(Intent(this, NotificationWatcher::class.java))
+        }
+        setTheme(skivvy.getThemeState())
     }
 
     private fun hideSysUI() {
@@ -2385,9 +2386,6 @@ open class MainActivity : AppCompatActivity() {
             }
             return false
         }
-        override fun onPostExecute(result: Boolean?) {
-            super.onPostExecute(result)
-        }
     }
 
     var name: String? = null
@@ -2526,7 +2524,7 @@ open class MainActivity : AppCompatActivity() {
         }
     }
     //TODO: create array of ongoingTasks boolean variable, to check multiple ongoing tasks at same time.
-
+    //TODO: Try lauching as apk instead of app bundle, to check for other locales
     //TODO: notification content display
     override fun onDestroy() {
         speakOut(getString(exit_msg))

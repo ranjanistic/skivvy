@@ -5,6 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:background="@drawable/button_square_round"
     android:backgroundTint="?attr/fluid_button_color"
+    android:drawableTop="@drawable/dots_in_circle"
     android:drawablePadding="4dp"
     android:textColor="?attr/fluid_button_text_color"
     android:clickable="true"

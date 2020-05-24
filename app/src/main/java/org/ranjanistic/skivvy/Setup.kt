@@ -62,6 +62,10 @@ class Setup : AppCompatActivity() {
 
     private class Maths {
         lateinit var angleUnit: Switch
+        lateinit var logBaseText: TextView
+        lateinit var logBaseEditor: LinearLayout
+        lateinit var logBaseInput: EditText
+        lateinit var logBaseSave: TextView
     }
 
     private class Security {
@@ -182,6 +186,11 @@ class Setup : AppCompatActivity() {
         appSetup.fullScreen = findViewById(R.id.fullScreenMode)
         appSetup.notifications = findViewById(R.id.showNotification)
         maths.angleUnit = findViewById(R.id.angleUnitBtn)
+        maths.logBaseText = findViewById(R.id.logBaseText)
+        maths.logBaseEditor = findViewById(R.id.logBaseEditor)
+        maths.logBaseInput = findViewById(R.id.logBaseInput)
+        maths.logBaseSave = findViewById(R.id.saveLogBase)
+        maths.logBaseSave.text = "Save"
         security.biometrics = findViewById(R.id.biometricsBtn)
         security.voiceAuth = findViewById(R.id.voice_auth_switch)
         security.deleteVoiceSetup = findViewById(R.id.delete_voice_key)
@@ -191,7 +200,8 @@ class Setup : AppCompatActivity() {
         special.accessNotifications = findViewById(R.id.notificationAccessBtn)
         special.drawOver = findViewById(R.id.drawOverBtn)
         special.batteryOptimize = findViewById(R.id.batteryOptBtn)
-        noteView.text = "${BuildConfig.VERSION_NAME}\n${getString(R.string.app_tag_line)}"
+        val text = "${BuildConfig.VERSION_NAME}\n${getString(R.string.app_tag_line)}"
+        noteView.text = text
         findViewById<TextView>(R.id.voice_group_head).text = getString(R.string.voice_and_volume)
         findViewById<TextView>(R.id.appsetup_group_head).text = getString(R.string.app_and_setup)
         findViewById<TextView>(R.id.mathematics_group_head).text =
@@ -199,7 +209,6 @@ class Setup : AppCompatActivity() {
         findViewById<TextView>(R.id.security_group_head).text =
             getString(R.string.security_and_setup)
         appSetup.saveTheme.setBackgroundResource(R.drawable.button_square_round_spruce)
-
         setPermissionGridData(
             arrayOf(
                 special.permissions,
@@ -265,6 +274,7 @@ class Setup : AppCompatActivity() {
         if (skivvy.isCustomTheme()) {
             appSetup.themeChoices.check(getRadioForTheme(skivvy.getThemeState()))
         }
+        setLogBaseUI(false)
         val switches: Array<Switch?> = arrayOf(
             voice.mute,
             voice.normalizeVolume,
@@ -831,6 +841,22 @@ class Setup : AppCompatActivity() {
                 }, showSnackbar = true
             )
         }
+        maths.logBaseText.setOnClickListener {
+            setLogBaseUI(maths.logBaseEditor.visibility != View.VISIBLE)
+        }
+        maths.logBaseSave.setOnClickListener {
+            val base = maths.logBaseInput.text.toString().toFloat().toInt()
+            if (!maths.logBaseInput.text.isNullOrBlank() && base > 1) {
+                skivvy.setMathsPref(logBase = base)
+                setLogBaseUI(false)
+            } else {
+                speakOut(
+                    getString(R.string.invalid_log_base),
+                    showSnackbar = true,
+                    isPositiveForSnackbar = false
+                )
+            }
+        }
         security.biometrics.setOnCheckedChangeListener { view, isChecked ->
             if (isChecked) {
                 skivvy.setSecurityPref(biometricOn = true)
@@ -849,7 +875,7 @@ class Setup : AppCompatActivity() {
                 }
             }
         }
-        //TODO:  minimum retry attempts preference
+
         security.voiceAuth.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 if (skivvy.getVoiceKeyPhrase() == null) {
@@ -985,6 +1011,36 @@ class Setup : AppCompatActivity() {
             bubbleThis(view)
             speakOut(getString(R.string.draw_over_others_request), showSnackbar = true)
             true
+        }
+    }
+
+    private fun setLogBaseUI(isEditing: Boolean) {
+        val text = getString(R.string.log_base_is_) + skivvy.getLogBase().toString()
+        maths.logBaseText.text = text
+        if (isEditing) {
+            maths.logBaseText.setBackgroundResource(R.drawable.button_square_round_top)
+            maths.logBaseText.setCompoundDrawablesWithIntrinsicBounds(
+                0,
+                0,
+                R.drawable.ic_close_black,
+                0
+            )
+            maths.logBaseEditor.setBackgroundResource(R.drawable.button_square_round_bottom)
+            maths.logBaseEditor.visibility = View.VISIBLE
+            maths.logBaseSave.visibility = View.VISIBLE
+            maths.logBaseInput.visibility = View.VISIBLE
+        } else {
+            maths.logBaseText.setBackgroundResource(R.drawable.button_square_round)
+            maths.logBaseText.setCompoundDrawablesWithIntrinsicBounds(
+                0,
+                0,
+                R.drawable.ic_edit_black,
+                0
+            )
+            maths.logBaseEditor.setBackgroundResource(0)
+            maths.logBaseEditor.visibility = View.GONE
+            maths.logBaseSave.visibility = View.GONE
+            maths.logBaseInput.visibility = View.GONE
         }
     }
 
@@ -1297,6 +1353,9 @@ class Setup : AppCompatActivity() {
                 applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager,
                 false
             )
+        if (showSnackbar) showSnackBar(text, isPositiveForSnackbar)
+        if (showToast) Toast.makeText(applicationContext, text, Toast.LENGTH_LONG)
+            .show()
         skivvy.tts?.let {
             it.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onDone(utteranceId: String) {
@@ -1321,12 +1380,8 @@ class Setup : AppCompatActivity() {
                 code?.let { it1 -> startVoiceRecIntent(it1, text) }
                 if (!showSnackbar && !showToast)
                     Toast.makeText(this, text, Toast.LENGTH_LONG).show()
-                else {
-                    if (showSnackbar) showSnackBar(text, isPositiveForSnackbar)
-                    if (showToast) Toast.makeText(applicationContext, text, Toast.LENGTH_LONG)
-                        .show()
-                    else return
-                }
+                else return
+
             }
         }
     }

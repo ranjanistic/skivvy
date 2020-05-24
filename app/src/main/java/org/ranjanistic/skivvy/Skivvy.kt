@@ -12,9 +12,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.os.Build
-import android.provider.ContactsContract
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -271,16 +269,18 @@ class Skivvy : Application() {
         getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_NOTIFY, false)
     //Mathematics and calculation preferences
-    fun setMathsPref(angleUnit: String? = null, logBase:Float? = null) {
+    fun setMathsPref(angleUnit: String? = null, logBase: Int? = null) {
         val editor = getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE).edit()
         angleUnit?.let { editor.putString(this.PREF_KEY_ANGLE_UNIT, it).apply() }
-        logBase?.let{editor.putFloat(this.PREF_KEY_LOG_BASE,it).apply()}
+        logBase?.let { editor.putInt(this.PREF_KEY_LOG_BASE, it).apply() }
     }
 
     fun getAngleUnit(): String =
         getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE)
             .getString(this.PREF_KEY_ANGLE_UNIT, this.degree)!!
-    fun getLogBase():Float = getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE).getFloat(this.PREF_KEY_LOG_BASE,10F)
+
+    fun getLogBase(): Int =
+        getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE).getInt(this.PREF_KEY_LOG_BASE, 10)
     //Security preferences
     fun setSecurityPref(
         biometricOn: Boolean? = null,

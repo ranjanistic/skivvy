@@ -368,7 +368,10 @@ class CalculationManager(var skivvy: Skivvy) {
                     func.replace(skivvy.textPattern, nothing).toFloat().toRadian(skivvy.getAngleUnit())
                 ))).toString()
                 func.contains("log") -> {
-                    log(func.replace(skivvy.textPattern, nothing).toFloat(), skivvy.getLogBase()).toString()
+                    log(
+                        func.replace(skivvy.textPattern, nothing).toFloat(),
+                        skivvy.getLogBase().toFloat()
+                    ).toString()
                 }
                 func.contains("ln") -> {
                     ln1p(func.replace(skivvy.textPattern, nothing).toFloat()).toString()
