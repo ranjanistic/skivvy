@@ -1,0 +1,3 @@
+package org.ranjanistic.skivvy
+
+interface NotificationContent
