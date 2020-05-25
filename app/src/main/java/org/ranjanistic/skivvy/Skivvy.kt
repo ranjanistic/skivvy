@@ -60,9 +60,14 @@ class Skivvy : Application() {
     val nothing = ""
     val space = " "
     val actionNotification = BuildConfig.APPLICATION_ID + "NOTIFICATION_LISTENER_SERVICE"
+    val notificationPosted = "posted"
+    val notificationRemoved = "removed"
+    val notificationID = "notificationID"
+    val notificationPackage = "notificationPackageName"
     val notificationAppName = "notificationAppName"
     val notificationTicker = "notificationTicker"
     val notificationTime = "notificationTime"
+    val notificationStatus = "notificationStatus"
     val notificationOngoing = "notificationOngoing"
     var isHomePageRunning = false
     //action codes
@@ -107,7 +112,10 @@ class Skivvy : Application() {
     val PREF_KEY_HANDY = "handSide"
     val PREF_KEY_START_TALK = "talkOnStart"
     val PREF_KEY_FULL_SCREEN = "fullscreen"
-    val PREF_KEY_NOTIFY = "showNotifications"
+
+    val PREF_HEAD_NOTIFICATION = "notifySetup"
+    val PREF_KEY_NOTIFY = "readNotifications"
+    val PREF_KEY_BAT_INFO = "alertBatteryStat"
 
     val PREF_HEAD_MATHS = "mathsSetup"
     val PREF_KEY_ANGLE_UNIT = "angleUnit"
@@ -265,9 +273,19 @@ class Skivvy : Application() {
         getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_FULL_SCREEN, false)
 
+    fun setNotifyPref(notify: Boolean? = null, batteryInfo: Boolean? = null) {
+        val editor = getSharedPreferences(this.PREF_HEAD_NOTIFICATION, MODE_PRIVATE).edit()
+        notify?.let { editor.putBoolean(this.PREF_KEY_NOTIFY, it).apply() }
+        batteryInfo?.let { editor.putBoolean(this.PREF_KEY_BAT_INFO, it).apply() }
+    }
     fun showNotifications(): Boolean =
-        getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
+        getSharedPreferences(this.PREF_HEAD_NOTIFICATION, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_NOTIFY, false)
+
+    fun readBatteryStatus(): Boolean =
+        getSharedPreferences(this.PREF_HEAD_NOTIFICATION, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_BAT_INFO, false)
+
     //Mathematics and calculation preferences
     fun setMathsPref(angleUnit: String? = null, logBase: Int? = null) {
         val editor = getSharedPreferences(this.PREF_HEAD_MATHS, MODE_PRIVATE).edit()

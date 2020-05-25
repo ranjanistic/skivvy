@@ -289,6 +289,7 @@
     <string name="airplane_mode_off">Airplane mode off.</string>
     <string name="voice_and_volume">Voice &amp; Volume</string>
     <string name="app_and_setup">App &amp; Lications</string>
+    <string name="alert_and_notify">Alert &amp; Notify</string>
     <string name="maths_and_setup">Maths &amp; Functions</string>
     <string name="security_and_setup">Security &amp; Skivvy</string>
     <string name="write_sys_settings">Write settings</string>
@@ -337,4 +338,7 @@
     <string name="notifications_off">Not reading notifications</string>
     <string name="log_base_is_">Log base is&#160;</string>
     <string name="invalid_log_base">Invalid base value</string>
+    <string name="battery_stat_on">Reading battery status</string>
+    <string name="battery_stat_off">Read battery status</string>
+    <string name="searching">Searching...</string>
 </resources>

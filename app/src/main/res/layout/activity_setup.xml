@@ -293,14 +293,36 @@
                 app:layout_constraintTop_toBottomOf="@id/recordOnStart"/>
 
             <include
+                android:id="@+id/notification_group_head"
+                layout="@layout/text_head_top_round"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/fullScreenMode" />
+
+
+            <include
                 android:id="@+id/showNotification"
+                layout="@layout/switch_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/notification_group_head" />
+
+            <include
+                android:id="@+id/batteryStatus"
                 layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginVertical="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/fullScreenMode" />
+                app:layout_constraintTop_toBottomOf="@id/showNotification" />
 
             <include
                 android:id="@+id/mathematics_group_head"
@@ -311,7 +333,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/showNotification" />
+                app:layout_constraintTop_toBottomOf="@id/batteryStatus" />
 
             <include
                 android:id="@+id/angleUnitBtn"

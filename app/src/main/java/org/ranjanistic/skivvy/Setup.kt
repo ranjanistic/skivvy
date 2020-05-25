@@ -28,6 +28,7 @@ import com.google.android.material.snackbar.Snackbar
 import org.ranjanistic.skivvy.manager.SystemFeatureManager
 import org.ranjanistic.skivvy.manager.TempDataManager
 import java.util.concurrent.Executor
+import kotlin.NumberFormatException as NumberFormatException1
 
 
 @ExperimentalStdlibApi
@@ -57,9 +58,12 @@ class Setup : AppCompatActivity() {
         lateinit var handy: Switch
         lateinit var onStartup: Switch
         lateinit var fullScreen: Switch
-        lateinit var notifications: Switch
     }
 
+    private class Notify {
+        lateinit var notifications: Switch
+        lateinit var battery: Switch
+    }
     private class Maths {
         lateinit var angleUnit: Switch
         lateinit var logBaseText: TextView
@@ -89,6 +93,7 @@ class Setup : AppCompatActivity() {
     private val childLayout = ChildLayout()
     private val voice = Voice()
     private val appSetup = AppSetup()
+    private val notify = Notify()
     private val maths = Maths()
     private val security = Security()
     private val temp = TempDataManager()
@@ -184,7 +189,8 @@ class Setup : AppCompatActivity() {
         appSetup.handy = findViewById(R.id.handDirectionBtn)
         appSetup.onStartup = findViewById(R.id.recordOnStart)
         appSetup.fullScreen = findViewById(R.id.fullScreenMode)
-        appSetup.notifications = findViewById(R.id.showNotification)
+        notify.notifications = findViewById(R.id.showNotification)
+        notify.battery = findViewById(R.id.batteryStatus)
         maths.angleUnit = findViewById(R.id.angleUnitBtn)
         maths.logBaseText = findViewById(R.id.logBaseText)
         maths.logBaseEditor = findViewById(R.id.logBaseEditor)
@@ -204,6 +210,8 @@ class Setup : AppCompatActivity() {
         noteView.text = text
         findViewById<TextView>(R.id.voice_group_head).text = getString(R.string.voice_and_volume)
         findViewById<TextView>(R.id.appsetup_group_head).text = getString(R.string.app_and_setup)
+        findViewById<TextView>(R.id.notification_group_head).text =
+            getString(R.string.alert_and_notify)
         findViewById<TextView>(R.id.mathematics_group_head).text =
             getString(R.string.maths_and_setup)
         findViewById<TextView>(R.id.security_group_head).text =
@@ -284,7 +292,8 @@ class Setup : AppCompatActivity() {
             appSetup.handy,
             appSetup.onStartup,
             appSetup.fullScreen,
-            appSetup.notifications,
+            notify.notifications,
+            notify.battery,
             maths.angleUnit,
             security.biometrics,
             security.voiceAuth
@@ -301,6 +310,7 @@ class Setup : AppCompatActivity() {
             skivvy.shouldListenStartup(),
             skivvy.shouldFullScreen(),
             skivvy.showNotifications(),
+            skivvy.readBatteryStatus(),
             skivvy.getAngleUnit() == skivvy.radian,
             skivvy.getBiometricStatus(),
             skivvy.getPhraseKeyStatus()
@@ -317,6 +327,7 @@ class Setup : AppCompatActivity() {
             getString(R.string.listen_on_click),
             getString(R.string.disable_full_screen),
             getString(R.string.notifications_on),
+            getString(R.string.battery_stat_on),
             getString(R.string.unit_radian_text),
             getString(R.string.disable_fingerprint),
             getString(R.string.disable_vocal_authentication)
@@ -331,6 +342,7 @@ class Setup : AppCompatActivity() {
             getString(R.string.listen_on_start),
             getString(R.string.enable_full_screen),
             getString(R.string.notifications_off),
+            getString(R.string.battery_stat_off),
             getString(R.string.unit_degree_text),
             getString(R.string.enable_fingerprint),
             getString(R.string.enable_vocal_authentication)
@@ -806,18 +818,41 @@ class Setup : AppCompatActivity() {
             )
             restarter()
         }
-        appSetup.notifications.setOnCheckedChangeListener { view, isChecked ->
-            skivvy.setAppModePref(showNotification = isChecked)
+        notify.notifications.setOnCheckedChangeListener { view, isChecked ->
+            if (isNotificationServiceRunning()) {
+                skivvy.setNotifyPref(notify = isChecked)
+                setThumbAttrs(
+                    view as Switch,
+                    isChecked,
+                    getString(R.string.notifications_on),
+                    getString(R.string.notifications_off)
+                )
+                speakOut(
+                    when (isChecked) {
+                        true -> getString(R.string.notifications_on)
+                        else -> getString(R.string.notifications_off)
+                    }, showSnackbar = true
+                )
+            } else {
+                speakOut(getString(R.string.notification_access_direction_text), showToast = true)
+                startActivityForResult(
+                    Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS),
+                    skivvy.CODE_NOTIFICATION_ACCESS
+                )
+            }
+        }
+        notify.battery.setOnCheckedChangeListener { view, isChecked ->
+            skivvy.setNotifyPref(batteryInfo = isChecked)
             setThumbAttrs(
                 view as Switch,
                 isChecked,
-                getString(R.string.notifications_on),
-                getString(R.string.notifications_off)
+                getString(R.string.battery_stat_on),
+                getString(R.string.battery_stat_off)
             )
             speakOut(
                 when (isChecked) {
-                    true -> getString(R.string.notifications_on)
-                    else -> getString(R.string.notifications_off)
+                    true -> getString(R.string.battery_stat_on)
+                    else -> getString(R.string.battery_stat_off)
                 }, showSnackbar = true
             )
         }
@@ -845,11 +880,20 @@ class Setup : AppCompatActivity() {
             setLogBaseUI(maths.logBaseEditor.visibility != View.VISIBLE)
         }
         maths.logBaseSave.setOnClickListener {
-            val base = maths.logBaseInput.text.toString().toFloat().toInt()
-            if (!maths.logBaseInput.text.isNullOrBlank() && base > 1) {
-                skivvy.setMathsPref(logBase = base)
-                setLogBaseUI(false)
-            } else {
+            var base = 0
+            try {
+                base = maths.logBaseInput.text.toString().toFloat().toInt()
+                if (!maths.logBaseInput.text.isNullOrBlank() && base > 1) {
+                    skivvy.setMathsPref(logBase = base)
+                    setLogBaseUI(false)
+                } else {
+                    speakOut(
+                        getString(R.string.invalid_log_base),
+                        showSnackbar = true,
+                        isPositiveForSnackbar = false
+                    )
+                }
+            } catch (e: NumberFormatException1) {
                 speakOut(
                     getString(R.string.invalid_log_base),
                     showSnackbar = true,
@@ -1178,6 +1222,7 @@ class Setup : AppCompatActivity() {
                     showSnackbar = true,
                     isPositiveForSnackbar = isNotificationServiceRunning()
                 )
+                notify.notifications.isChecked = isNotificationServiceRunning()
             }
             skivvy.CODE_OVERLAY_ACCESS -> {
                 setVisibilityOf(special.drawOver, visible = !canDrawOverOtherApps())

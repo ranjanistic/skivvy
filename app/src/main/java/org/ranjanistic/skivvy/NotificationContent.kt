@@ -1,3 +1,9 @@
 package org.ranjanistic.skivvy
 
-interface NotificationContent
+import android.app.PendingIntent
+import android.graphics.drawable.Icon
+
+interface NotificationContent {
+    fun notificationBadge(icon: Icon)
+    fun notificationIntent(intent: PendingIntent)
+}

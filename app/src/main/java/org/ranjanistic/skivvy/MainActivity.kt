@@ -53,6 +53,7 @@ import org.ranjanistic.skivvy.R.string.*
 import org.ranjanistic.skivvy.manager.*
 import java.io.File
 import java.io.FileOutputStream
+import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.Executor
 import kotlin.collections.ArrayList
@@ -88,9 +89,13 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private val anim = Animations()
+    val CALLTASK = 0
+    val NOTIFTASK = 1
 
+    //TODO: Check incoming caller name from call logs
     private var lastTxt: String? = null
-    private var onGoingTask: Boolean = false
+    private var tasksOngoing: ArrayList<Boolean> = arrayListOf(false, false)
+    private fun anyTaskRunning(): Boolean = tasksOngoing[CALLTASK] || tasksOngoing[NOTIFTASK]
     private lateinit var receiver: ImageButton
     private lateinit var setting: ImageButton
     private lateinit var loading: ImageView
@@ -271,16 +276,12 @@ open class MainActivity : AppCompatActivity() {
             startSettingAnimate()
         }
         receiver.setOnClickListener {
-            initialView(onGoingTask)
-            if (!onGoingTask) {
+            initialView(anyTaskRunning())
+            if (!anyTaskRunning()) {
                 speakOut(nothing, skivvy.CODE_SPEECH_RECORD, parallelReceiver = true)
+                setFeedback(nothing)
+                setOutput(getString(im_ready))
             } else {
-                val out = outputText.text.toString()
-                val feed = feedback.text.toString()
-                if (out != getString(what_next) || out != getString(im_ready))
-                    if (feed == getString(what_next) || feed == getString(im_ready) || feed == nothing)
-                        feedback.text = out
-                onGoingTask = true
                 startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
             }
         }
@@ -500,10 +501,13 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun setFeedback(text: String?, isNotOngoing: Boolean = true) {
-        if (isNotOngoing) {
-            feedback.startAnimation(anim.fadeOnFast)
-            feedback.text = text
-        }
+        feedback.startAnimation(anim.fadeOnFast)
+        feedback.text = text
+    }
+
+    private fun setOutput(text: String?, isNotOngoing: Boolean = true) {
+        outputText.startAnimation(anim.fadeOnFast)
+        outputText.text = text
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -512,33 +516,34 @@ open class MainActivity : AppCompatActivity() {
                 finishAnimate()
             }
             KeyEvent.KEYCODE_HEADSETHOOK -> {
-                initialView(onGoingTask)
-                if (!onGoingTask) {
+                initialView(anyTaskRunning())
+                if (!anyTaskRunning()) {
                     speakOut(nothing, skivvy.CODE_SPEECH_RECORD, parallelReceiver = true)
+                    setFeedback(nothing)
+                    setOutput(getString(im_ready))
                 } else {
-                    setFeedback(outputText.text.toString())
-                    speakOut(
-                        getString(what_next),
-                        skivvy.CODE_SPEECH_RECORD,
-                        parallelReceiver = true
-                    )
+                    startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
                 }
             }
             KeyEvent.KEYCODE_VOLUME_UP -> {
-                setFeedback(
-                    getString(volume_raised_to_) + "${feature.getMediaVolume(
-                        audioManager
-                    )}" + getString(
-                        percent
-                    ), !onGoingTask
-                )
+                skivvy.setVoicePreference(normalizeVolume = false)
+                if (!anyTaskRunning()) {
+                    setFeedback(
+                        getString(volume_raised_to_) + "${feature.getMediaVolume(audioManager)}" + getString(
+                            percent
+                        )
+                    )
+                }
             }
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                setFeedback(
-                    getString(volume_low_to_) + "${feature.getMediaVolume(audioManager)}" + getString(
-                        percent
-                    ), !onGoingTask
-                )
+                skivvy.setVoicePreference(normalizeVolume = false)
+                if (!anyTaskRunning()) {
+                    setFeedback(
+                        getString(volume_low_to_) + "${feature.getMediaVolume(audioManager)}" + getString(
+                            percent
+                        )
+                    )
+                }
             }
         }
         return super.onKeyDown(keyCode, event)
@@ -569,15 +574,9 @@ open class MainActivity : AppCompatActivity() {
             if (data == null || data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
                     ?.get(0).toString().toLowerCase(skivvy.locale) == nothing
             ) {
-                initialView(onGoingTask)
-                if (!onGoingTask) {
+                initialView(anyTaskRunning())
+                if (!anyTaskRunning()) {
                     speakOut(getString(no_input))
-                } else {
-                    val feed = feedback.text.toString()
-                    if (feed != getString(im_ready) || feed != getString(what_next)) {
-                        outputText.text = feed
-                        setFeedback(nothing)
-                    }
                 }
                 return
             } else {
@@ -947,7 +946,7 @@ open class MainActivity : AppCompatActivity() {
                             initialView()
                             speakOut(getString(okay))
                         } else if (txt != null) {
-                            waitingView(null)
+                            waitingView()
                             temp.setTextBody(txt)
                             if (temp.getContactPresence()) {
                                 speakOut(
@@ -1443,7 +1442,7 @@ open class MainActivity : AppCompatActivity() {
         if (!operatorsAndFunctionsBoolean[0].contains(true)) {     //if no operators
             if (operatorsAndFunctionsBoolean[1].contains(true)) {       //has a mathematical function
                 if (expression.contains(skivvy.numberPattern)) {
-                    setFeedback(expression, !onGoingTask)
+                    setFeedback(expression, !anyTaskRunning())
                     saveCalculationResult(calculation.operateFuncWithConstant(expression)!!)
                     if (getLastCalculationResult().let {
                             calculation.handleExponentialTerm(
@@ -1499,7 +1498,7 @@ open class MainActivity : AppCompatActivity() {
         val midOutput = arrayOfExpression.contentToString().replace("[", nothing)
             .replace("]", nothing).replace(",", nothing).replace(space, nothing)
         if (midOutput != rawExpression.replace(space, nothing))
-            setFeedback(midOutput, !onGoingTask)      //segmentized expression to user
+            setFeedback(midOutput, !anyTaskRunning())      //segmentized expression to user
 
         if (operatorsAndFunctionsBoolean[1].contains(true)) {      //If expression has mathematical functions
             val temp =
@@ -1581,7 +1580,7 @@ open class MainActivity : AppCompatActivity() {
                     speakOut(
                         getString(volume_at_) + "${percent.toInt()}" + getString(R.string.percent),
                         null,
-                        isFeedback = !onGoingTask
+                        isFeedback = !anyTaskRunning()
                     )
                 }
             }
@@ -1602,7 +1601,7 @@ open class MainActivity : AppCompatActivity() {
                         getString(R.string.volume_increased),
                         null,
                         parallelReceiver = false,
-                        isFeedback = !onGoingTask
+                        isFeedback = !anyTaskRunning()
                     )
                 }
             }
@@ -1626,7 +1625,7 @@ open class MainActivity : AppCompatActivity() {
                     speakOut(
                         getString(volume_decreased),
                         null,
-                        isFeedback = !onGoingTask
+                        isFeedback = !anyTaskRunning()
                     )
                 }
             }
@@ -1986,8 +1985,8 @@ open class MainActivity : AppCompatActivity() {
             super.onPreExecute()
             temp.setPhoneIndex(0)
             temp.setEmailIndex(0)
-            waitingView(null)
-            speakOut("Searching...")
+            waitingView()
+            speakOut(getString(searching))
         }
 
         override fun doInBackground(vararg params: MessageCode): ContactModel? {
@@ -1997,81 +1996,85 @@ open class MainActivity : AppCompatActivity() {
 
         override fun onPostExecute(result: ContactModel?) {
             super.onPostExecute(result)
-            if (result == null) {
-                errorView()
-                speakOut(getString(no_contacts_available))
-            } else if (!temp.getContactPresence()) {
-                errorView()
-                speakOut(getString(contact_not_found))
-            } else {
-                waitingView(cropToCircle(result.photoID))
-                when (temp.getContactCode()) {
-                    skivvy.CODE_EMAIL_CONF -> {
-                        if (result.emailList.isNullOrEmpty()) {
-                            errorView()
-                            speakOut(
-                                getString(you_dont_seem_having) + result.displayName + getString(
-                                    someone_email_address
-                                )
+            handleSearchResults(result)
+        }
+    }
+
+    private fun handleSearchResults(result: ContactModel?) {
+        if (result == null) {
+            errorView()
+            speakOut(getString(no_contacts_available))
+        } else if (!temp.getContactPresence()) {
+            errorView()
+            speakOut(getString(contact_not_found))
+        } else {
+            waitingView(cropToCircle(result.photoID))
+            when (temp.getContactCode()) {
+                skivvy.CODE_EMAIL_CONF -> {
+                    if (result.emailList.isNullOrEmpty()) {
+                        errorView()
+                        speakOut(
+                            getString(you_dont_seem_having) + result.displayName + getString(
+                                someone_email_address
                             )
-                        } else {
-                            speakOut(
-                                getString(what_is_subject),
-                                skivvy.CODE_EMAIL_CONTENT
-                            )
-                        }
+                        )
+                    } else {
+                        speakOut(
+                            getString(what_is_subject),
+                            skivvy.CODE_EMAIL_CONTENT
+                        )
                     }
-                    else -> {
-                        when (temp.getContactCode()) {
-                            skivvy.CODE_CALL_CONF -> {
-                                when {
-                                    result.phoneList.isNullOrEmpty() -> {
-                                        errorView()
-                                        speakOut(
-                                            getString(you_dont_seem_having) + result.displayName + getString(
-                                                someones_phone_number
-                                            )
-                                        )
-                                    }
-                                    result.phoneList!!.size == 1 -> {
-                                        speakOut(
-                                            getString(should_i_call) + "${result.displayName}?",
-                                            skivvy.CODE_CALL_CONF
-                                        )
-                                    }
-                                    else -> {
-                                        setFeedback(
-                                            getString(i_have_) + result.phoneList!!.size + getString(
-                                                _phone_nums_of_
-                                            ) + result.displayName, !onGoingTask
-                                        )
-                                        if (skivvy.hasThisPermission(
-                                                context,
-                                                skivvy.CODE_CALL_LOG_REQUEST
-                                            )
-                                        ) {
-                                            ArrangeViaLogs().execute(result.displayName)        //to arrange phone list according to recently called
-                                        } else {
-                                            speakOut("I can call ${result.displayName} at their recent number, if you allow me to access call logs.")
-                                            requestThisPermission(skivvy.CODE_CALL_LOG_REQUEST)
-                                        }
-                                    }
-                                }
-                            }
-                            skivvy.CODE_SMS_CONF -> {
-                                if (result.phoneList == null || result.phoneList!!.isEmpty()) {
+                }
+                else -> {
+                    when (temp.getContactCode()) {
+                        skivvy.CODE_CALL_CONF -> {
+                            when {
+                                result.phoneList.isNullOrEmpty() -> {
                                     errorView()
                                     speakOut(
                                         getString(you_dont_seem_having) + result.displayName + getString(
                                             someones_phone_number
                                         )
                                     )
-                                } else {
+                                }
+                                result.phoneList!!.size == 1 -> {
                                     speakOut(
-                                        getString(what_is_message),
-                                        skivvy.CODE_TEXT_MESSAGE_BODY
+                                        getString(should_i_call) + "${result.displayName}?",
+                                        skivvy.CODE_CALL_CONF
                                     )
                                 }
+                                else -> {
+                                    setFeedback(
+                                        getString(i_have_) + result.phoneList!!.size + getString(
+                                            _phone_nums_of_
+                                        ) + result.displayName, !tasksOngoing[NOTIFTASK]
+                                    )
+                                    if (skivvy.hasThisPermission(
+                                            context,
+                                            skivvy.CODE_CALL_LOG_REQUEST
+                                        )
+                                    ) {
+                                        ArrangeViaLogs().execute(result.displayName)        //to arrange phone list according to recently called
+                                    } else {
+                                        speakOut("I can call ${result.displayName} at their recent number, if you allow me to access call logs.")
+                                        requestThisPermission(skivvy.CODE_CALL_LOG_REQUEST)
+                                    }
+                                }
+                            }
+                        }
+                        skivvy.CODE_SMS_CONF -> {
+                            if (result.phoneList == null || result.phoneList!!.isEmpty()) {
+                                errorView()
+                                speakOut(
+                                    getString(you_dont_seem_having) + result.displayName + getString(
+                                        someones_phone_number
+                                    )
+                                )
+                            } else {
+                                speakOut(
+                                    getString(what_is_message),
+                                    skivvy.CODE_TEXT_MESSAGE_BODY
+                                )
                             }
                         }
                     }
@@ -2377,17 +2380,23 @@ open class MainActivity : AppCompatActivity() {
 
     }
 
-    inner class FindContactIncoming : AsyncTask<String, Void, Boolean>() {
+    private class FindContactIncoming internal constructor(context: MainActivity) :
+        AsyncTask<String, Void, Boolean>() {
+        private val activityReference: WeakReference<MainActivity> = WeakReference(context)
         override fun doInBackground(vararg params: String?): Boolean {
+            val activity = activityReference.get()
             params[0]?.let {
-                name = getContactNameOfNumber(it)
-                image = getContactImageOfNumber(it)
-                return true
+                activity?.let { act ->
+                    act.name = act.getContactNameOfNumber(it)
+                    act.image = act.getContactImageOfNumber(it)
+                    return true
+                }
             }
             return false
         }
     }
 
+    //TODO : Call state refurbishment
     var name: String? = null
     var phone: String? = null
     var image: Drawable? = null
@@ -2398,16 +2407,16 @@ open class MainActivity : AppCompatActivity() {
                 if (state != lastState) {
                     if (number.isNotEmpty()) {
                         phone = formatPhoneNumber(number)
-                        FindContactIncoming().execute(phone)
+                        FindContactIncoming(MainActivity()).execute(phone)
                     }
                 }
                 when (state) {
                     lastState -> {
-                        onGoingTask = false
+                        tasksOngoing[CALLTASK] = false
                         return
                     }
                     TelephonyManager.CALL_STATE_RINGING -> {        //incoming
-                        onGoingTask = true
+                        tasksOngoing[CALLTASK] = true
                         successView(
                             if (image != null) image
                             else getDrawable(ic_phone_dialer)
@@ -2420,7 +2429,7 @@ open class MainActivity : AppCompatActivity() {
                         )
                     }
                     TelephonyManager.CALL_STATE_OFFHOOK -> {
-                        onGoingTask = true
+                        tasksOngoing[CALLTASK] = true
                         if (lastState == TelephonyManager.CALL_STATE_RINGING) {     //user picked up
                             speakOut(
                                 getString(speaking_to_) + if (name != null) name
@@ -2441,7 +2450,7 @@ open class MainActivity : AppCompatActivity() {
                         }
                     }
                     TelephonyManager.CALL_STATE_IDLE -> {
-                        onGoingTask = false
+                        tasksOngoing[CALLTASK] = false
                         if (lastState == TelephonyManager.CALL_STATE_RINGING) {     //missed call
                             speakOut(
                                 getString(you_missed_call_from_) + if (name != null) name
@@ -2478,7 +2487,7 @@ open class MainActivity : AppCompatActivity() {
     private val mBatInfoReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctxt: Context?, intent: Intent) {
             batteryLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0)
-            if (!onGoingTask) {
+            if (!anyTaskRunning() && skivvy.readBatteryStatus()) {
                 when (batteryLevel) {
                     100 -> speakOut(
                         "Battery is full, you may remove charger now.",
@@ -2501,28 +2510,84 @@ open class MainActivity : AppCompatActivity() {
     var lastTimeNotif: String? = null
     var lastMsgNotif: String? = null
     var lastNotifFrom: String? = null
+    var lastNotifKey: String? = null
+    var lastOngoing = false
+    var ongoingNotifKey: String? = null
     private val mNotificationReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
+            val key = intent.getStringExtra(skivvy.notificationID)
+            val state = intent.getStringExtra(skivvy.notificationStatus)
             val from = intent.getStringExtra(skivvy.notificationAppName)
-            val msg = intent.getStringExtra(skivvy.notificationTicker)
+            val msg = intent.getStringExtra(skivvy.notificationTicker)?.replace("—", "by")
             val time = intent.getStringExtra(skivvy.notificationTime)
             val ongoing = intent.getBooleanExtra(skivvy.notificationOngoing, false)
-            if (outputText.text.toString() == lastMsgNotif && msg != lastMsgNotif) {
-                setFeedback(nothing)
-                outputText.text = msg
-            }
-            if (time != lastTimeNotif && msg != lastMsgNotif || ongoing != onGoingTask) {
-                msg?.let { speakOut("$it, on $from", isFeedback = ongoing) }
+            if (state == skivvy.notificationRemoved) {
+                if (key == lastNotifKey) {
+                    if (tasksOngoing[NOTIFTASK]) {
+                        if (key == ongoingNotifKey) {
+                            setFeedback(nothing)
+                        }
+                        setOutput(getString(what_next))
+                    } else {
+                        initialView()
+                    }
+                } else if (key == ongoingNotifKey) {
+                    setFeedback(nothing)
+                }
+            } else {
+                if (ongoing) {        //if notification  is sticky
+                    if (tasksOngoing[NOTIFTASK]) {        //if already has a sticky notification
+                        if (key == lastNotifKey) {
+                            if (msg == lastMsgNotif)
+                                msg?.let { setFeedback(msg) }  //if same app post same notification sticky, replace previous one
+                            else
+                                msg?.let {
+                                    speakOut(
+                                        it,
+                                        isFeedback = true
+                                    )
+                                }         //if same app post different notification sticky, speak and replace previous one
+                        } else
+                            msg?.let {
+                                speakOut(
+                                    it,
+                                    isFeedback = false
+                                )
+                            }       //if other app post notification sticky, show on output
+                    } else {
+                        msg?.let {
+                            speakOut(
+                                it,
+                                isFeedback = true
+                            )
+                        }         //if no previous sticky notification, show as feedback
+                    }
+                    tasksOngoing[NOTIFTASK] = true
+                    ongoingNotifKey = key
+                    waitingView()
+                } else {        //if notification is removable
+                    if (tasksOngoing[NOTIFTASK]) {
+                        setFeedback(lastMsgNotif)
+                        if (key == ongoingNotifKey) {
+                            speakOut(nothing)
+                        } else {
+                            msg?.let { speakOut(it, isFeedback = false) }
+                        }
+                        tasksOngoing[NOTIFTASK] = true
+                    } else {
+                        msg?.let { speakOut(it, isFeedback = true) }
+                        tasksOngoing[NOTIFTASK] = false
+                    }
+                }
+                lastNotifKey = key
                 lastTimeNotif = time
                 lastMsgNotif = msg
                 lastNotifFrom = from
-                val pData = PackageDataManager(skivvy)
-                waitingView(pData.iconOfPackage(appName = from))
-                onGoingTask = if (ongoing) ongoing
-                else false
+                lastOngoing = ongoing
             }
         }
     }
+
     //TODO: create array of ongoingTasks boolean variable, to check multiple ongoing tasks at same time.
     //TODO: Try lauching as apk instead of app bundle, to check for other locales
     //TODO: notification content display
@@ -2674,7 +2739,7 @@ open class MainActivity : AppCompatActivity() {
         txt = null
     }
 
-    fun waitingView(image: Drawable?) {
+    fun waitingView(image: Drawable? = null) {
         loading.startAnimation(anim.fadeOnFast)
         loading.startAnimation(anim.focusRotate)
         loading.setImageDrawable(getDrawable(dots_in_circle_yellow))
@@ -2876,6 +2941,7 @@ open class MainActivity : AppCompatActivity() {
 
     private fun isNotificationServiceRunning(): Boolean =
         NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
+
     private fun getLocalisedString(eng: String, hindi: String): String {
         if (skivvy.isLocaleHindi()) {
             return hindi

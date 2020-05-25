@@ -236,6 +236,7 @@
     <string name="airplane_mode_off">हवाई जहाज मोड बंद.</string>
     <string name="voice_and_volume">ध्वनि और स्तर</string>
     <string name="app_and_setup">रूप और व्यवहार</string>
+    <string name="alert_and_notify">सचेत और सूचित</string>
     <string name="maths_and_setup">गणित और तर्क</string>
     <string name="security_and_setup">सुरक्षा और स्किवी</string>
     <string name="write_sys_settings">Write settings</string>
@@ -284,4 +285,7 @@
     <string name="notifications_off">Not reading notifications</string>
     <string name="log_base_is_">Log base is&#160;</string>
     <string name="invalid_log_base">Invalid base value</string>
+    <string name="battery_stat_on">Reading battery status</string>
+    <string name="battery_stat_off">Read battery status</string>
+    <string name="searching">Searching...</string>
 </resources>
