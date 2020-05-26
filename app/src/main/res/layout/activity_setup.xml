@@ -283,6 +283,16 @@
                 app:layout_constraintTop_toBottomOf="@id/handDirectionBtn" />
 
             <include
+                android:id="@+id/retryAfterFailure"
+                layout="@layout/switch_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/recordOnStart" />
+
+            <include
                 android:id="@+id/fullScreenMode"
                 layout="@layout/switch_layout"
                 android:layout_width="0dp"
@@ -290,7 +300,7 @@
                 android:layout_marginVertical="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/recordOnStart"/>
+                app:layout_constraintTop_toBottomOf="@id/retryAfterFailure"/>
 
             <include
                 android:id="@+id/notification_group_head"

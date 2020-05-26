@@ -290,4 +290,6 @@
     <string name="searching">Searching...</string>
     <string name="skivvy_receiver">Skivvy Receiver</string>
     <string name="skivvy_service">Skivvy Service</string>
+    <string name="retry_fail_on">Retrying on failure</string>
+    <string name="retry_fail_off">Retry on failure</string>
 </resources>

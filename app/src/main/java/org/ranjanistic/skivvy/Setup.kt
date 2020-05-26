@@ -57,6 +57,7 @@ class Setup : AppCompatActivity() {
         lateinit var response: Switch
         lateinit var handy: Switch
         lateinit var onStartup: Switch
+        lateinit var retryFailure:Switch
         lateinit var fullScreen: Switch
     }
 
@@ -188,6 +189,7 @@ class Setup : AppCompatActivity() {
         appSetup.response = findViewById(R.id.parallelResponseBtn)
         appSetup.handy = findViewById(R.id.handDirectionBtn)
         appSetup.onStartup = findViewById(R.id.recordOnStart)
+        appSetup.retryFailure = findViewById(R.id.retryAfterFailure)
         appSetup.fullScreen = findViewById(R.id.fullScreenMode)
         notify.notifications = findViewById(R.id.showNotification)
         notify.battery = findViewById(R.id.batteryStatus)
@@ -291,6 +293,7 @@ class Setup : AppCompatActivity() {
             appSetup.response,
             appSetup.handy,
             appSetup.onStartup,
+            appSetup.retryFailure,
             appSetup.fullScreen,
             notify.notifications,
             notify.battery,
@@ -308,6 +311,7 @@ class Setup : AppCompatActivity() {
             skivvy.getParallelResponseStatus(),
             skivvy.getLeftHandy(),
             skivvy.shouldListenStartup(),
+            skivvy.shouldRetry(),
             skivvy.shouldFullScreen(),
             skivvy.showNotifications(),
             skivvy.readBatteryStatus(),
@@ -317,14 +321,13 @@ class Setup : AppCompatActivity() {
         )
         switchData.onText = arrayOf(
             getString(R.string.unmute_text),
-            getString(R.string.normal_vol_on_text_) + skivvy.getNormalVolume()
-                .toString() + getString(R.string.percent),
-            getString(R.string.urgent_vol_on_text_) + skivvy.getUrgentVolume()
-                .toString() + getString(R.string.percent),
+            getString(R.string.normal_vol_on_text_) + skivvy.getNormalVolume().toString() + getString(R.string.percent),
+            getString(R.string.urgent_vol_on_text_) + skivvy.getUrgentVolume().toString() + getString(R.string.percent),
             getString(R.string.set_default_theme),
             getString(R.string.set_queued_receive),
             getString(R.string.left_handy),
             getString(R.string.listen_on_click),
+            getString(R.string.retry_fail_on),
             getString(R.string.disable_full_screen),
             getString(R.string.notifications_on),
             getString(R.string.battery_stat_on),
@@ -340,6 +343,7 @@ class Setup : AppCompatActivity() {
             getString(R.string.set_parallel_receive),
             getString(R.string.right_handy),
             getString(R.string.listen_on_start),
+            getString(R.string.retry_fail_off),
             getString(R.string.enable_full_screen),
             getString(R.string.notifications_off),
             getString(R.string.battery_stat_off),
@@ -799,7 +803,22 @@ class Setup : AppCompatActivity() {
                 when (isChecked) {
                     true -> getString(R.string.i_listen_at_start)
                     else -> getString(R.string.i_listen_on_tap)
-                }, showToast = true
+                }, showSnackbar = true
+            )
+        }
+        appSetup.retryFailure.setOnCheckedChangeListener { view, isChecked ->
+            skivvy.setAppModePref(onFailRetry = isChecked)
+            setThumbAttrs(
+                view as Switch,
+                isChecked,
+                getString(R.string.retry_fail_on),
+                getString(R.string.retry_fail_off)
+            )
+            speakOut(
+                when (isChecked) {
+                    true -> getString(R.string.retry_fail_on)
+                    else -> getString(R.string.retry_fail_off)
+                }, showSnackbar = true
             )
         }
         appSetup.fullScreen.setOnCheckedChangeListener { view, isChecked ->

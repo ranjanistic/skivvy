@@ -113,6 +113,7 @@ class Skivvy : Application() {
     val PREF_KEY_PARLLEL_TALK = "parallelResponse"
     val PREF_KEY_HANDY = "handSide"
     val PREF_KEY_START_TALK = "talkOnStart"
+    val PREF_KEY_RETRY_INPUT = "retryAfterFailure"
     val PREF_KEY_FULL_SCREEN = "fullscreen"
 
     val PREF_HEAD_NOTIFICATION = "notifySetup"
@@ -238,6 +239,7 @@ class Skivvy : Application() {
         parallelListen: Boolean? = null,
         leftHandy: Boolean? = null,
         onStartListen: Boolean? = null,
+        onFailRetry:Boolean? = null,
         fullScreen: Boolean? = null,
         showNotification: Boolean? = null
     ) {
@@ -247,6 +249,7 @@ class Skivvy : Application() {
         parallelListen?.let { editor.putBoolean(this.PREF_KEY_PARLLEL_TALK, it).apply() }
         leftHandy?.let { editor.putBoolean(this.PREF_KEY_HANDY, it).apply() }
         onStartListen?.let { editor.putBoolean(this.PREF_KEY_START_TALK, it).apply() }
+        onFailRetry?.let { editor.putBoolean(this.PREF_KEY_RETRY_INPUT, it).apply() }
         fullScreen?.let { editor.putBoolean(this.PREF_KEY_FULL_SCREEN, it).apply() }
         showNotification?.let { editor.putBoolean(this.PREF_KEY_NOTIFY, it).apply() }
     }
@@ -270,7 +273,9 @@ class Skivvy : Application() {
     fun shouldListenStartup(): Boolean =
         getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_START_TALK, false)
-
+    fun shouldRetry():Boolean =
+        getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_RETRY_INPUT, false)
     fun shouldFullScreen(): Boolean =
         getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_FULL_SCREEN, false)

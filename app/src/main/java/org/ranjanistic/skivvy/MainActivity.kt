@@ -1,3 +1,5 @@
+@file:Suppress("PropertyName")
+
 package org.ranjanistic.skivvy
 
 import android.Manifest
@@ -88,8 +90,8 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private val anim = Animations()
-    val CALLTASK = 0
-    val NOTIFTASK = 1
+    private val CALLTASK = 0
+    private val NOTIFTASK = 1
 
     //TODO: Check incoming caller name from call logs
     private var lastTxt: String? = null
@@ -591,7 +593,10 @@ open class MainActivity : AppCompatActivity() {
                 inputText.text = txt
                 if (!inGlobalCommands(txt)) {
                     errorView()
-                    speakOut(getString(recognize_error))
+                    if (skivvy.shouldRetry()) {
+                        speakOut(getString(recognize_error), skivvy.CODE_SPEECH_RECORD)
+                    } else
+                        speakOut(getString(recognize_error))
                 }
             }
             skivvy.CODE_VOICE_AUTH_CONFIRM -> {
@@ -676,12 +681,14 @@ open class MainActivity : AppCompatActivity() {
                         speakOut(getString(okay))
                     }
                     else -> {
-                        speakOut(
-                            getString(recognize_error) + "\n" + getString(do_u_want_open) + "${packages.getPackageAppName(
-                                temp.getPackageIndex()
-                            )!!.capitalize(skivvy.locale)}?",
-                            skivvy.CODE_APP_CONF
-                        )
+                        if (!inGlobalCommands(txt!!)) {
+                            speakOut(
+                                getString(recognize_error) + "\n" + getString(do_u_want_open) + "${packages.getPackageAppName(
+                                    temp.getPackageIndex()
+                                )!!.capitalize(skivvy.locale)}?",
+                                skivvy.CODE_APP_CONF
+                            )
+                        }
                     }
                 }
             }
@@ -755,29 +762,31 @@ open class MainActivity : AppCompatActivity() {
                             initialView()
                             speakOut(getString(okay))
                         } else {
-                            if (temp.getContactPresence()) {
-                                speakOut(
-                                    getString(recognize_error) + "\n" + getString(
-                                        should_i_call
-                                    ) + contact.displayName + space +
-                                            getLocalisedString(
-                                                "${getString(at)}${contact.phoneList!![temp.getPhoneIndex()]}?",
-                                                "को ${contact.phoneList!![temp.getPhoneIndex()]}${getString(
-                                                    at
-                                                )}?"
-                                            ),
-                                    skivvy.CODE_CALL_CONF
-                                )
-                            } else {
-                                speakOut(
-                                    getString(recognize_error) + "\n" + getString(
-                                        should_i_call
-                                    ) + "${temp.getPhone()}" + getLocalisedString(
-                                        "?",
-                                        "${getString(at)}?"
-                                    ),
-                                    skivvy.CODE_CALL_CONF
-                                )
+                            if (!inGlobalCommands(txt!!)) {
+                                if (temp.getContactPresence()) {
+                                    speakOut(
+                                        getString(recognize_error) + "\n" + getString(
+                                            should_i_call
+                                        ) + contact.displayName + space +
+                                                getLocalisedString(
+                                                    "at ${contact.phoneList!![temp.getPhoneIndex()]}?",
+                                                    "को ${contact.phoneList!![temp.getPhoneIndex()]}${getString(
+                                                        at
+                                                    )}?"
+                                                ),
+                                        skivvy.CODE_CALL_CONF
+                                    )
+                                } else {
+                                    speakOut(
+                                        getString(recognize_error) + "\n" + getString(
+                                            should_i_call
+                                        ) + "${temp.getPhone()}" + getLocalisedString(
+                                            "?",
+                                            "${getString(at)}?"
+                                        ),
+                                        skivvy.CODE_CALL_CONF
+                                    )
+                                }
                             }
                         }
                     }
@@ -788,6 +797,7 @@ open class MainActivity : AppCompatActivity() {
                     if (!skivvy.hasThisPermission(context, skivvy.CODE_ANSWER_CALL)) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             requestThisPermission(skivvy.CODE_ANSWER_CALL)
+                            //TODO: picking calls
                         } else speakOut("I can't pick calls on this device.")
                     } else {
                         manageIncomingCall(txt!!)
@@ -905,27 +915,29 @@ open class MainActivity : AppCompatActivity() {
                             initialView()
                             speakOut(getString(okay))
                         } else {
-                            if (temp.getContactPresence()) {
-                                speakOut(
-                                    getString(recognize_error) + "\n" +
-                                            getString(should_i_email) + "${contact.displayName}${space}" +
-                                            getLocalisedString(
-                                                getString(at) + "\n${contact.emailList!![temp.getEmailIndex()]}?",
-                                                "को \n${contact.emailList!![temp.getEmailIndex()]}${getString(
-                                                    at
-                                                )}?"
-                                            ),
-                                    skivvy.CODE_EMAIL_CONF
-                                )
-                            } else {
-                                speakOut(
-                                    getString(recognize_error) + "\n" +
-                                            getString(should_i_email) + "${temp.getEmail()}" + getLocalisedString(
-                                        "?",
-                                        "${getString(at)}?"
-                                    ),
-                                    skivvy.CODE_EMAIL_CONF
-                                )
+                            if (!inGlobalCommands(txt!!)) {
+                                if (temp.getContactPresence()) {
+                                    speakOut(
+                                        getString(recognize_error) + "\n" +
+                                                getString(should_i_email) + "${contact.displayName}${space}" +
+                                                getLocalisedString(
+                                                    getString(at) + "\n${contact.emailList!![temp.getEmailIndex()]}?",
+                                                    "को \n${contact.emailList!![temp.getEmailIndex()]}${getString(
+                                                        at
+                                                    )}?"
+                                                ),
+                                        skivvy.CODE_EMAIL_CONF
+                                    )
+                                } else {
+                                    speakOut(
+                                        getString(recognize_error) + "\n" +
+                                                getString(should_i_email) + "${temp.getEmail()}" + getLocalisedString(
+                                            "?",
+                                            "${getString(at)}?"
+                                        ),
+                                        skivvy.CODE_EMAIL_CONF
+                                    )
+                                }
                             }
                         }
                     }
@@ -1030,27 +1042,29 @@ open class MainActivity : AppCompatActivity() {
                             initialView()
                             speakOut(getString(okay))
                         } else {
-                            if (temp.getContactPresence()) {
-                                speakOut(
-                                    getString(should_i_text) + contact.displayName + space +
-                                            getLocalisedString(
-                                                getString(at) + "${contact.phoneList!![temp.getPhoneIndex()]}",
-                                                "को ${contact.phoneList!![temp.getPhoneIndex()]}" + getString(
-                                                    at
-                                                )
-                                            ) + getString(via_sms) + "?",
-                                    skivvy.CODE_SMS_CONF
-                                )
-                            } else {
-                                speakOut(
-                                    getString(should_i_text) + "${temp.getPhone()}" + getLocalisedString(
-                                        nothing,
-                                        "${getString(at)}$space"
-                                    ) + getString(
-                                        via_sms
-                                    ) + "?",
-                                    skivvy.CODE_SMS_CONF
-                                )
+                            if (!inGlobalCommands(txt!!)) {
+                                if (temp.getContactPresence()) {
+                                    speakOut(
+                                        getString(should_i_text) + contact.displayName + space +
+                                                getLocalisedString(
+                                                    getString(at) + "${contact.phoneList!![temp.getPhoneIndex()]}",
+                                                    "को ${contact.phoneList!![temp.getPhoneIndex()]}" + getString(
+                                                        at
+                                                    )
+                                                ) + getString(via_sms) + "?",
+                                        skivvy.CODE_SMS_CONF
+                                    )
+                                } else {
+                                    speakOut(
+                                        getString(should_i_text) + "${temp.getPhone()}" + getLocalisedString(
+                                            nothing,
+                                            "${getString(at)}$space"
+                                        ) + getString(
+                                            via_sms
+                                        ) + "?",
+                                        skivvy.CODE_SMS_CONF
+                                    )
+                                }
                             }
                         }
                     }
@@ -2575,12 +2589,15 @@ open class MainActivity : AppCompatActivity() {
         loading.startAnimation(anim.zoomInRotate)
         this.unregisterReceiver(this.mBatInfoReceiver)
         this.unregisterReceiver(this.mNotificationReceiver)
+        sendBroadcast(
+            Intent(skivvy.actionServiceRestart)
+                .putExtra(skivvy.serviceDead, true)
+        )
         skivvy.tts?.let {
             it.stop()
             it.shutdown()
         }
         skivvy.isHomePageRunning = false
-        startService(Intent(this, SkivvyService::class.java))
         super.onDestroy()
     }
 
