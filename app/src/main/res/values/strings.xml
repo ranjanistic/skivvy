@@ -341,4 +341,6 @@
     <string name="battery_stat_on">Reading battery status</string>
     <string name="battery_stat_off">Read battery status</string>
     <string name="searching">Searching...</string>
+    <string name="skivvy_receiver">Skivvy Receiver</string>
+    <string name="skivvy_service">Skivvy Service</string>
 </resources>

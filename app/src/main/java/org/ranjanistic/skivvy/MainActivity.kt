@@ -2580,6 +2580,7 @@ open class MainActivity : AppCompatActivity() {
             it.shutdown()
         }
         skivvy.isHomePageRunning = false
+        startService(Intent(this, SkivvyService::class.java))
         super.onDestroy()
     }
 

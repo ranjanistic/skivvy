@@ -60,6 +60,8 @@ class Skivvy : Application() {
     val nothing = ""
     val space = " "
     val actionNotification = BuildConfig.APPLICATION_ID + "NOTIFICATION_LISTENER_SERVICE"
+    val actionServiceRestart = BuildConfig.APPLICATION_ID + "SKIVVY_SERVICE_DEAD"
+    val serviceDead = "Service Destroyed"
     val notificationPosted = "posted"
     val notificationRemoved = "removed"
     val notificationID = "notificationID"
