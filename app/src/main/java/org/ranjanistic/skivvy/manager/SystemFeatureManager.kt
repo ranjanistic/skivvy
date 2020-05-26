@@ -1,11 +1,8 @@
 package org.ranjanistic.skivvy.manager
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.content.ContentResolver
-import android.content.Context
-import android.content.pm.PackageManager
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
@@ -15,10 +12,8 @@ import android.provider.Settings
 import android.provider.Settings.SettingNotFoundException
 import android.telecom.TelecomManager
 import android.telephony.TelephonyManager
-import android.util.Log
 import android.view.Window
 import android.view.WindowManager
-import androidx.core.app.ActivityCompat
 
 
 class SystemFeatureManager {
@@ -59,6 +54,7 @@ class SystemFeatureManager {
         return null
     }
 
+    //set media volume
     fun getMediaVolume(audioManager: AudioManager):Int{
         return (audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) * 100)/
                 audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
@@ -71,6 +67,35 @@ class SystemFeatureManager {
             if(showUI)AudioManager.FLAG_SHOW_UI
             else 0
         )
+    }
+
+    //get ringing volume
+    fun getRingerVolume(audioManager: AudioManager): Int {
+        return (audioManager.getStreamVolume(AudioManager.STREAM_RING) * 100) /
+                audioManager.getStreamMaxVolume(AudioManager.STREAM_RING)
+    }
+
+    //set ringing volume
+    fun setRingerVolume(percent: Float, audioManager: AudioManager, showUI: Boolean = true) {
+        audioManager.setStreamVolume(
+            AudioManager.STREAM_RING,
+            (audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) * (percent / 100)).toInt(),
+            if (showUI) AudioManager.FLAG_SHOW_UI
+            else 0
+        )
+    }
+
+    //silent ringer
+    fun silentRinger(audioManager: AudioManager, silent: Boolean) {
+        if (audioManager.ringerMode == AudioManager.RINGER_MODE_NORMAL) {
+            audioManager.ringerMode =
+                if (silent) AudioManager.RINGER_MODE_SILENT
+                else AudioManager.RINGER_MODE_NORMAL
+        } else {
+            audioManager.ringerMode =
+                if (silent) AudioManager.RINGER_MODE_SILENT
+                else AudioManager.RINGER_MODE_NORMAL
+        }
     }
 
     fun setFlashLight(cameraManager: CameraManager, status: Boolean):Boolean{

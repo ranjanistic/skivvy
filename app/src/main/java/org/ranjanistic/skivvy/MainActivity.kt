@@ -53,7 +53,6 @@ import org.ranjanistic.skivvy.R.string.*
 import org.ranjanistic.skivvy.manager.*
 import java.io.File
 import java.io.FileOutputStream
-import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.Executor
 import kotlin.collections.ArrayList
@@ -1075,185 +1074,16 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    //actions invoking quick commands
-    @ExperimentalStdlibApi
-    private fun respondToCommand(text: String): Boolean {
-        val array = arrayOf(
-            R.array.setup_list,
-            R.array.bt_list,
-            R.array.wifi_list,
-            R.array.gps_list,
-            R.array.lock_list,
-            R.array.snap_list
-        )
-        val deviceNames = arrayOf("screen", "phone", "device", "system", "yourself")
+    private fun settingsCommand(text: String): Boolean {
         when {
-            text.contains("battery level") || text.contains("battery status") || text.contains("battery") -> {
-                speakOut("Battery at $batteryLevel%.")
-            }
             text.contains("setup") || text.contains("set up") -> {
                 startActivity(Intent(context, Setup::class.java))
                 overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
             }
-            //TODO: use this as external function, and return special codes for commands here just like isCooperative(): input.removeBeforeLastStringsIn(text, arrayOf(resources.getStringArray(R.array.bt_list)))
-            text.contains("bluetooth") -> {
-                //the first function of Skivvy  ;-)
-                if (text.contains("on")) {
-                    val stat = feature.bluetooth(true)
-                    if (stat == null) {
-                        successView(getDrawable(ic_bluetooth))
-                        speakOut(getString(bt_already_on))
-                    } else {
-                        successView(getDrawable(ic_bluetooth))
-                        speakOut(getString(bt_on))
-                    }
-                } else if (text.contains("off")) {
-                    val stat = feature.bluetooth(false)
-                    if (stat == null) {
-                        errorView(getDrawable(ic_bluetooth))
-                        speakOut(getString(bt_already_off))
-                    } else {
-                        errorView(getDrawable(ic_bluetooth))
-                        speakOut(getString(bt_off))
-                    }
-                } else {
-                    val stat = feature.bluetooth(null)
-                    if (stat!!) {
-                        successView(getDrawable(ic_bluetooth))
-                        speakOut(getString(bt_on))
-                    } else {
-                        errorView(getDrawable(ic_bluetooth))
-                        speakOut(getString(bt_off))
-                    }
-                }
-            }
-            text.contains("wi-fi") || text.contains("wifi") -> {
-                if (text.contains("on") || text.contains("enable")) {
-                    when (feature.wirelessFidelity(true, wifiManager)) {
-                        null -> {
-                            waitingView(getDrawable(ic_wifi_connected))
-                            speakOut(getString(wifi_already_on))
-                        }
-                        true -> {
-                            successView(getDrawable(ic_wifi_connected))
-                            speakOut(getString(wifi_on))
-                        }
-                    }
-                } else if (text.contains("off")) {
-                    when (feature.wirelessFidelity(false, wifiManager)) {
-                        null -> {
-                            waitingView(getDrawable(ic_wifi_disconnected))
-                            speakOut(getString(wifi_already_off))
-                        }
-                        false -> {
-                            successView(getDrawable(ic_wifi_disconnected))
-                            speakOut(getString(wifi_off))
-                        }
-                    }
-                } else {
-                    if (feature.wirelessFidelity(null, wifiManager)!!) {
-                        waitingView(getDrawable(ic_wifi_connected))
-                        speakOut(getString(wifi_on))
-                    } else {
-                        waitingView(getDrawable(ic_wifi_disconnected))
-                        speakOut(getString(wifi_off))
-                    }
-                }
-            }
-            resources.getStringArray(array[3]).contains(text) -> {
-                waitingView(getDrawable(ic_location_pointer))
-                startActivityForResult(
-                    Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
-                    skivvy.CODE_LOCATION_SERVICE
-                )
-            }
-            //TODO: reset txt when new input has no enablers/disablers/on/off etc.
-            input.containsString(text, arrayOf(deviceNames)) -> {
-                if (text.contains("lock"))
-                    deviceLockOps()
-            }
-            text.contains("screenshot") || text.contains("snapshot") || text.contains("take ss") -> {
-                if (!skivvy.hasThisPermission(context, skivvy.CODE_STORAGE_REQUEST)) {
-                    speakOut(getString(require_physical_permission))
-                    requestThisPermission(skivvy.CODE_STORAGE_REQUEST)
-                } else {
-                    takeScreenshot()
-                }
-            }
-            text.contains("airplane") -> {
-                if (text.contains("on") || text.contains("enable")) {
-                    if (isAirplaneModeEnabled()) {
-                        speakOut(getString(R.string.airplane_already_on))
-                    } else {
-                        speakOut(getString(R.string.airplane_mode_on))
-                        setAirplaneMode(true)
-                    }
-                } else if (text.contains("off") || text.contains("disable")) {
-                    if (!isAirplaneModeEnabled()) {
-                        speakOut(getString(R.string.airplane_already_off))
-                    } else {
-                        speakOut(getString(R.string.airplane_mode_off))
-                        setAirplaneMode(false)
-                    }
-                }
-            }
-            text.contains("flash") -> {
-                if (skivvy.isFlashAvailable()) {
-                    val mCameraManager =
-                        getSystemService(Context.CAMERA_SERVICE) as CameraManager
-                    if (text.contains("off")) {
-                        feature.setFlashLight(mCameraManager, false)
-                        speakOut(getString(flash_off))
-                    } else {
-                        if (!feature.setFlashLight(mCameraManager, false)) {
-                            speakOut(getString(flash_access_error))
-                        } else speakOut(getString(flash_on))
-                    }
-                } else {
-                    speakOut("Flashlight not available")
-                }
-            }
-            text.contains("search") -> {
-                var query = text.replace("search for", nothing).replace("search", nothing)
-                    .trim()
-                if (query != nothing) {
-                    if (query.contains("via")) {
-                        query = query.replace("via", nothing).trim()
-                        if (query != nothing) {
-                            speakOut("Searching for " + getLastCalculationResult() + " via $query")
-                            startActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://$query.com/search?q=" + getLastCalculationResult())
-                                )
-                            )
-                        } else {
-                            txt = "search via"
-                            speakOut(
-                                "Which search engine should I go for?",
-                                skivvy.CODE_SPEECH_RECORD
-                            )
-                        }
-                    } else {
-                        txt = "search via"
-                        saveCalculationResult(query)
-                        speakOut(
-                            "Which search engine should I go for?",
-                            skivvy.CODE_SPEECH_RECORD
-                        )
-                    }
-                } else {
-                    if (text.replace("search for", nothing)
-                            .trim() == nothing || text.replace(
-                            "search",
-                            nothing
-                        )
-                            .trim() == nothing
-                    ) {
-                        txt = text
-                        speakOut("Search for what?", skivvy.CODE_SPEECH_RECORD)
-                    } else return false
-                }
+            text.contains(skivvy.numberPattern) && text.contains("set log base") -> {
+                val base = text.replace(skivvy.nonNumeralPattern, nothing)
+                skivvy.setMathsPref(logBase = base.toFloat().toInt())
+                speakOut("$base is the log base.")
             }
             text.contains("volume") -> {
                 volumeOps(text.replace("volume", nothing).trim())
@@ -1272,10 +1102,6 @@ open class MainActivity : AppCompatActivity() {
                 } else {
                     speakOut(getString(voice_output_on))
                 }
-            }
-            text == getString(exit) -> {
-                finishAnimate()
-                finish()
             }
             text.contains("voice authentication") -> {
                 return when {
@@ -1392,6 +1218,152 @@ open class MainActivity : AppCompatActivity() {
             }
             else -> return false
         }
+        return true
+    }
+
+    //actions invoking quick commands
+    @ExperimentalStdlibApi
+    private fun respondToCommand(text: String): Boolean {
+        val array = arrayOf(
+            R.array.setup_list,
+            R.array.bt_list,
+            R.array.wifi_list,
+            R.array.gps_list,
+            R.array.lock_list,
+            R.array.snap_list
+        )
+        val deviceNames = arrayOf("screen", "phone", "device", "system", "yourself")
+        if (!settingsCommand(text))
+            when {
+                text.contains("battery level") || text.contains("battery status") || text.contains("battery") -> {
+                    speakOut("Battery at $batteryLevel%.")
+                }
+                //TODO: use this as external function, and return special codes for commands here just like isCooperative(): input.removeBeforeLastStringsIn(text, arrayOf(resources.getStringArray(R.array.bt_list)))
+                text.contains("bluetooth") -> {
+                    //the first function of Skivvy  ;-)
+                    if (text.contains("on")) {
+                        val stat = feature.bluetooth(true)
+                        if (stat == null) {
+                            successView(getDrawable(ic_bluetooth))
+                            speakOut(getString(bt_already_on))
+                        } else {
+                            successView(getDrawable(ic_bluetooth))
+                            speakOut(getString(bt_on))
+                        }
+                    } else if (text.contains("off")) {
+                        val stat = feature.bluetooth(false)
+                        if (stat == null) {
+                            errorView(getDrawable(ic_bluetooth))
+                            speakOut(getString(bt_already_off))
+                        } else {
+                            errorView(getDrawable(ic_bluetooth))
+                            speakOut(getString(bt_off))
+                        }
+                    } else {
+                        val stat = feature.bluetooth(null)
+                        if (stat!!) {
+                            successView(getDrawable(ic_bluetooth))
+                            speakOut(getString(bt_on))
+                        } else {
+                            errorView(getDrawable(ic_bluetooth))
+                            speakOut(getString(bt_off))
+                        }
+                    }
+                }
+                text.contains("wi-fi") || text.contains("wifi") -> {
+                    if (text.contains("on") || text.contains("enable")) {
+                        when (feature.wirelessFidelity(true, wifiManager)) {
+                            null -> {
+                                waitingView(getDrawable(ic_wifi_connected))
+                                speakOut(getString(wifi_already_on))
+                            }
+                            true -> {
+                                successView(getDrawable(ic_wifi_connected))
+                                speakOut(getString(wifi_on))
+                            }
+                        }
+                    } else if (text.contains("off")) {
+                        when (feature.wirelessFidelity(false, wifiManager)) {
+                            null -> {
+                                waitingView(getDrawable(ic_wifi_disconnected))
+                                speakOut(getString(wifi_already_off))
+                            }
+                            false -> {
+                                successView(getDrawable(ic_wifi_disconnected))
+                                speakOut(getString(wifi_off))
+                            }
+                        }
+                    } else {
+                        if (feature.wirelessFidelity(null, wifiManager)!!) {
+                            waitingView(getDrawable(ic_wifi_connected))
+                            speakOut(getString(wifi_on))
+                        } else {
+                            waitingView(getDrawable(ic_wifi_disconnected))
+                            speakOut(getString(wifi_off))
+                        }
+                    }
+                }
+                resources.getStringArray(array[3]).contains(text) -> {
+                    waitingView(getDrawable(ic_location_pointer))
+                    startActivityForResult(
+                        Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
+                        skivvy.CODE_LOCATION_SERVICE
+                    )
+                }
+                //TODO: reset txt when new input has no enablers/disablers/on/off etc.
+                input.containsString(text, arrayOf(deviceNames)) -> {
+                    if (text.contains("lock"))
+                        deviceLockOps()
+                }
+                text.contains("screenshot") || text.contains("snapshot") || text.contains("take ss") -> {
+                    if (!skivvy.hasThisPermission(context, skivvy.CODE_STORAGE_REQUEST)) {
+                        speakOut(getString(require_physical_permission))
+                        requestThisPermission(skivvy.CODE_STORAGE_REQUEST)
+                    } else {
+                        takeScreenshot()
+                    }
+                }
+                text.contains("airplane") -> {
+                    if (text.contains("on") || text.contains("enable")) {
+                        if (isAirplaneModeEnabled()) {
+                            speakOut(getString(R.string.airplane_already_on))
+                        } else {
+                            speakOut(getString(R.string.airplane_mode_on))
+                            setAirplaneMode(true)
+                        }
+                    } else if (text.contains("off") || text.contains("disable")) {
+                        if (!isAirplaneModeEnabled()) {
+                            speakOut(getString(R.string.airplane_already_off))
+                        } else {
+                            speakOut(getString(R.string.airplane_mode_off))
+                            setAirplaneMode(false)
+                        }
+                    }
+                }
+                text.contains("flash") -> {
+                    if (skivvy.isFlashAvailable()) {
+                        val mCameraManager =
+                            getSystemService(Context.CAMERA_SERVICE) as CameraManager
+                        if (text.contains("off")) {
+                            feature.setFlashLight(mCameraManager, false)
+                            speakOut(getString(flash_off))
+                        } else {
+                            if (!feature.setFlashLight(mCameraManager, false)) {
+                                speakOut(getString(flash_access_error))
+                            } else speakOut(getString(flash_on))
+                        }
+                    } else {
+                        speakOut("Flashlight not available")
+                    }
+                }
+                //TODO: Searching
+                text == getString(exit) -> {
+                    speakOut(getString(exit))
+                    finishAnimate()
+                    finish()
+                }
+                else -> return false
+            }
         return true
     }
 
@@ -2183,40 +2155,39 @@ open class MainActivity : AppCompatActivity() {
         return emails
     }
 
-    private fun getContactIdOfNumber(number: String): String? {
-        return skivvy.cResolver.query(
-            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            arrayOf(
-                ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
-                ContactsContract.CommonDataKinds.Phone.NUMBER
-            ),
-            formatPhoneNumber(ContactsContract.CommonDataKinds.Phone.NUMBER) + " = ?",
-            arrayOf(formatPhoneNumber(number)),
-            null
-        )?.getString(0)
-    }
-
-
-    fun getContactNameOfNumber(number: String): String? {
-        return skivvy.cResolver.query(
-            ContactsContract.Contacts.CONTENT_URI,
-            arrayOf(ContactsContract.Contacts.DISPLAY_NAME),
-            ContactsContract.Contacts._ID + " = ?",
-            arrayOf(getContactIdOfNumber(number)),
-            null
-        )?.getString(0)
-    }
-
-    private fun getContactImageOfNumber(number: String): Drawable? {
-        return cropToCircle(
-            skivvy.cResolver.query(
-                ContactsContract.Contacts.CONTENT_URI,
-                arrayOf(ContactsContract.Contacts.PHOTO_URI),
-                ContactsContract.Contacts._ID + " = ?",
-                arrayOf(getContactIdOfNumber(number)),
-                null
-            )?.getString(0)
+    val tag = "contactLook"
+    private fun getNameAndImageUri(number: String): ArrayList<String?>? {
+        val projection = arrayOf(
+            ContactsContract.PhoneLookup.DISPLAY_NAME,
+            ContactsContract.PhoneLookup.NUMBER,
+            ContactsContract.PhoneLookup.PHOTO_URI,
+            ContactsContract.PhoneLookup.HAS_PHONE_NUMBER
         )
+
+        // encode the phone number and build the filter URI
+        val contactUri = Uri.withAppendedPath(
+            ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+            Uri.encode(number)
+        )
+        var contactName: String? = null
+        var image: String? = null
+        // query time
+        val cursor = skivvy.cResolver.query(
+            contactUri,
+            projection, null, null, null
+        )
+        cursor?.let {
+            if (it.moveToFirst()) {
+                contactName =
+                    it.getString(it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME))
+                image = it.getString(it.getColumnIndex(ContactsContract.PhoneLookup.PHOTO_URI))
+            }
+            it.close()
+            Log.d(tag, "returns id")
+            return arrayListOf(contactName, image)
+        }
+        cursor?.close()
+        return null
     }
 
     //TODO: Create suitable projection and search argument for cursor
@@ -2249,7 +2220,8 @@ open class MainActivity : AppCompatActivity() {
                         contact.emailList = getEmailIDsOf(contact.contactID)
                         contact.phoneList = getPhoneNumbersOf(contact.contactID)
                         break
-                    } else temp.setContactPresence(false)
+                    } else
+                        temp.setContactPresence(false)
                 }
                 it.close()
                 return contact
@@ -2366,37 +2338,109 @@ open class MainActivity : AppCompatActivity() {
     }
 
     //Handle incoming phone calls
-    private
-    var phoneStateListener: PhoneStateListener? = null
-
-    private
-    var telephonyManager: TelephonyManager? = null
-
-    private
-    var lastState: Int? = null
+    private var phoneStateListener: PhoneStateListener? = null
+    private var telephonyManager: TelephonyManager? = null
+    private var lastState: Int? = null
 
     //TODO: timer while call
     private fun startTimer(onFeedback: Boolean = false) {
-
-    }
-
-    private class FindContactIncoming internal constructor(context: MainActivity) :
-        AsyncTask<String, Void, Boolean>() {
-        private val activityReference: WeakReference<MainActivity> = WeakReference(context)
-        override fun doInBackground(vararg params: String?): Boolean {
-            val activity = activityReference.get()
-            params[0]?.let {
-                activity?.let { act ->
-                    act.name = act.getContactNameOfNumber(it)
-                    act.image = act.getContactImageOfNumber(it)
-                    return true
-                }
+        val timer = object : CountDownTimer(20000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
             }
-            return false
+
+            override fun onFinish() {
+            }
         }
     }
 
+    //TODO: manage incoming contact lookup
+    inner class FindContactIncoming : AsyncTask<String, Void, ArrayList<String?>>() {
+        var number: String? = null
+        var callState: Int? = null
+        override fun doInBackground(vararg params: String?): ArrayList<String?>? {
+            params[0]?.let {
+                number = it
+                params[1]?.let { it1 ->
+                    callState = it1.toFloat().toInt()
+                }
+                return getNameAndImageUri(it)
+            }
+            return null
+        }
+
+        override fun onPostExecute(result: ArrayList<String?>?) {
+            super.onPostExecute(result)
+            if (result != null) {
+                if (result[0] != null || result[1] != null) {
+                    callStateManager(callState!!, number!!, result[0], cropToCircle(result[1]))
+                }
+            }
+        }
+    }
+
+    private fun callStateManager(
+        state: Int,
+        phone: String,
+        name: String? = null,
+        image: Drawable? = null
+    ) {
+        var caller = name
+        when (state) {
+            TelephonyManager.CALL_STATE_RINGING -> {        //incoming
+                tasksOngoing[CALLTASK] = true
+                feature.silentRinger(audioManager, true)
+                successView(image ?: getDrawable(ic_phone_dialer))
+                speakOut(
+                    if (name != null) name + getString(_is_calling_you)
+                    else getString(incoming_call_from_) + phone,
+                    taskCode = skivvy.CODE_ANSWER_CALL,
+                    isUrgent = true
+                )
+            }
+            TelephonyManager.CALL_STATE_OFFHOOK -> {
+                tasksOngoing[CALLTASK] = true
+                if (lastState == TelephonyManager.CALL_STATE_RINGING) {     //user picked up
+                    speakOut(
+                        getString(speaking_to_) + (name ?: phone)
+                    )
+                    waitingView(image ?: getDrawable(ic_phone_dialer))
+                } else {        //dialed by user
+                    speakOut(
+                        getString(calling_) + when {
+                            name != null -> name
+                            temp.getContactPresence() -> contact.displayName
+                            else -> phone
+                        }
+                    )
+                }
+            }
+            TelephonyManager.CALL_STATE_IDLE -> {
+                tasksOngoing[CALLTASK] = false
+                if (lastState == TelephonyManager.CALL_STATE_RINGING) {     //missed call
+                    speakOut(
+                        getString(you_missed_call_from_) + (name ?: phone)
+                    )
+                    errorView(
+                        image ?: getDrawable(ic_phone_dialer)
+                    )
+                } else if (lastState == TelephonyManager.CALL_STATE_OFFHOOK) {      //call ended
+                    speakOut(
+                        getString(call_ended_with_) + when {
+                            name != null -> name
+                            temp.getContactPresence() -> contact.displayName
+                            else -> phone
+                        }
+                    )
+                }
+            }
+        }
+        lastState = state
+        this.phone = null
+        this.image = null
+    }
+
     //TODO : Call state refurbishment
+
     var name: String? = null
     var phone: String? = null
     var image: Drawable? = null
@@ -2404,77 +2448,10 @@ open class MainActivity : AppCompatActivity() {
         telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         phoneStateListener = object : PhoneStateListener() {
             override fun onCallStateChanged(state: Int, number: String) {
-                if (state != lastState) {
-                    if (number.isNotEmpty()) {
-                        phone = formatPhoneNumber(number)
-                        FindContactIncoming(MainActivity()).execute(phone)
-                    }
+                if (state != lastState && number.isNotEmpty()) {
+//                    callStateManager(state, number)
+                    FindContactIncoming().execute(number, state.toString())
                 }
-                when (state) {
-                    lastState -> {
-                        tasksOngoing[CALLTASK] = false
-                        return
-                    }
-                    TelephonyManager.CALL_STATE_RINGING -> {        //incoming
-                        tasksOngoing[CALLTASK] = true
-                        successView(
-                            if (image != null) image
-                            else getDrawable(ic_phone_dialer)
-                        )
-                        speakOut(
-                            if (name != null) name + getString(_is_calling_you)
-                            else getString(incoming_call_from_) + phone,
-                            taskCode = skivvy.CODE_ANSWER_CALL,
-                            isUrgent = true
-                        )
-                    }
-                    TelephonyManager.CALL_STATE_OFFHOOK -> {
-                        tasksOngoing[CALLTASK] = true
-                        if (lastState == TelephonyManager.CALL_STATE_RINGING) {     //user picked up
-                            speakOut(
-                                getString(speaking_to_) + if (name != null) name
-                                else phone
-                            )
-                            waitingView(
-                                if (image != null) image
-                                else getDrawable(ic_phone_dialer)
-                            )
-                        } else {        //dialed by user
-                            speakOut(
-                                getString(calling_) + when {
-                                    name != null -> name
-                                    temp.getContactPresence() -> contact.displayName
-                                    else -> phone
-                                }
-                            )
-                        }
-                    }
-                    TelephonyManager.CALL_STATE_IDLE -> {
-                        tasksOngoing[CALLTASK] = false
-                        if (lastState == TelephonyManager.CALL_STATE_RINGING) {     //missed call
-                            speakOut(
-                                getString(you_missed_call_from_) + if (name != null) name
-                                else phone
-                            )
-                            errorView(
-                                if (image != null) image
-                                else getDrawable(ic_phone_dialer)
-                            )
-                        } else if (lastState == TelephonyManager.CALL_STATE_OFFHOOK) {      //call ended
-                            speakOut(
-                                getString(call_ended_with_) + when {
-                                    name != null -> name
-                                    temp.getContactPresence() -> contact.displayName
-                                    else -> phone
-                                }
-                            )
-                        }
-                        name = null
-                        phone = null
-                        image = null
-                    }
-                }
-                lastState = state
             }
         }
         telephonyManager!!.listen(
@@ -2526,6 +2503,7 @@ open class MainActivity : AppCompatActivity() {
                     if (tasksOngoing[NOTIFTASK]) {
                         if (key == ongoingNotifKey) {
                             setFeedback(nothing)
+                            tasksOngoing[NOTIFTASK] = false
                         }
                         setOutput(getString(what_next))
                     } else {
@@ -2533,6 +2511,7 @@ open class MainActivity : AppCompatActivity() {
                     }
                 } else if (key == ongoingNotifKey) {
                     setFeedback(nothing)
+                    initialView()
                 }
             } else {
                 if (ongoing) {        //if notification  is sticky
