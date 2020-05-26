@@ -61,6 +61,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
         android:theme="@style/DarkTheme">
+        <service
+            android:name=".SkivvyService"
+            android:enabled="true"
+            android:exported="false"></service>
+
         <activity android:name=".LockScreenActivity" />
         <activity android:name=".SkivvyConnect">
             <intent-filter>
