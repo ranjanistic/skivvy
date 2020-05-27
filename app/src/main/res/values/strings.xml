@@ -181,7 +181,7 @@
     <string name="biometric_recommendation_passphrase_enabling">I recommend enabling biometric too, in case you forget the passphrase.</string>
     <string name="reset">Reset</string>
     <string name="enable_or_disable">Enable or Disable?</string>
-    <string name="text" translatable="false">text</string>
+    <string name="text">text</string>
     <string name="vocal_auth_off_error">I could not disable vocal authentication.</string>
     <string name="generic_voice_rec_text">I\'m listening</string>
     <string name="grant_permissions">Grant permissions</string>
@@ -292,7 +292,7 @@
     <string name="alert_and_notify">Alert &amp; Notify</string>
     <string name="maths_and_setup">Maths &amp; Functions</string>
     <string name="security_and_setup">Security &amp; Skivvy</string>
-    <string name="write_sys_settings">Write settings</string>
+    <string name="write_sys_settings">Modify settings</string>
     <string name="write_settings_permit_allowed">Thanks for allowing me to change system settings</string>
     <string name="left_handy">Left handy human</string>
     <string name="right_handy">Right handy human</string>
@@ -345,4 +345,7 @@
     <string name="skivvy_service">Skivvy Service</string>
     <string name="retry_fail_on">Retrying on failure</string>
     <string name="retry_fail_off">Retry on failure</string>
+    <string name="text_who_">Text who?</string>
+    <string name="email_who_">Email who?</string>
+    <string name="call_who_">Call who?</string>
 </resources>

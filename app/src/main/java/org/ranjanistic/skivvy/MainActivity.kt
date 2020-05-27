@@ -50,6 +50,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
+import kotlinx.coroutines.delay
 import org.ranjanistic.skivvy.R.drawable.*
 import org.ranjanistic.skivvy.R.string.*
 import org.ranjanistic.skivvy.manager.*
@@ -58,6 +59,7 @@ import java.io.FileOutputStream
 import java.util.*
 import java.util.concurrent.Executor
 import kotlin.collections.ArrayList
+import kotlin.properties.Delegates
 
 @ExperimentalStdlibApi
 open class MainActivity : AppCompatActivity() {
@@ -93,7 +95,6 @@ open class MainActivity : AppCompatActivity() {
     private val CALLTASK = 0
     private val NOTIFTASK = 1
 
-    //TODO: Check incoming caller name from call logs
     private var lastTxt: String? = null
     private var tasksOngoing: ArrayList<Boolean> = arrayListOf(false, false)
     private fun anyTaskRunning(): Boolean = tasksOngoing[CALLTASK] || tasksOngoing[NOTIFTASK]
@@ -137,17 +138,12 @@ open class MainActivity : AppCompatActivity() {
         initialView()
         resetVariables()
         setListeners()
+        initiateRecognitionIntent()
         skivvy.tts = TextToSpeech(this, TextToSpeech.OnInitListener {
             if (it == TextToSpeech.SUCCESS) {
                 skivvy.tts?.language = skivvy.locale
             } else speakOut(getString(output_error))
         })
-        recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            .putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
         setOutput(getString(im_ready))
         if (skivvy.shouldListenStartup())
             startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
@@ -156,6 +152,14 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun initiateRecognitionIntent(){
+        recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
+    }
     private fun getSysBarColorByTheme(
         context: Context,
         isStatus: Boolean
@@ -273,6 +277,10 @@ open class MainActivity : AppCompatActivity() {
 
     private fun setListeners() {
         callStateListener()
+        greet.setOnClickListener{
+            it.startAnimation(anim.waveDamped)
+            speakOut(getString(i_am) + getString(app_name))
+        }
         setting.setOnClickListener {
             startSettingAnimate()
         }
@@ -311,6 +319,7 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        initiateRecognitionIntent()
         this.registerReceiver(this.mBatInfoReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         this.registerReceiver(this.mNotificationReceiver, IntentFilter(skivvy.actionNotification))
         if (isNotificationServiceRunning() && skivvy.showNotifications()) {
@@ -502,8 +511,10 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun setFeedback(text: String?, isNotOngoing: Boolean = true) {
-        feedback.startAnimation(anim.fadeOnFast)
-        feedback.text = text
+        if(isNotOngoing) {
+            feedback.startAnimation(anim.fadeOnFast)
+            feedback.text = text
+        }
     }
 
     private fun setOutput(text: String?, isNotOngoing: Boolean = true) {
@@ -961,9 +972,9 @@ open class MainActivity : AppCompatActivity() {
                             temp.setTextBody(txt)
                             if (temp.getContactPresence()) {
                                 speakOut(
-                                    getString(should_i_text) + "${contact.displayName}$space" +
+                                    getString(should_i_text) + contact.displayName+space+
                                             getLocalisedString(
-                                                getString(at) + "${contact.phoneList!![temp.getPhoneIndex()]}",
+                                                "at${contact.phoneList!![temp.getPhoneIndex()]}",
                                                 "को ${contact.phoneList!![temp.getPhoneIndex()]}" + getString(
                                                     at
                                                 )
@@ -1088,89 +1099,43 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
+    //TODO: Setup commands here
     private fun settingsCommand(text: String): Boolean {
-        when {
-            text.contains("setup") || text.contains("set up") -> {
-                startActivity(Intent(context, Setup::class.java))
-                overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
-            }
-            text.contains(skivvy.numberPattern) && text.contains("set log base") -> {
-                val base = text.replace(skivvy.nonNumeralPattern, nothing)
-                skivvy.setMathsPref(logBase = base.toFloat().toInt())
-                speakOut("$base is the log base.")
-            }
-            text.contains("volume") -> {
-                volumeOps(text.replace("volume", nothing).trim())
-            }
-            text.contains("brightness") -> {
-                brightnessOps(text.replace("brightness", nothing).trim())
-            }
-            text == "mute" -> {
-                skivvy.setVoicePreference(voiceMute = true)
-                speakOut("Muted")
-            }
-            text == "speak" || text == "unmute" -> {
-                if (skivvy.getMuteStatus()) {
-                    skivvy.setVoicePreference(voiceMute = false)
-                    speakOut(getString(okay))
-                } else {
-                    speakOut(getString(voice_output_on))
+        val setters = arrayOf("set","change","turn","enable","disable")
+        if(!input.finallySaidLineFromList(text,arrayOf(setters))){
+            Log.d("noooooooo","not contains")
+            return false
+        }else {
+            Log.d("noooooooo","contains")
+            when {
+                text.contains("setup") || text.contains("set up") -> {
+                    startActivity(Intent(context, Setup::class.java))
+                    overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
                 }
-            }
-            text.contains("voice authentication") -> {
-                return when {
-                    text.contains("enable") && text.contains("disable") -> {
-                        txt = text.replace("enable", nothing)
-                        txt = txt!!.replace("disable", nothing)
-                        speakOut(
-                            getString(enable_or_disable),
-                            skivvy.CODE_SPEECH_RECORD
-                        )
-                        true
-                    }
-                    text.contains("enable") -> {
-                        if (!skivvy.getPhraseKeyStatus()) {
-                            if (skivvy.getVoiceKeyPhrase() != null) {
-                                skivvy.setSecurityPref(vocalAuthOn = true)
-                                speakOut(getString(vocal_auth_enabled))
-                            } else {
-                                speakOut(getString(vocal_auth_unset))
-                                startActivity(Intent(context, Setup::class.java))
-                            }
-                        } else {
-                            speakOut(getString(vocal_auth_already_on))
-                        }
-                        true
-                    }
-                    text.contains("disable") -> {
-                        if (!skivvy.getPhraseKeyStatus()) {
-                            speakOut(getString(vocal_auth_already_off))
-                        } else {
-                            speakOut(
-                                getString(get_passphrase_text),
-                                skivvy.CODE_VOICE_AUTH_CONFIRM
-                            )
-                        }
-                        true
-                    }
-                    else -> {
-                        if (text.replace("voice authentication", nothing)
-                                .trim() == nothing
-                        ) {
-                            txt = text
-                            speakOut(
-                                "Vocal authentication what?",
-                                skivvy.CODE_SPEECH_RECORD
-                            )
-                            true
-                        } else false
+                text.contains(skivvy.numberPattern) && text.contains("log base") -> {
+                    val base = text.replace(skivvy.nonNumeralPattern, nothing)
+                    skivvy.setMathsPref(logBase = base.toFloat().toInt())
+                    speakOut("$base is the log base.")
+                }
+                text.contains("volume") -> {
+                    volumeOps(text.replace("volume", nothing).trim())
+                }
+                text.contains("brightness") -> {
+                    brightnessOps(text.replace("brightness", nothing).trim())
+                }
+                text == "mute" -> {
+                    skivvy.setVoicePreference(voiceMute = true)
+                    speakOut("Muted")
+                }
+                text == "speak" || text == "unmute" -> {
+                    if (skivvy.getMuteStatus()) {
+                        skivvy.setVoicePreference(voiceMute = false)
+                        speakOut(getString(okay))
+                    } else {
+                        speakOut(getString(voice_output_on))
                     }
                 }
-            }
-            text.contains("biometric") -> {
-                if (!skivvy.checkBioMetrics()) {
-                    speakOut(getString(biometric_unsupported))
-                } else {
+                text.contains("voice authentication") -> {
                     return when {
                         text.contains("enable") && text.contains("disable") -> {
                             txt = text.replace("enable", nothing)
@@ -1182,55 +1147,109 @@ open class MainActivity : AppCompatActivity() {
                             true
                         }
                         text.contains("enable") -> {
-                            if (skivvy.getBiometricStatus()) {
-                                speakOut(getString(biometric_already_on))
+                            if (!skivvy.getPhraseKeyStatus()) {
+                                if (skivvy.getVoiceKeyPhrase() != null) {
+                                    skivvy.setSecurityPref(vocalAuthOn = true)
+                                    speakOut(getString(vocal_auth_enabled))
+                                } else {
+                                    speakOut(getString(vocal_auth_unset))
+                                    startActivity(Intent(context, Setup::class.java))
+                                }
                             } else {
-                                skivvy.setSecurityPref(biometricOn = true)
-                                if (skivvy.getBiometricStatus()) speakOut(
-                                    getString(
-                                        biometric_on
-                                    )
-                                )
-                                else speakOut(getString(biometric_enable_error))
+                                speakOut(getString(vocal_auth_already_on))
                             }
                             true
                         }
                         text.contains("disable") -> {
-                            if (!skivvy.getBiometricStatus()) {
-                                speakOut(getString(biometric_already_off))
+                            if (!skivvy.getPhraseKeyStatus()) {
+                                speakOut(getString(vocal_auth_already_off))
                             } else {
-                                if (skivvy.getPhraseKeyStatus()) {
-                                    speakOut(
-                                        getString(get_passphrase_text),
-                                        skivvy.CODE_BIOMETRIC_CONFIRM
-                                    )
-                                } else {
-                                    speakOut(getString(physical_auth_request))
-                                    authStateAction(skivvy.CODE_BIOMETRIC_CONFIRM)
-                                    biometricPrompt.authenticate(promptInfo)
-                                }
+                                speakOut(
+                                    getString(get_passphrase_text),
+                                    skivvy.CODE_VOICE_AUTH_CONFIRM
+                                )
                             }
                             true
                         }
                         else -> {
-                            if (text.replace("biometric", nothing).trim() == nothing) {
+                            if (text.replace("voice authentication", nothing)
+                                    .trim() == nothing
+                            ) {
                                 txt = text
-                                speakOut("Biometric what?", skivvy.CODE_SPEECH_RECORD)
+                                speakOut(
+                                    "Vocal authentication what?",
+                                    skivvy.CODE_SPEECH_RECORD
+                                )
                                 true
                             } else false
                         }
                     }
                 }
-            }
-            text == "get permission" -> {
-                if (!skivvy.hasPermissions(context)) {
-                    speakOut(getString(need_all_permissions))
-                    requestThisPermission(skivvy.CODE_ALL_PERMISSIONS)
-                } else {
-                    speakOut(getString(have_all_permits))
+                text.contains("biometric") -> {
+                    if (!skivvy.checkBioMetrics()) {
+                        speakOut(getString(biometric_unsupported))
+                    } else {
+                        return when {
+                            text.contains("enable") && text.contains("disable") -> {
+                                txt = text.replace("enable", nothing)
+                                txt = txt!!.replace("disable", nothing)
+                                speakOut(
+                                    getString(enable_or_disable),
+                                    skivvy.CODE_SPEECH_RECORD
+                                )
+                                true
+                            }
+                            text.contains("enable") -> {
+                                if (skivvy.getBiometricStatus()) {
+                                    speakOut(getString(biometric_already_on))
+                                } else {
+                                    skivvy.setSecurityPref(biometricOn = true)
+                                    if (skivvy.getBiometricStatus()) speakOut(
+                                        getString(
+                                            biometric_on
+                                        )
+                                    )
+                                    else speakOut(getString(biometric_enable_error))
+                                }
+                                true
+                            }
+                            text.contains("disable") -> {
+                                if (!skivvy.getBiometricStatus()) {
+                                    speakOut(getString(biometric_already_off))
+                                } else {
+                                    if (skivvy.getPhraseKeyStatus()) {
+                                        speakOut(
+                                            getString(get_passphrase_text),
+                                            skivvy.CODE_BIOMETRIC_CONFIRM
+                                        )
+                                    } else {
+                                        speakOut(getString(physical_auth_request))
+                                        authStateAction(skivvy.CODE_BIOMETRIC_CONFIRM)
+                                        biometricPrompt.authenticate(promptInfo)
+                                    }
+                                }
+                                true
+                            }
+                            else -> {
+                                if (text.replace("biometric", nothing).trim() == nothing) {
+                                    txt = text
+                                    speakOut("Biometric what?", skivvy.CODE_SPEECH_RECORD)
+                                    true
+                                } else false
+                            }
+                        }
+                    }
                 }
+                text.contains( "permission") -> {
+                    if (!skivvy.hasPermissions(context)) {
+                        speakOut(getString(need_all_permissions))
+                        requestThisPermission(skivvy.CODE_ALL_PERMISSIONS)
+                    } else {
+                        speakOut(getString(have_all_permits))
+                    }
+                }
+                else -> return false
             }
-            else -> return false
         }
         return true
     }
@@ -1701,6 +1720,7 @@ open class MainActivity : AppCompatActivity() {
                         )
                         return true
                     }
+                    //TODO: Retry on function end successful preference
                     when {
                         localText == getString(app_name).toLowerCase(skivvy.locale) -> {
                             initialView()
@@ -1838,14 +1858,14 @@ open class MainActivity : AppCompatActivity() {
                                     requestThisPermission(skivvy.CODE_CONTACTS_REQUEST)
                                 }
                             } else {
-                                lastTxt = "call"
-                                speakOut("Call who?", skivvy.CODE_SPEECH_RECORD)
+                                lastTxt = text
+                                speakOut(getString(call_who_), skivvy.CODE_SPEECH_RECORD)
                             }
                         }
                     }
                 } else {
-                    lastTxt = "call "
-                    speakOut("Call who?", skivvy.CODE_SPEECH_RECORD)
+                    lastTxt = text
+                    speakOut(getString(call_who_), skivvy.CODE_SPEECH_RECORD)
                 }
             }
             text.contains(getString(email)) -> {
@@ -1870,8 +1890,8 @@ open class MainActivity : AppCompatActivity() {
                         }
                     }
                     else -> {
-                        lastTxt = "email"
-                        speakOut("Email who?", skivvy.CODE_SPEECH_RECORD)
+                        lastTxt = text
+                        speakOut(getString(email_who_), skivvy.CODE_SPEECH_RECORD)
                     }
                 }
             }
@@ -1902,8 +1922,8 @@ open class MainActivity : AppCompatActivity() {
                         }
                     }
                     else -> {
-                        lastTxt = "text"
-                        speakOut("Text who?", skivvy.CODE_SPEECH_RECORD)
+                        lastTxt = text
+                        speakOut(getString(text_who_), skivvy.CODE_SPEECH_RECORD)
                     }
                 }
             }
@@ -1992,7 +2012,10 @@ open class MainActivity : AppCompatActivity() {
             speakOut(getString(no_contacts_available))
         } else if (!temp.getContactPresence()) {
             errorView()
-            speakOut(getString(contact_not_found))
+            speakOut(getString(contact_not_found),
+                taskCode = if(skivvy.shouldRetry()) skivvy.CODE_SPEECH_RECORD
+                else null
+            )
         } else {
             waitingView(cropToCircle(result.photoID))
             when (temp.getContactCode()) {
@@ -2366,7 +2389,8 @@ open class MainActivity : AppCompatActivity() {
             }
         }
     }
-
+    private var incomingName:String? = null
+    private var incomingImage:Drawable? = null
     //TODO: manage incoming contact lookup
     inner class FindContactIncoming : AsyncTask<String, Void, ArrayList<String?>>() {
         var number: String? = null
@@ -2398,9 +2422,10 @@ open class MainActivity : AppCompatActivity() {
         name: String? = null,
         image: Drawable? = null
     ) {
-        var caller = name
         when (state) {
             TelephonyManager.CALL_STATE_RINGING -> {        //incoming
+                this.incomingName = name
+                this.incomingImage = image
                 tasksOngoing[CALLTASK] = true
                 feature.silentRinger(audioManager, true)
                 successView(image ?: getDrawable(ic_phone_dialer))
@@ -2432,10 +2457,10 @@ open class MainActivity : AppCompatActivity() {
                 tasksOngoing[CALLTASK] = false
                 if (lastState == TelephonyManager.CALL_STATE_RINGING) {     //missed call
                     speakOut(
-                        getString(you_missed_call_from_) + (name ?: phone)
+                        getString(you_missed_call_from_) + (this.incomingName ?: phone)
                     )
                     errorView(
-                        image ?: getDrawable(ic_phone_dialer)
+                        this.incomingImage ?: getDrawable(ic_phone_dialer)
                     )
                 } else if (lastState == TelephonyManager.CALL_STATE_OFFHOOK) {      //call ended
                     speakOut(
@@ -2518,10 +2543,9 @@ open class MainActivity : AppCompatActivity() {
                         if (key == ongoingNotifKey) {
                             setFeedback(nothing)
                             tasksOngoing[NOTIFTASK] = false
+                            initialView()
                         }
                         setOutput(getString(what_next))
-                    } else {
-                        initialView()
                     }
                 } else if (key == ongoingNotifKey) {
                     setFeedback(nothing)
@@ -2581,8 +2605,6 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    //TODO: create array of ongoingTasks boolean variable, to check multiple ongoing tasks at same time.
-    //TODO: Try lauching as apk instead of app bundle, to check for other locales
     //TODO: notification content display
     override fun onDestroy() {
         speakOut(getString(exit_msg))
@@ -2733,10 +2755,12 @@ open class MainActivity : AppCompatActivity() {
         contact = ContactModel()
         temp = TempDataManager()
         msgCode = MessageCode()
+        this.incomingName = null
+        this.incomingImage = null
         txt = null
     }
 
-    fun waitingView(image: Drawable? = null) {
+    private fun waitingView(image: Drawable? = null) {
         loading.startAnimation(anim.fadeOnFast)
         loading.startAnimation(anim.focusRotate)
         loading.setImageDrawable(getDrawable(dots_in_circle_yellow))
@@ -2745,13 +2769,13 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun errorView(image: Drawable? = null) {
+    private fun errorView(image: Drawable? = null) {
         loading.startAnimation(anim.fadeOnFadeOff)
         loading.setImageDrawable(getDrawable(dots_in_circle_red))
         image?.let { icon.setImageDrawable(image) }
     }
 
-    fun successView(image: Drawable?) {
+    private fun successView(image: Drawable?) {
         loading.startAnimation(anim.fadeOnFast)
         loading.startAnimation(anim.focusDefocusRotate)
         loading.setImageDrawable(getDrawable(dots_in_circle_green))

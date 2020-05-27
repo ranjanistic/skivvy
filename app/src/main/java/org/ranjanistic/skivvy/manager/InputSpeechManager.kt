@@ -85,7 +85,7 @@ class InputSpeechManager {
 
     //TODO: setting icon attribute for different themes
     //TODO: Check for substring after contained string
-    fun finallySaidSomethingFromList(line: String, stringListArray: Array<Array<String>>)
+    fun finallySaidLineFromList(line: String, stringListArray: Array<Array<String>>)
             : Boolean = containsString(
         removeBeforeLastStringsIn(line, stringListArray, true).trim(),
         stringListArray

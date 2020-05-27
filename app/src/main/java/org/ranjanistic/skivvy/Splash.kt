@@ -25,7 +25,6 @@ class Splash : AppCompatActivity() {
     private lateinit var recognizeIntent: Intent
     private var temp: TempDataManager = TempDataManager()
     private lateinit var context: Context
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         skivvy = this.application as Skivvy
@@ -49,7 +48,7 @@ class Splash : AppCompatActivity() {
                     RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                     RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
                 )
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.getVoiceKeyLocale())
             skivvy.tts = TextToSpeech(skivvy, TextToSpeech.OnInitListener {
                 if (it == TextToSpeech.SUCCESS) {
                     skivvy.tts!!.language = skivvy.locale
@@ -81,7 +80,11 @@ class Splash : AppCompatActivity() {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    finishAffinity()
+                    try {
+                        finishAffinity()
+                    } catch(e:Exception){
+                        finish()
+                    }
                 }
 
                 override fun onAuthenticationFailed() {

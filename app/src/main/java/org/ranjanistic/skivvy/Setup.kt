@@ -27,6 +27,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import org.ranjanistic.skivvy.manager.SystemFeatureManager
 import org.ranjanistic.skivvy.manager.TempDataManager
+import java.util.*
 import java.util.concurrent.Executor
 import kotlin.NumberFormatException as NumberFormatException1
 
@@ -1182,7 +1183,8 @@ class Setup : AppCompatActivity() {
             }
             skivvy.CODE_VOICE_AUTH_CONFIRM -> {
                 if (text == skivvy.getVoiceKeyPhrase()) {
-                    skivvy.setSecurityPref(vocalAuthPhrase = text)
+                    //TODO: recording voice auth phrase locale for if change in default locale occurs.
+                    skivvy.setSecurityPref(vocalAuthPhrase = text, vocalAuthLocale = Locale.getDefault())
                     security.voiceAuth.isChecked = true
                     skivvy.setSecurityPref(vocalAuthOn = true)
                     setVisibilityOf(security.deleteVoiceSetup, visible = true)

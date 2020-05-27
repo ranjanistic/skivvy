@@ -106,6 +106,7 @@ class Skivvy : Application() {
     val PREF_KEY_BIOMETRIC = "fingerprint"
     val PREF_KEY_VOCAL_AUTH = "voiceAuth"
     val PREF_KEY_VOCAL_PHRASE = "voicePhrase"
+    val PREF_KEY_AUTH_LOCALE = "voiceLocale"
 
     val PREF_HEAD_APP_SETUP = "appSetup"
     val PREF_KEY_THEME = "theme"
@@ -310,7 +311,8 @@ class Skivvy : Application() {
     fun setSecurityPref(
         biometricOn: Boolean? = null,
         vocalAuthOn: Boolean? = null,
-        vocalAuthPhrase: String? = nothing
+        vocalAuthPhrase: String? = nothing,
+        vocalAuthLocale:Locale = this.locale
     ) {
         val editor = getSharedPreferences(this.PREF_HEAD_SECURITY, MODE_PRIVATE).edit()
         biometricOn?.let { editor.putBoolean(this.PREF_KEY_BIOMETRIC, it).apply() }
@@ -318,6 +320,8 @@ class Skivvy : Application() {
         if(vocalAuthPhrase!=nothing){
             editor.putString(this.PREF_KEY_VOCAL_PHRASE, vocalAuthPhrase).apply()
         }
+        if(vocalAuthLocale!=this.locale)
+            editor.putString(this.PREF_KEY_AUTH_LOCALE,vocalAuthLocale.toString()).apply()
     }
 
     fun getBiometricStatus(): Boolean =
@@ -331,6 +335,10 @@ class Skivvy : Application() {
     fun getVoiceKeyPhrase(): String? =
         getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
             .getString(this.PREF_KEY_VOCAL_PHRASE, null)
+
+    fun getVoiceKeyLocale():Locale =
+        Locale.Builder().setLanguageTag(getSharedPreferences(this.PREF_HEAD_SECURITY, AppCompatActivity.MODE_PRIVATE)
+            .getString(this.PREF_KEY_AUTH_LOCALE, this.locale.toString())!!.replace("_","-")).build()
 
     fun checkBioMetrics(): Boolean = when (BiometricManager.from(this).canAuthenticate()) {
         BiometricManager.BIOMETRIC_SUCCESS -> true
