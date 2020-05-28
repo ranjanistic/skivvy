@@ -204,7 +204,11 @@ open class MainActivity : AppCompatActivity() {
         wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         calculation = CalculationManager(skivvy)
         greet.text = getString(app_name)
-        greet.setCompoundDrawablesWithIntrinsicBounds(dots_in_circle, 0, 0, 0)
+        greet.setCompoundDrawablesWithIntrinsicBounds(
+            if(skivvy.isColorfulSkivvy()) dots_in_circle_colorful
+            else dots_in_circle
+            , 0, 0, 0
+        )
         if (skivvy.isLocaleHindi()) {
             greet.typeface = Typeface.DEFAULT
             inputText.typeface = Typeface.DEFAULT
@@ -1701,7 +1705,7 @@ open class MainActivity : AppCompatActivity() {
             localText = input.removeBeforeLastStringsIn(
                 text,
                 arrayOf(resources.getStringArray(R.array.initiators))
-            )
+            ).toLowerCase(skivvy.locale)
             if (localText == nothing) {
                 localText = input.removeStringsIn(
                     text,
@@ -1731,6 +1735,16 @@ open class MainActivity : AppCompatActivity() {
                             return true
                         }
                         localText == packages.getPackageAppName(i) -> {
+                            temp.setPackageIndex(i)
+                            successView(packages.getPackageIcon(i))
+                            speakOut(
+                                getString(opening) + packages.getPackageAppName(i)!!
+                                    .capitalize(skivvy.locale)
+                            )
+                            startActivity(Intent(packages.getPackageIntent(i)))
+                            return true
+                        }
+                        localText.substringAfterLast(space) == packages.getPackageAppName(i)->{
                             temp.setPackageIndex(i)
                             successView(packages.getPackageIcon(i))
                             speakOut(
@@ -2739,10 +2753,21 @@ open class MainActivity : AppCompatActivity() {
             loading.setImageDrawable(
                 getDrawable(
                     when (skivvy.getThemeState()) {
-                        R.style.BlueTheme -> dots_in_circle_white
-                        else -> dots_in_circle
+                        R.style.BlueTheme ->{
+                            if(skivvy.isColorfulSkivvy()) dots_in_circle_colorful_white
+                            else dots_in_circle_white
+                        }
+                        else ->{
+                            if(skivvy.isColorfulSkivvy()) dots_in_circle_colorful
+                            else dots_in_circle
+                        }
                     }
                 )
+            )
+            greet.setCompoundDrawablesWithIntrinsicBounds(
+                if(skivvy.isColorfulSkivvy()) dots_in_circle_colorful
+                else dots_in_circle
+                , 0, 0, 0
             )
             setOutput(getString(what_next))
             setFeedback(null)

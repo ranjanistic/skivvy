@@ -359,4 +359,6 @@
     <string name="continue_input_off">Continue conversation</string>
     <string name="ill_continue_listening">I\'ll continue listening</string>
     <string name="i_not_continue_listening">I won\'t continue listening</string>
+    <string name="color_icon_on">Set normal skivvy icon</string>
+    <string name="color_icon_off">Set colored skivvy icon</string>
 </resources>

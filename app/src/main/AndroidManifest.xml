@@ -77,7 +77,6 @@
             android:label="@string/skivvy_service"
             tools:targetApi="Q" />
 
-        <activity android:name=".LockScreenActivity" />
         <activity android:name=".SkivvyConnect">
             <intent-filter>
                 <category android:name="android.intent.category.LAUNCHER" />

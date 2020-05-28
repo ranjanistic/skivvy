@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Typeface
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -13,6 +14,7 @@ import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.view.animation.Animation
@@ -24,6 +26,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import com.google.android.material.snackbar.Snackbar
 import org.ranjanistic.skivvy.manager.SystemFeatureManager
 import org.ranjanistic.skivvy.manager.TempDataManager
@@ -55,10 +58,11 @@ class Setup : AppCompatActivity() {
         lateinit var theme: Switch
         lateinit var themeChoices: RadioGroup
         lateinit var saveTheme: TextView
+        lateinit var colorSkivvy:Switch
         lateinit var response: Switch
         lateinit var handy: Switch
         lateinit var onStartup: Switch
-        lateinit var retryFailure:Switch
+        lateinit var retryFailure: Switch
         lateinit var continueInput: Switch
         lateinit var fullScreen: Switch
     }
@@ -67,6 +71,7 @@ class Setup : AppCompatActivity() {
         lateinit var notifications: Switch
         lateinit var battery: Switch
     }
+
     private class Maths {
         lateinit var angleUnit: Switch
         lateinit var logBaseText: TextView
@@ -193,6 +198,7 @@ class Setup : AppCompatActivity() {
         appSetup.themeChoices = findViewById(R.id.themeChoices)
         appSetup.saveTheme = findViewById(R.id.save_theme)
         appSetup.response = findViewById(R.id.parallelResponseBtn)
+        appSetup.colorSkivvy = findViewById(R.id.coloredIcon)
         appSetup.handy = findViewById(R.id.handDirectionBtn)
         appSetup.onStartup = findViewById(R.id.recordOnStart)
         appSetup.retryFailure = findViewById(R.id.retryAfterFailure)
@@ -225,7 +231,6 @@ class Setup : AppCompatActivity() {
             getString(R.string.maths_and_setup)
         findViewById<TextView>(R.id.security_group_head).text =
             getString(R.string.security_and_setup)
-        appSetup.saveTheme.setBackgroundResource(R.drawable.button_square_round_spruce)
         setPermissionGridData(
             arrayOf(
                 special.permissions,
@@ -298,6 +303,7 @@ class Setup : AppCompatActivity() {
             voice.urgentVolume,
             appSetup.theme,
             appSetup.response,
+            appSetup.colorSkivvy,
             appSetup.handy,
             appSetup.onStartup,
             appSetup.retryFailure,
@@ -317,6 +323,7 @@ class Setup : AppCompatActivity() {
             skivvy.getVolumeUrgent(),
             skivvy.isCustomTheme(),
             skivvy.getParallelResponseStatus(),
+            skivvy.isColorfulSkivvy(),
             skivvy.getLeftHandy(),
             skivvy.shouldListenStartup(),
             skivvy.shouldRetry(),
@@ -330,10 +337,13 @@ class Setup : AppCompatActivity() {
         )
         switchData.onText = arrayOf(
             getString(R.string.unmute_text),
-            getString(R.string.normal_vol_on_text_) + skivvy.getNormalVolume().toString() + getString(R.string.percent),
-            getString(R.string.urgent_vol_on_text_) + skivvy.getUrgentVolume().toString() + getString(R.string.percent),
+            getString(R.string.normal_vol_on_text_) + skivvy.getNormalVolume()
+                .toString() + getString(R.string.percent),
+            getString(R.string.urgent_vol_on_text_) + skivvy.getUrgentVolume()
+                .toString() + getString(R.string.percent),
             getString(R.string.set_default_theme),
             getString(R.string.set_queued_receive),
+            getString(R.string.color_icon_on),
             getString(R.string.left_handy),
             getString(R.string.listen_on_click),
             getString(R.string.retry_fail_on),
@@ -351,6 +361,7 @@ class Setup : AppCompatActivity() {
             getString(R.string.urgent_vol_off_text),
             getString(R.string.customize_theme),
             getString(R.string.set_parallel_receive),
+            getString(R.string.color_icon_off),
             getString(R.string.right_handy),
             getString(R.string.listen_on_start),
             getString(R.string.retry_fail_off),
@@ -376,7 +387,8 @@ class Setup : AppCompatActivity() {
         textViews: Array<TextView>,
         textIDs: Array<Int>,
         texts: Array<String>? = null,
-        drawableIDs: Array<Int>) {
+        drawableIDs: Array<Int>
+    ) {
         for ((index, access) in textViews.withIndex()) {
             if (texts == null) {
                 access.text = getString(textIDs[index])
@@ -401,6 +413,7 @@ class Setup : AppCompatActivity() {
                         switchData.offText[index]
                     )
                 }
+                it.setTypeface(ResourcesCompat.getFont(context, R.font.jost_light))
             }
             index++
         }
@@ -620,16 +633,19 @@ class Setup : AppCompatActivity() {
             }
         }
     }
+
     //TODO: log base selector
-    private fun restarter(){
+    private fun restarter() {
         startActivity(
             Intent(
                 context,
                 MainActivity::class.java
-            ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
         finish()
     }
+
     private fun setListeners() {
         back.setOnClickListener {
             finish()
@@ -724,6 +740,7 @@ class Setup : AppCompatActivity() {
                 if (fromUser) voice.urgentVolume.text = txt
                 uPercent = progress
             }
+
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 skivvy.setVoicePreference(urgentVolumeLevel = uPercent)
@@ -785,6 +802,15 @@ class Setup : AppCompatActivity() {
                     true -> getString(R.string.parallel_receive_text)
                     else -> getString(R.string.queued_receive_text)
                 }, showSnackbar = true
+            )
+        }
+        appSetup.colorSkivvy.setOnCheckedChangeListener { view, isChecked ->
+            skivvy.setAppModePref(colorfulIcon = isChecked)
+            setThumbAttrs(
+                view as Switch,
+                isChecked,
+                getString(R.string.color_icon_on),
+                getString(R.string.color_icon_off)
             )
         }
         appSetup.handy.setOnCheckedChangeListener { view, isChecked ->
@@ -1230,7 +1256,10 @@ class Setup : AppCompatActivity() {
             skivvy.CODE_VOICE_AUTH_CONFIRM -> {
                 if (text == skivvy.getVoiceKeyPhrase()) {
                     //TODO: recording voice auth phrase locale for if change in default locale occurs.
-                    skivvy.setSecurityPref(vocalAuthPhrase = text, vocalAuthLocale = Locale.getDefault())
+                    skivvy.setSecurityPref(
+                        vocalAuthPhrase = text,
+                        vocalAuthLocale = Locale.getDefault()
+                    )
                     security.voiceAuth.isChecked = true
                     skivvy.setSecurityPref(vocalAuthOn = true)
                     setVisibilityOf(security.deleteVoiceSetup, visible = true)
@@ -1343,7 +1372,8 @@ class Setup : AppCompatActivity() {
         security.biometricPrompt = BiometricPrompt(this, security.executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(
-                    result: BiometricPrompt.AuthenticationResult) {
+                    result: BiometricPrompt.AuthenticationResult
+                ) {
                     super.onAuthenticationSucceeded(result)
                     when (code) {
                         skivvy.CODE_VOICE_AUTH_CONFIRM -> {

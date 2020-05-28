@@ -33,23 +33,42 @@ class Skivvy : Application() {
     val CODE_CALL_LOG_REQUEST = 1004
     val CODE_BODY_SENSOR_REQUEST = 1005
     val CODE_CALENDER_REQUEST = 1006
-    val permissions = arrayOf(
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_CONTACTS,
-        Manifest.permission.READ_CONTACTS,
-        Manifest.permission.CALL_PHONE,
-        Manifest.permission.ANSWER_PHONE_CALLS,
-        Manifest.permission.READ_CALL_LOG,
-        Manifest.permission.WRITE_CALENDAR,
-        Manifest.permission.READ_CALENDAR,
-        Manifest.permission.ACCESS_WIFI_STATE,
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.SEND_SMS,
-        Manifest.permission.READ_SMS,
-        Manifest.permission.CAMERA,
-        Manifest.permission.BODY_SENSORS
-    )
+    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        arrayOf(
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.ANSWER_PHONE_CALLS,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.WRITE_CALENDAR,
+            Manifest.permission.READ_CALENDAR,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.READ_SMS,
+            Manifest.permission.CAMERA,
+            Manifest.permission.BODY_SENSORS
+        )
+    } else {
+        arrayOf(
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.WRITE_CALENDAR,
+            Manifest.permission.READ_CALENDAR,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.READ_SMS,
+            Manifest.permission.CAMERA,
+            Manifest.permission.BODY_SENSORS
+        )
+    }
 
     //defaults
     val locale: Locale = Locale.getDefault()
@@ -112,6 +131,7 @@ class Skivvy : Application() {
     val PREF_KEY_THEME = "theme"
     val PREF_KEY_CUSTOM_THEME = "customTheme"
     val PREF_KEY_PARLLEL_TALK = "parallelResponse"
+    val PREF_KEY_COLOR_ICON = "colorfulIcon"
     val PREF_KEY_HANDY = "handSide"
     val PREF_KEY_START_TALK = "talkOnStart"
     val PREF_KEY_RETRY_INPUT = "retryAfterFailure"
@@ -239,6 +259,7 @@ class Skivvy : Application() {
         isCustomTheme: Boolean? = null,
         customTheme: Int? = null,
         parallelListen: Boolean? = null,
+        colorfulIcon: Boolean? = null,
         leftHandy: Boolean? = null,
         onStartListen: Boolean? = null,
         onFailRetry:Boolean? = null,
@@ -250,6 +271,7 @@ class Skivvy : Application() {
         isCustomTheme?.let { editor.putBoolean(this.PREF_KEY_CUSTOM_THEME, it).apply() }
         customTheme?.let { editor.putInt(this.PREF_KEY_THEME, it).apply() }
         parallelListen?.let { editor.putBoolean(this.PREF_KEY_PARLLEL_TALK, it).apply() }
+        colorfulIcon?.let { editor.putBoolean(this.PREF_KEY_COLOR_ICON, it).apply() }
         leftHandy?.let { editor.putBoolean(this.PREF_KEY_HANDY, it).apply() }
         onStartListen?.let { editor.putBoolean(this.PREF_KEY_START_TALK, it).apply() }
         onFailRetry?.let { editor.putBoolean(this.PREF_KEY_RETRY_INPUT, it).apply() }
@@ -269,6 +291,10 @@ class Skivvy : Application() {
     fun getParallelResponseStatus(): Boolean =
         getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
             .getBoolean(this.PREF_KEY_PARLLEL_TALK, false)
+
+    fun isColorfulSkivvy():Boolean =
+        getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)
+            .getBoolean(this.PREF_KEY_COLOR_ICON, false)
 
     fun getLeftHandy(): Boolean =
         getSharedPreferences(this.PREF_HEAD_APP_SETUP, AppCompatActivity.MODE_PRIVATE)

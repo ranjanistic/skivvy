@@ -307,4 +307,6 @@
     <string name="continue_input_off">निरंतर बातचीत करें</string>
     <string name="ill_continue_listening">मैं आपकी बात सुनती रहूंगी</string>
     <string name="i_not_continue_listening">मैं आपकी बात सुनती नहीं रहूंगी</string>
+    <string name="color_icon_on">स्किवी आइकन सामान्य करें </string>
+    <string name="color_icon_off">स्किवी आइकन रंगीन करें</string>
 </resources>

@@ -67,18 +67,20 @@
             android:paddingHorizontal="@dimen/secondary_separation"
             android:paddingTop="240dp"
             android:paddingBottom="@dimen/base_separation">
+
             <GridLayout
                 android:id="@+id/accessGrid"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/base_separation"
                 android:columnCount="2"
                 android:useDefaultMargins="true"
-                android:layout_marginBottom="@dimen/base_separation"
                 app:layout_constraintBottom_toTopOf="@id/voice_group_head"
-                app:layout_constraintVertical_chainStyle="spread_inside"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="spread_inside">
+
                 <include
                     android:id="@+id/permissionBtn"
                     layout="@layout/text_button_image"
@@ -92,6 +94,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1" />
+
                 <include
                     android:id="@+id/writeSettingsBtn"
                     layout="@layout/text_button_image"
@@ -105,19 +108,21 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1" />
+
                 <include
                     android:id="@+id/drawOverBtn"
                     layout="@layout/text_button_image"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1" />
+
                 <include
                     android:id="@+id/batteryOptBtn"
                     layout="@layout/text_button_image"
-                    android:visibility="gone"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_columnWeight="1" />
+                    android:layout_columnWeight="1"
+                    android:visibility="gone" />
             </GridLayout>
 
             <include
@@ -125,8 +130,8 @@
                 layout="@layout/text_head_top_round"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/accessGrid" />
 
@@ -164,8 +169,7 @@
                     layout="@layout/seekbar_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/secondary_separation"
-                    />
+                    android:layout_marginHorizontal="@dimen/secondary_separation" />
             </LinearLayout>
 
             <LinearLayout
@@ -192,8 +196,7 @@
                     layout="@layout/seekbar_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/secondary_separation"
-                    />
+                    android:layout_marginHorizontal="@dimen/secondary_separation" />
             </LinearLayout>
 
             <include
@@ -250,6 +253,7 @@
                         layout="@layout/radio_button_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content" />
+
                     <include
                         android:id="@+id/blue_theme"
                         layout="@layout/radio_button_layout"
@@ -278,7 +282,7 @@
                 app:layout_constraintTop_toBottomOf="@id/theme_setup" />
 
             <include
-                android:id="@+id/handDirectionBtn"
+                android:id="@+id/coloredIcon"
                 layout="@layout/switch_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -286,6 +290,16 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/parallelResponseBtn" />
+
+            <include
+                android:id="@+id/handDirectionBtn"
+                layout="@layout/switch_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/coloredIcon" />
 
             <include
                 android:id="@+id/recordOnStart"
@@ -399,24 +413,25 @@
                 android:id="@+id/logBaseEditor"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:layout_marginBottom="@dimen/base_separation"
+                android:orientation="horizontal"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/logBaseText">
+
                 <EditText
                     android:id="@+id/logBaseInput"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:inputType="number"
                     android:layout_gravity="start|center_vertical"
                     android:layout_margin="@dimen/minimum_separation"
                     android:backgroundTint="@color/colorPrimary"
                     android:gravity="center"
+                    android:hint="@string/enter_base_for_log"
+                    android:inputType="number"
                     android:textColor="?attr/fluid_button_text_color"
                     android:textColorHint="?attr/secondary_text_color"
-                    android:textSize="@dimen/normal_text_size"
-                    android:hint="@string/enter_base_for_log" />
+                    android:textSize="@dimen/normal_text_size" />
 
                 <View
                     android:layout_width="0dp"

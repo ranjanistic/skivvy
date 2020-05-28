@@ -6,7 +6,6 @@
     android:background="@drawable/button_square_round"
     android:backgroundTint="?attr/fluid_button_color"
     android:textColor="?attr/fluid_button_text_color"
-    android:fontFamily="@font/jost_light"
     android:textSize="@dimen/normal_text_size"
     android:layout_gravity="center_vertical"
     android:gravity="center_vertical"
