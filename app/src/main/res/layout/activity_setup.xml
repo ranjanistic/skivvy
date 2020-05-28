@@ -8,6 +8,21 @@
     android:background="?attr/secondary_background_color"
     tools:context=".Setup">
 
+    <include
+        android:id="@+id/goBack"
+        layout="@layout/text_button_image_chip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/minimum_separation"
+        android:textColor="?attr/tertiary_text_color"
+        android:textSize="@dimen/normal_text_size"
+        app:layout_constraintBottom_toBottomOf="@+id/end_note"
+        app:layout_constraintEnd_toStartOf="@id/settingIcon"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/settingIcon"
+        app:layout_constraintVertical_bias="0" />
+
     <ImageView
         android:id="@+id/settingIcon"
         android:layout_width="110dp"
@@ -39,7 +54,7 @@
         android:id="@+id/settingScrollView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:elevation="@dimen/base_separation"
+
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -293,6 +308,16 @@
                 app:layout_constraintTop_toBottomOf="@id/recordOnStart" />
 
             <include
+                android:id="@+id/continueConversation"
+                layout="@layout/switch_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="@dimen/base_separation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/retryAfterFailure" />
+
+            <include
                 android:id="@+id/fullScreenMode"
                 layout="@layout/switch_layout"
                 android:layout_width="0dp"
@@ -300,7 +325,7 @@
                 android:layout_marginVertical="@dimen/base_separation"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/retryAfterFailure"/>
+                app:layout_constraintTop_toBottomOf="@id/continueConversation" />
 
             <include
                 android:id="@+id/notification_group_head"

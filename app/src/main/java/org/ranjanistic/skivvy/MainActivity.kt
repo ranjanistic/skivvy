@@ -50,7 +50,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
-import kotlinx.coroutines.delay
 import org.ranjanistic.skivvy.R.drawable.*
 import org.ranjanistic.skivvy.R.string.*
 import org.ranjanistic.skivvy.manager.*
@@ -59,7 +58,6 @@ import java.io.FileOutputStream
 import java.util.*
 import java.util.concurrent.Executor
 import kotlin.collections.ArrayList
-import kotlin.properties.Delegates
 
 @ExperimentalStdlibApi
 open class MainActivity : AppCompatActivity() {
@@ -202,10 +200,8 @@ open class MainActivity : AppCompatActivity() {
         greet = findViewById(R.id.greeting)
         backfall = findViewById(R.id.backdrop)
         packages = skivvy.packageDataManager
-        audioManager =
-            applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        wifiManager =
-            applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         calculation = CalculationManager(skivvy)
         greet.text = getString(app_name)
         greet.setCompoundDrawablesWithIntrinsicBounds(dots_in_circle, 0, 0, 0)
@@ -562,15 +558,24 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun inGlobalCommands(text: String?): Boolean {
-        if (!respondToCommand(text!!)) {
-            if (!directActions(text)) {
-                if (!computerOps(text)) {
-                    if (!appOptions(text)) {
+        if (!respondToCommand(text!!)) {        //the commands which skivvy can respond promptly and execute directly by itself.
+            if (!directActions(text)) {     //the commands which require intrusion of other services of device, such as calling or SMS functionality.
+                if (!computerOps(text)) {       //the commands which are mathematical in nature, performed directly by Skivvy itself.
+                    if (!appOptions(text)) {        //the commands requiring other apps or intents on the device to be opened, leaving Skivvy in the background.
                         speakOut(getString(recognize_error))
                         return false
                     }
+                } else {
+                    if (skivvy.shouldContinueInput())        //TODO: Requiring permissions should not invoke this.
+                        startVoiceRecIntent(
+                            skivvy.CODE_SPEECH_RECORD,
+                            getString(generic_voice_rec_text)
+                        )
                 }
             }
+        } else {
+            if (skivvy.shouldContinueInput())
+                startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD, getString(generic_voice_rec_text))
         }
         return true
     }
@@ -1103,10 +1108,8 @@ open class MainActivity : AppCompatActivity() {
     private fun settingsCommand(text: String): Boolean {
         val setters = arrayOf("set","change","turn","enable","disable")
         if(!input.finallySaidLineFromList(text,arrayOf(setters))){
-            Log.d("noooooooo","not contains")
             return false
         }else {
-            Log.d("noooooooo","contains")
             when {
                 text.contains("setup") || text.contains("set up") -> {
                     startActivity(Intent(context, Setup::class.java))
@@ -1116,24 +1119,6 @@ open class MainActivity : AppCompatActivity() {
                     val base = text.replace(skivvy.nonNumeralPattern, nothing)
                     skivvy.setMathsPref(logBase = base.toFloat().toInt())
                     speakOut("$base is the log base.")
-                }
-                text.contains("volume") -> {
-                    volumeOps(text.replace("volume", nothing).trim())
-                }
-                text.contains("brightness") -> {
-                    brightnessOps(text.replace("brightness", nothing).trim())
-                }
-                text == "mute" -> {
-                    skivvy.setVoicePreference(voiceMute = true)
-                    speakOut("Muted")
-                }
-                text == "speak" || text == "unmute" -> {
-                    if (skivvy.getMuteStatus()) {
-                        skivvy.setVoicePreference(voiceMute = false)
-                        speakOut(getString(okay))
-                    } else {
-                        speakOut(getString(voice_output_on))
-                    }
                 }
                 text.contains("voice authentication") -> {
                     return when {
@@ -1268,6 +1253,24 @@ open class MainActivity : AppCompatActivity() {
         val deviceNames = arrayOf("screen", "phone", "device", "system", "yourself")
         if (!settingsCommand(text))
             when {
+                text.contains("volume") -> {
+                    volumeOps(text.replace("volume", nothing).trim())
+                }
+                text.contains("brightness") -> {
+                    brightnessOps(text.replace("brightness", nothing).trim())
+                }
+                text == "mute" -> {
+                    skivvy.setVoicePreference(voiceMute = true)
+                    speakOut("Muted")
+                }
+                text == "speak" || text == "unmute" -> {
+                    if (skivvy.getMuteStatus()) {
+                        skivvy.setVoicePreference(voiceMute = false)
+                        speakOut(getString(okay))
+                    } else {
+                        speakOut(getString(voice_output_on))
+                    }
+                }
                 text.contains("battery level") || text.contains("battery status") || text.contains("battery") -> {
                     speakOut("Battery at $batteryLevel%.")
                 }

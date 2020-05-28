@@ -59,6 +59,7 @@ class Setup : AppCompatActivity() {
         lateinit var handy: Switch
         lateinit var onStartup: Switch
         lateinit var retryFailure:Switch
+        lateinit var continueInput: Switch
         lateinit var fullScreen: Switch
     }
 
@@ -104,6 +105,7 @@ class Setup : AppCompatActivity() {
     private lateinit var reveal: Animation
     private lateinit var slideIn: Animation
     private lateinit var slideOut: Animation
+    private lateinit var back: TextView
     private lateinit var settingIcon: ImageView
     private lateinit var noteView: TextView
 
@@ -174,6 +176,9 @@ class Setup : AppCompatActivity() {
             override fun onAnimationRepeat(animation: Animation?) {
             }
         })
+        back = findViewById(R.id.goBack)
+        back.text = getString(R.string.back)
+        back.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_backarrowskivvy, 0, 0, 0)
         settingIcon = findViewById(R.id.settingIcon)
         noteView = findViewById(R.id.end_note)
         childLayout.scrollView = findViewById(R.id.settingScrollView)
@@ -191,6 +196,7 @@ class Setup : AppCompatActivity() {
         appSetup.handy = findViewById(R.id.handDirectionBtn)
         appSetup.onStartup = findViewById(R.id.recordOnStart)
         appSetup.retryFailure = findViewById(R.id.retryAfterFailure)
+        appSetup.continueInput = findViewById(R.id.continueConversation)
         appSetup.fullScreen = findViewById(R.id.fullScreenMode)
         notify.notifications = findViewById(R.id.showNotification)
         notify.battery = findViewById(R.id.batteryStatus)
@@ -295,6 +301,7 @@ class Setup : AppCompatActivity() {
             appSetup.handy,
             appSetup.onStartup,
             appSetup.retryFailure,
+            appSetup.continueInput,
             appSetup.fullScreen,
             notify.notifications,
             notify.battery,
@@ -313,6 +320,7 @@ class Setup : AppCompatActivity() {
             skivvy.getLeftHandy(),
             skivvy.shouldListenStartup(),
             skivvy.shouldRetry(),
+            skivvy.shouldContinueInput(),
             skivvy.shouldFullScreen(),
             skivvy.showNotifications(),
             skivvy.readBatteryStatus(),
@@ -329,6 +337,7 @@ class Setup : AppCompatActivity() {
             getString(R.string.left_handy),
             getString(R.string.listen_on_click),
             getString(R.string.retry_fail_on),
+            getString(R.string.continue_input_on),
             getString(R.string.disable_full_screen),
             getString(R.string.notifications_on),
             getString(R.string.battery_stat_on),
@@ -345,6 +354,7 @@ class Setup : AppCompatActivity() {
             getString(R.string.right_handy),
             getString(R.string.listen_on_start),
             getString(R.string.retry_fail_off),
+            getString(R.string.continue_input_off),
             getString(R.string.enable_full_screen),
             getString(R.string.notifications_off),
             getString(R.string.battery_stat_off),
@@ -621,7 +631,7 @@ class Setup : AppCompatActivity() {
         finish()
     }
     private fun setListeners() {
-        settingIcon.setOnClickListener {
+        back.setOnClickListener {
             finish()
             overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
         }
@@ -817,8 +827,23 @@ class Setup : AppCompatActivity() {
             )
             speakOut(
                 when (isChecked) {
-                    true -> getString(R.string.retry_fail_on)
-                    else -> getString(R.string.retry_fail_off)
+                    true -> getString(R.string.ill_retry_on_fail)
+                    else -> getString(R.string.ill_not_retry_on_fail)
+                }, showSnackbar = true
+            )
+        }
+        appSetup.continueInput.setOnCheckedChangeListener { view, isChecked ->
+            skivvy.setAppModePref(continueInput = isChecked)
+            setThumbAttrs(
+                view as Switch,
+                isChecked,
+                getString(R.string.continue_input_on),
+                getString(R.string.continue_input_off)
+            )
+            speakOut(
+                when (isChecked) {
+                    true -> getString(R.string.ill_continue_listening)
+                    else -> getString(R.string.i_not_continue_listening)
                 }, showSnackbar = true
             )
         }
@@ -849,8 +874,8 @@ class Setup : AppCompatActivity() {
                 )
                 speakOut(
                     when (isChecked) {
-                        true -> getString(R.string.notifications_on)
-                        else -> getString(R.string.notifications_off)
+                        true -> getString(R.string.reading_notifications)
+                        else -> getString(R.string.not_reading_notifications)
                     }, showSnackbar = true
                 )
             } else {
@@ -871,8 +896,8 @@ class Setup : AppCompatActivity() {
             )
             speakOut(
                 when (isChecked) {
-                    true -> getString(R.string.battery_stat_on)
-                    else -> getString(R.string.battery_stat_off)
+                    true -> getString(R.string.reading_battery_stat)
+                    else -> getString(R.string.not_reading_battery_stat)
                 }, showSnackbar = true
             )
         }
@@ -929,7 +954,11 @@ class Setup : AppCompatActivity() {
                     true,
                     onText = getString(R.string.disable_fingerprint)
                 )
-                speakOut(getString(R.string.fingerprint_is_on))
+                speakOut(
+                    getString(R.string.fingerprint_is_on),
+                    showSnackbar = true
+                )
+
             } else {
                 if (skivvy.getBiometricStatus()) {
                     if (skivvy.checkBioMetrics()) {
@@ -945,7 +974,7 @@ class Setup : AppCompatActivity() {
                 if (skivvy.getVoiceKeyPhrase() == null) {
                     speakOut(
                         getString(R.string.tell_new_secret_phrase),
-                        skivvy.CODE_VOICE_AUTH_INIT
+                        skivvy.CODE_VOICE_AUTH_INIT, showSnackbar = true
                     )
                 } else {
                     skivvy.setSecurityPref(vocalAuthOn = true)
@@ -955,13 +984,17 @@ class Setup : AppCompatActivity() {
                         onText = getString(R.string.disable_vocal_authentication)
                     )
                     setVisibilityOf(security.deleteVoiceSetup, visible = true)
-                    speakOut(getString(R.string.vocal_auth_enabled))
+                    speakOut(getString(R.string.vocal_auth_enabled), showSnackbar = true)
                     if (!skivvy.getBiometricStatus()) {
                         showBiometricRecommendation()
                     }
                 }
             } else {
-                speakOut(getString(R.string.vocal_auth_disabled))
+                speakOut(
+                    getString(R.string.vocal_auth_disabled),
+                    showSnackbar = true,
+                    isPositiveForSnackbar = false
+                )
                 defaultVoiceAuthUIState()
             }
         }
@@ -988,7 +1021,7 @@ class Setup : AppCompatActivity() {
         }
         security.deleteVoiceSetup.setOnLongClickListener { view ->
             bubbleThis(view)
-            speakOut(getString(R.string.passphrase_to_be_deleted))
+            speakOut(getString(R.string.passphrase_to_be_deleted), showSnackbar = true)
             true
         }
         special.permissions.setOnClickListener {
@@ -1169,15 +1202,28 @@ class Setup : AppCompatActivity() {
                 defaultVoiceAuthUIState()
                 if (text != "") {
                     if (text.length < 5) {
-                        speakOut(getString(R.string.phrase_too_short), skivvy.CODE_VOICE_AUTH_INIT)
+                        speakOut(
+                            getString(R.string.phrase_too_short),
+                            skivvy.CODE_VOICE_AUTH_INIT,
+                            showSnackbar = true,
+                            isPositiveForSnackbar = false
+                        )
                     } else {
                         skivvy.setSecurityPref(vocalAuthPhrase = text)
-                        speakOut(getString(R.string.confirm_phrase), skivvy.CODE_VOICE_AUTH_CONFIRM)
+                        speakOut(
+                            getString(R.string.confirm_phrase),
+                            skivvy.CODE_VOICE_AUTH_CONFIRM,
+                            showSnackbar = true
+                        )
                     }
                 } else {
                     skivvy.setSecurityPref(vocalAuthPhrase = null)
                     defaultVoiceAuthUIState()
-                    speakOut(getString(R.string.no_input))
+                    speakOut(
+                        getString(R.string.no_input),
+                        showSnackbar = true,
+                        isPositiveForSnackbar = false
+                    )
                     return
                 }
             }
@@ -1188,7 +1234,10 @@ class Setup : AppCompatActivity() {
                     security.voiceAuth.isChecked = true
                     skivvy.setSecurityPref(vocalAuthOn = true)
                     setVisibilityOf(security.deleteVoiceSetup, visible = true)
-                    speakOut("'${skivvy.getVoiceKeyPhrase()}'" + getString(R.string._is_the_phrase))
+                    speakOut(
+                        "'${skivvy.getVoiceKeyPhrase()}'" + getString(R.string._is_the_phrase),
+                        showSnackbar = true
+                    )
                     if (!skivvy.getBiometricStatus() && skivvy.checkBioMetrics()) {
                         showBiometricRecommendation()
                     }
@@ -1299,11 +1348,19 @@ class Setup : AppCompatActivity() {
                     when (code) {
                         skivvy.CODE_VOICE_AUTH_CONFIRM -> {
                             skivvy.setSecurityPref(vocalAuthPhrase = null)
-                            speakOut(getString(R.string.secret_phrase_deleted))
+                            speakOut(
+                                getString(R.string.secret_phrase_deleted),
+                                showSnackbar = true,
+                                isPositiveForSnackbar = false
+                            )
                             defaultVoiceAuthUIState()
                         }
                         skivvy.CODE_BIOMETRIC_CONFIRM -> {
-                            speakOut(getString(R.string.fingerprint_off))
+                            speakOut(
+                                getString(R.string.fingerprint_off),
+                                showSnackbar = true,
+                                isPositiveForSnackbar = false
+                            )
                             skivvy.setSecurityPref(biometricOn = false)
                             setThumbAttrs(
                                 security.biometrics,
