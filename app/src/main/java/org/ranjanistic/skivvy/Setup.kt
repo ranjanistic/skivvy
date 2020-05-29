@@ -555,7 +555,6 @@ class Setup : AppCompatActivity() {
                 k.visibility = when (eachVisible[boolIndex]) {
                     true -> View.VISIBLE
                     false -> View.GONE
-                    else -> throw IllegalArgumentException()
                 }
             }
         } else {
@@ -951,9 +950,8 @@ class Setup : AppCompatActivity() {
             setLogBaseUI(maths.logBaseEditor.visibility != View.VISIBLE)
         }
         maths.logBaseSave.setOnClickListener {
-            var base = 0
             try {
-                base = maths.logBaseInput.text.toString().toFloat().toInt()
+                var base = maths.logBaseInput.text.toString().toFloat().toInt()
                 if (!maths.logBaseInput.text.isNullOrBlank() && base > 1) {
                     skivvy.setMathsPref(logBase = base)
                     setLogBaseUI(false)

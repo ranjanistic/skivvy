@@ -1,1 +1,20 @@
-[{"outputType":{"type":"APK"},"apkData":{"type":"MAIN","splits":[],"versionCode":1,"versionName":"0.1-unborn-stage1","enabled":true,"outputFile":"org.ranjanistic.skivvy-0.1-unborn-stage1.apk","fullName":"release","baseName":"release","dirName":""},"path":"org.ranjanistic.skivvy-0.1-unborn-stage1.apk","properties":{}}]
+{
+  "version": 1,
+  "artifactType": {
+    "type": "APK",
+    "kind": "Directory"
+  },
+  "applicationId": "org.ranjanistic.skivvy",
+  "variantName": "release",
+  "elements": [
+    {
+      "type": "SINGLE",
+      "filters": [],
+      "properties": [],
+      "versionCode": 1,
+      "versionName": "1",
+      "enabled": true,
+      "outputFile": "org.ranjanistic.skivvy-0.2.1-unborn-stage2.apk"
+    }
+  ]
+}

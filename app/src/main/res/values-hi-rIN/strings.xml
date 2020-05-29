@@ -309,4 +309,7 @@
     <string name="i_not_continue_listening">मैं आपकी बात सुनती नहीं रहूंगी</string>
     <string name="color_icon_on">स्किवी आइकन सामान्य करें </string>
     <string name="color_icon_off">स्किवी आइकन रंगीन करें</string>
+    <string name="if_u_allow_call_logs">यदि आप मुझे अनुमति दें.</string>
+    <string name="_at_their_recent_num">&#160;को उनके हाल ही के नंबर पर</string>
+    <string name="i_can_call_">मै कॉल कर सकती हूँ&#160;</string>
 </resources>

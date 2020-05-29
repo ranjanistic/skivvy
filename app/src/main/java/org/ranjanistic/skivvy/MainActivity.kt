@@ -150,7 +150,7 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initiateRecognitionIntent(){
+    private fun initiateRecognitionIntent() {
         recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             .putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -158,6 +158,7 @@ open class MainActivity : AppCompatActivity() {
             )
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE, skivvy.locale)
     }
+
     private fun getSysBarColorByTheme(
         context: Context,
         isStatus: Boolean
@@ -205,7 +206,7 @@ open class MainActivity : AppCompatActivity() {
         calculation = CalculationManager(skivvy)
         greet.text = getString(app_name)
         greet.setCompoundDrawablesWithIntrinsicBounds(
-            if(skivvy.isColorfulSkivvy()) dots_in_circle_colorful
+            if (skivvy.isColorfulSkivvy()) dots_in_circle_colorful
             else dots_in_circle
             , 0, 0, 0
         )
@@ -277,7 +278,7 @@ open class MainActivity : AppCompatActivity() {
 
     private fun setListeners() {
         callStateListener()
-        greet.setOnClickListener{
+        greet.setOnClickListener {
             it.startAnimation(anim.waveDamped)
             speakOut(getString(i_am) + getString(app_name))
         }
@@ -321,7 +322,7 @@ open class MainActivity : AppCompatActivity() {
         super.onStart()
         initiateRecognitionIntent()
         this.registerReceiver(this.mBatInfoReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-        this.registerReceiver(this.mNotificationReceiver, IntentFilter(skivvy.actionNotification))
+        this.registerReceiver(this.mNotificationReceiver, IntentFilter(skivvy.actionNotification as String))
         if (isNotificationServiceRunning() && skivvy.showNotifications()) {
             startService(Intent(this, NotificationWatcher::class.java))
         }
@@ -511,15 +512,10 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun setFeedback(text: String?, isNotOngoing: Boolean = true) {
-        if(isNotOngoing) {
+        if (isNotOngoing) {
             feedback.startAnimation(anim.fadeOnFast)
             feedback.text = text
         }
-    }
-
-    private fun setOutput(text: String?, isNotOngoing: Boolean = true) {
-        outputText.startAnimation(anim.fadeOnFast)
-        outputText.text = text
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -981,7 +977,7 @@ open class MainActivity : AppCompatActivity() {
                             temp.setTextBody(txt)
                             if (temp.getContactPresence()) {
                                 speakOut(
-                                    getString(should_i_text) + contact.displayName+space+
+                                    getString(should_i_text) + contact.displayName + space +
                                             getLocalisedString(
                                                 "at${contact.phoneList!![temp.getPhoneIndex()]}",
                                                 "को ${contact.phoneList!![temp.getPhoneIndex()]}" + getString(
@@ -1110,10 +1106,10 @@ open class MainActivity : AppCompatActivity() {
 
     //TODO: Setup commands here
     private fun settingsCommand(text: String): Boolean {
-        val setters = arrayOf("set","change","turn","enable","disable")
-        if(!input.finallySaidLineFromList(text,arrayOf(setters))){
+        val setters = arrayOf("set", "change", "turn", "enable", "disable")
+        if (!input.finallySaidLineFromList(text, arrayOf(setters))) {
             return false
-        }else {
+        } else {
             when {
                 text.contains("setup") || text.contains("set up") -> {
                     startActivity(Intent(context, Setup::class.java))
@@ -1229,7 +1225,7 @@ open class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                text.contains( "permission") -> {
+                text.contains("permission") -> {
                     if (!skivvy.hasPermissions(context)) {
                         speakOut(getString(need_all_permissions))
                         requestThisPermission(skivvy.CODE_ALL_PERMISSIONS)
@@ -1354,6 +1350,7 @@ open class MainActivity : AppCompatActivity() {
                 input.containsString(text, arrayOf(deviceNames)) -> {
                     if (text.contains("lock"))
                         deviceLockOps()
+                    else return false
                 }
                 text.contains("screenshot") || text.contains("snapshot") || text.contains("take ss") -> {
                     if (!skivvy.hasThisPermission(context, skivvy.CODE_STORAGE_REQUEST)) {
@@ -1744,7 +1741,7 @@ open class MainActivity : AppCompatActivity() {
                             startActivity(Intent(packages.getPackageIntent(i)))
                             return true
                         }
-                        localText.substringAfterLast(space) == packages.getPackageAppName(i)->{
+                        localText.substringAfterLast(space) == packages.getPackageAppName(i) -> {
                             temp.setPackageIndex(i)
                             successView(packages.getPackageIcon(i))
                             speakOut(
@@ -1835,10 +1832,9 @@ open class MainActivity : AppCompatActivity() {
     private fun directActions(text: String): Boolean {
         var localTxt: String
         when {
-            //TODO: continued calculation
             text.contains(getString(call)) -> {
                 waitingView(getDrawable(ic_phone_dialer))
-                localTxt = text.replace(getString(call), nothing, true).trim()
+                localTxt = text.replaceBeforeLast(getString(call), nothing).replace(getString(call), nothing, true).trim()
                 temp.setPhone(text.replace(skivvy.nonNumeralPattern, nothing))
                 if (temp.getPhone() != null) {
                     when {
@@ -1887,7 +1883,7 @@ open class MainActivity : AppCompatActivity() {
             }
             text.contains(getString(email)) -> {
                 waitingView(getDrawable(ic_envelope_open))
-                localTxt = text.replace(getString(email), nothing, true).trim()
+                localTxt = text.replaceBeforeLast(getString(email), nothing).replace(getString(email), nothing, true).trim()
                 temp.setEmail(localTxt.replace(space, nothing).trim())
                 when {
                     temp.getEmail()!!.matches(skivvy.emailPattern) -> {
@@ -2024,13 +2020,14 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun handleSearchResults(result: ContactModel?) {
-        if (result == null) {
+        if (result == null ) {
             errorView()
             speakOut(getString(no_contacts_available))
         } else if (!temp.getContactPresence()) {
             errorView()
-            speakOut(getString(contact_not_found),
-                taskCode = if(skivvy.shouldRetry()) skivvy.CODE_SPEECH_RECORD
+            speakOut(
+                getString(contact_not_found),
+                taskCode = if (skivvy.shouldRetry()) skivvy.CODE_SPEECH_RECORD
                 else null
             )
         } else {
@@ -2065,7 +2062,7 @@ open class MainActivity : AppCompatActivity() {
                                 }
                                 result.phoneList!!.size == 1 -> {
                                     speakOut(
-                                        getString(should_i_call) + "${result.displayName}?",
+                                        getString(should_i_call) + result.displayName,
                                         skivvy.CODE_CALL_CONF
                                     )
                                 }
@@ -2075,14 +2072,14 @@ open class MainActivity : AppCompatActivity() {
                                             _phone_nums_of_
                                         ) + result.displayName, !tasksOngoing[NOTIFTASK]
                                     )
-                                    if (skivvy.hasThisPermission(
-                                            context,
-                                            skivvy.CODE_CALL_LOG_REQUEST
-                                        )
-                                    ) {
+                                    if (skivvy.hasThisPermission(context, skivvy.CODE_CALL_LOG_REQUEST)) {
                                         ArrangeViaLogs().execute(result.displayName)        //to arrange phone list according to recently called
                                     } else {
-                                        speakOut("I can call ${result.displayName} at their recent number, if you allow me to access call logs.")
+                                        speakOut(
+                                            getString(i_can_call_) + result.displayName + getString(
+                                                _at_their_recent_num
+                                            ) + ", " + getString(if_u_allow_call_logs)
+                                        )
                                         requestThisPermission(skivvy.CODE_CALL_LOG_REQUEST)
                                     }
                                 }
@@ -2151,11 +2148,13 @@ open class MainActivity : AppCompatActivity() {
             var nc = 0
             nickNames = arrayOfNulls(it.count)
             while (it.moveToNext()) {
-                nickNames!![nc] = it.getString(0)?.toLowerCase(skivvy.locale)
-                ++nc
+                it.getString(0)?.let {it1->
+                    nickNames!![nc] = it1.toLowerCase(skivvy.locale)
+                    ++nc
+                }
             }
             it.close()
-            return input.removeDuplicateStrings(nickNames!!)
+            return nickNames?.let{it1->input.removeDuplicateStrings(it1)}
         }
         cursor?.close()
         return nickNames
@@ -2175,11 +2174,13 @@ open class MainActivity : AppCompatActivity() {
             phones = arrayOfNulls(it.count)
             var k = 0
             while (it.moveToNext()) {
-                phones!![k] = formatPhoneNumber(it.getString(0))
-                ++k
+                it.getString(0)?.let {it1->
+                    phones!![k] = formatPhoneNumber(it1)
+                    ++k
+                }
             }
             it.close()
-            return input.removeDuplicateStrings(phones!!)
+            return phones?.let{it1->input.removeDuplicateStrings(it1)}
         }
         cursor?.close()
         return phones
@@ -2199,17 +2200,18 @@ open class MainActivity : AppCompatActivity() {
             emails = arrayOfNulls(it.count)
             var k = 0
             while (it.moveToNext()) {
-                emails!![k] = it.getString(0)
-                ++k
+                it.getString(0)?.let{it1->
+                    emails!![k] = it1
+                        ++k
+                }
             }
             it.close()
-            return input.removeDuplicateStrings(emails!!)
+            return emails?.let{it1->input.removeDuplicateStrings(it1)}
         }
         cursor?.close()
         return emails
     }
 
-    val tag = "contactLook"
     private fun getNameAndImageUri(number: String): ArrayList<String?>? {
         val projection = arrayOf(
             ContactsContract.PhoneLookup.DISPLAY_NAME,
@@ -2225,7 +2227,6 @@ open class MainActivity : AppCompatActivity() {
         )
         var contactName: String? = null
         var image: String? = null
-        // query time
         val cursor = skivvy.cResolver.query(
             contactUri,
             projection, null, null, null
@@ -2237,7 +2238,6 @@ open class MainActivity : AppCompatActivity() {
                 image = it.getString(it.getColumnIndex(ContactsContract.PhoneLookup.PHOTO_URI))
             }
             it.close()
-            Log.d(tag, "returns id")
             return arrayListOf(contactName, image)
         }
         cursor?.close()
@@ -2261,7 +2261,7 @@ open class MainActivity : AppCompatActivity() {
             if (it.count > 0) {
                 while (it.moveToNext()) {
                     contact.contactID = it.getString(0)
-                    contact.displayName = it.getString(1)
+                    it.getString(1)?.let{it1->contact.displayName = it1}
                     contact.nickName = getNicknamesOf(contact.contactID)
                     temp.setContactReceived(keyPhrase.trim())
                     if (temp.getContactReceived() == contact.displayName.toLowerCase(skivvy.locale)
@@ -2271,8 +2271,10 @@ open class MainActivity : AppCompatActivity() {
                     ) {
                         temp.setContactPresence(true)
                         it.getString(2)?.let { uri -> contact.photoID = uri }
-                        contact.emailList = getEmailIDsOf(contact.contactID)
-                        contact.phoneList = getPhoneNumbersOf(contact.contactID)
+                        contact.contactID?.let {
+                            contact.emailList = getEmailIDsOf(it)
+                            contact.phoneList = getPhoneNumbersOf(it)
+                        }
                         break
                     } else
                         temp.setContactPresence(false)
@@ -2406,8 +2408,10 @@ open class MainActivity : AppCompatActivity() {
             }
         }
     }
-    private var incomingName:String? = null
-    private var incomingImage:Drawable? = null
+
+    private var incomingName: String? = null
+    private var incomingImage: Drawable? = null
+
     //TODO: manage incoming contact lookup
     inner class FindContactIncoming : AsyncTask<String, Void, ArrayList<String?>>() {
         var number: String? = null
@@ -2629,8 +2633,7 @@ open class MainActivity : AppCompatActivity() {
         this.unregisterReceiver(this.mBatInfoReceiver)
         this.unregisterReceiver(this.mNotificationReceiver)
         sendBroadcast(
-            Intent(skivvy.actionServiceRestart)
-                .putExtra(skivvy.serviceDead, true)
+            Intent(skivvy.actionServiceRestart as String).putExtra(skivvy.serviceDead, true)
         )
         skivvy.tts?.let {
             it.stop()
@@ -2753,19 +2756,19 @@ open class MainActivity : AppCompatActivity() {
             loading.setImageDrawable(
                 getDrawable(
                     when (skivvy.getThemeState()) {
-                        R.style.BlueTheme ->{
-                            if(skivvy.isColorfulSkivvy()) dots_in_circle_colorful_white
+                        R.style.BlueTheme -> {
+                            if (skivvy.isColorfulSkivvy()) dots_in_circle_colorful_white
                             else dots_in_circle_white
                         }
-                        else ->{
-                            if(skivvy.isColorfulSkivvy()) dots_in_circle_colorful
+                        else -> {
+                            if (skivvy.isColorfulSkivvy()) dots_in_circle_colorful
                             else dots_in_circle
                         }
                     }
                 )
             )
             greet.setCompoundDrawablesWithIntrinsicBounds(
-                if(skivvy.isColorfulSkivvy()) dots_in_circle_colorful
+                if (skivvy.isColorfulSkivvy()) dots_in_circle_colorful
                 else dots_in_circle
                 , 0, 0, 0
             )
@@ -2969,14 +2972,17 @@ open class MainActivity : AppCompatActivity() {
         cursor?.let {
             it.moveToFirst()
             while (it.moveToNext()) {
-                val number = formatPhoneNumber(it.getString(1))        //number index column
-                contact.phoneList?.let { list ->
-                    if (list.contains(number)) {
-                        val index = list.indexOf(number)
-                        val temp = list[index]
-                        if (list[0] != temp) {
-                            list[index] = list[0]
-                            list[0] = temp
+                var number = nothing
+                it.getString(1)?.let { num ->
+                    number = formatPhoneNumber(num)        //number index column
+                    contact.phoneList?.let { list ->
+                        if (list.contains(number)) {
+                            val index = list.indexOf(number)
+                            val temp = list[index]
+                            if (list[0] != temp) {
+                                list[index] = list[0]
+                                list[0] = temp
+                            }
                         }
                     }
                 }
