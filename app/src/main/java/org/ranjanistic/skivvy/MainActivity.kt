@@ -64,6 +64,7 @@ open class MainActivity : AppCompatActivity() {
 
     lateinit var skivvy: Skivvy
 
+    //TODO: Create onboarding, with first preference as theme choice
     //TODO: lock screen activity, its brightness, charging status, incoming notifications on lock screen view, charging view
     //TODO: widget for actions (calculations first, or a calculator widget)
     private lateinit var outputText: TextView
@@ -90,12 +91,20 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private val anim = Animations()
+
     private val CALLTASK = 0
     private val NOTIFTASK = 1
-
+    private val CALCUTASK = 2
+    private val PERMITASK = 3
     private var lastTxt: String? = null
-    private var tasksOngoing: ArrayList<Boolean> = arrayListOf(false, false)
-    private fun anyTaskRunning(): Boolean = tasksOngoing[CALLTASK] || tasksOngoing[NOTIFTASK]
+    private var tasksOngoing: ArrayList<Boolean> = arrayListOf(false, false, false, false)
+    private fun anyTaskRunning(): Boolean {
+        return tasksOngoing[CALLTASK] ||
+                tasksOngoing[NOTIFTASK] ||
+                tasksOngoing[CALCUTASK] ||
+                tasksOngoing[PERMITASK]
+    }
+
     private lateinit var receiver: ImageButton
     private lateinit var setting: ImageButton
     private lateinit var loading: ImageView
@@ -114,7 +123,6 @@ open class MainActivity : AppCompatActivity() {
     private var contact = ContactModel()
     private var temp: TempDataManager = TempDataManager()
     private var feature: SystemFeatureManager = SystemFeatureManager()
-    private lateinit var intentFilter: IntentFilter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         context = this
@@ -133,7 +141,6 @@ open class MainActivity : AppCompatActivity() {
         hideSysUI()
         setViewAndDefaults()
         loadDefaultAnimations()
-        initialView()
         resetVariables()
         setListeners()
         initiateRecognitionIntent()
@@ -142,6 +149,7 @@ open class MainActivity : AppCompatActivity() {
                 skivvy.tts?.language = skivvy.locale
             } else speakOut(getString(output_error))
         })
+        initialView()
         setOutput(getString(im_ready))
         if (skivvy.shouldListenStartup())
             startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
@@ -322,7 +330,7 @@ open class MainActivity : AppCompatActivity() {
         super.onStart()
         initiateRecognitionIntent()
         this.registerReceiver(this.mBatInfoReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-        this.registerReceiver(this.mNotificationReceiver, IntentFilter(skivvy.actionNotification as String))
+        this.registerReceiver(this.mNotificationReceiver, IntentFilter(skivvy.actionNotification))
         if (isNotificationServiceRunning() && skivvy.showNotifications()) {
             startService(Intent(this, NotificationWatcher::class.java))
         }
@@ -359,6 +367,7 @@ open class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        tasksOngoing[PERMITASK] = false
         when (requestCode) {
             skivvy.CODE_ALL_PERMISSIONS -> {
                 speakOut(
@@ -557,16 +566,20 @@ open class MainActivity : AppCompatActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
+    //TODO: when output is 'okay', continue listening if preferred.
+    //TODO: check for other commands in agreements or denial inputs
     private fun inGlobalCommands(text: String?): Boolean {
         if (!respondToCommand(text!!)) {        //the commands which skivvy can respond promptly and execute directly by itself.
             if (!directActions(text)) {     //the commands which require intrusion of other services of device, such as calling or SMS functionality.
                 if (!computerOps(text)) {       //the commands which are mathematical in nature, performed directly by Skivvy itself.
+                    tasksOngoing[CALCUTASK] = false
                     if (!appOptions(text)) {        //the commands requiring other apps or intents on the device to be opened, leaving Skivvy in the background.
                         speakOut(getString(recognize_error))
                         return false
                     }
                 } else {
-                    if (skivvy.shouldContinueInput())        //TODO: Requiring permissions should not invoke this.
+                    tasksOngoing[CALCUTASK] = true
+                    if (skivvy.shouldContinueInput() && !tasksOngoing[PERMITASK])        //TODO: Requiring permissions should not invoke this.
                         startVoiceRecIntent(
                             skivvy.CODE_SPEECH_RECORD,
                             getString(generic_voice_rec_text)
@@ -574,7 +587,7 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
         } else {
-            if (skivvy.shouldContinueInput())
+            if (skivvy.shouldContinueInput() && !tasksOngoing[PERMITASK])
                 startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD, getString(generic_voice_rec_text))
         }
         return true
@@ -588,6 +601,7 @@ open class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         var result: ArrayList<String> = ArrayList(1)
         if (!skivvy.nonVocalRequestCodes.contains(requestCode)) {
+            tasksOngoing[PERMITASK] = false
             if (data == null || data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
                     ?.get(0).toString().toLowerCase(skivvy.locale) == nothing
             ) {
@@ -609,10 +623,7 @@ open class MainActivity : AppCompatActivity() {
                 inputText.text = txt
                 if (!inGlobalCommands(txt)) {
                     errorView()
-                    if (skivvy.shouldRetry()) {
-                        speakOut(getString(recognize_error), skivvy.CODE_SPEECH_RECORD)
-                    } else
-                        speakOut(getString(recognize_error))
+                    speakOut(getString(recognize_error))
                 }
             }
             skivvy.CODE_VOICE_AUTH_CONFIRM -> {
@@ -1534,6 +1545,7 @@ open class MainActivity : AppCompatActivity() {
             speakOut(getString(screen_locked))
             skivvy.deviceManager.lockNow()
         } else {
+            tasksOngoing[PERMITASK] = true
             waitingView(getDrawable(ic_locked))
             speakOut(getString(device_admin_request))
             startActivityForResult(
@@ -2025,11 +2037,8 @@ open class MainActivity : AppCompatActivity() {
             speakOut(getString(no_contacts_available))
         } else if (!temp.getContactPresence()) {
             errorView()
-            speakOut(
-                getString(contact_not_found),
-                taskCode = if (skivvy.shouldRetry()) skivvy.CODE_SPEECH_RECORD
-                else null
-            )
+            resetVariables()
+            speakOut(getString(contact_not_found))
         } else {
             waitingView(cropToCircle(result.photoID))
             when (temp.getContactCode()) {
@@ -2271,7 +2280,7 @@ open class MainActivity : AppCompatActivity() {
                     ) {
                         temp.setContactPresence(true)
                         it.getString(2)?.let { uri -> contact.photoID = uri }
-                        contact.contactID?.let {
+                        contact.contactID.let {
                             contact.emailList = getEmailIDsOf(it)
                             contact.phoneList = getPhoneNumbersOf(it)
                         }
@@ -2633,7 +2642,7 @@ open class MainActivity : AppCompatActivity() {
         this.unregisterReceiver(this.mBatInfoReceiver)
         this.unregisterReceiver(this.mNotificationReceiver)
         sendBroadcast(
-            Intent(skivvy.actionServiceRestart as String).putExtra(skivvy.serviceDead, true)
+            Intent(skivvy.actionServiceRestart).putExtra(skivvy.serviceDead, true)
         )
         skivvy.tts?.let {
             it.stop()
@@ -2804,6 +2813,8 @@ open class MainActivity : AppCompatActivity() {
         loading.startAnimation(anim.fadeOnFadeOff)
         loading.setImageDrawable(getDrawable(dots_in_circle_red))
         image?.let { icon.setImageDrawable(image) }
+        if (skivvy.shouldRetry())
+            startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD, getString(generic_voice_rec_text))
     }
 
     private fun successView(image: Drawable?) {
