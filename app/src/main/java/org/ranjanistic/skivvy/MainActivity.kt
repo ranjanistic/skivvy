@@ -1837,122 +1837,137 @@ open class MainActivity : AppCompatActivity() {
         return num
     }
 
-    private
-    var msgCode = MessageCode()
+    private var msgCode = MessageCode()
 
-    //action invoking direct intents
-    private fun directActions(text: String): Boolean {
-        var localTxt: String
+    private fun initiateCallProcess(text:String, callingArray:Array<String>){
+        waitingView(getDrawable(ic_phone_dialer))
+        val localTxt = input.removeBeforeLastStringsIn(text,arrayOf(callingArray)).trim()
+        temp.setPhone(text.replace(skivvy.nonNumeralPattern, nothing))
+        if (temp.getPhone() != null) {
+            when {
+                temp.getPhone()!!.contains(skivvy.numberPattern) -> {
+                    temp.setPhone(formatPhoneNumber(temp.getPhone()!!))
+                    if (!skivvy.hasThisPermission(context, skivvy.CODE_CALL_REQUEST)) {
+                        speakOut(getString(require_physical_permission))
+                        requestThisPermission(skivvy.CODE_CALL_REQUEST)
+                    } else {
+                        speakOut(
+                            getString(should_i_call) + "${temp.getPhone()}?",
+                            skivvy.CODE_CALL_CONF
+                        )
+                    }
+                }
+                else -> {
+                    if (localTxt.length > 1) {
+                        msgCode.setValues(
+                            localTxt,
+                            skivvy.CODE_CALL_CONF
+                        )
+                        if (skivvy.hasThisPermission(
+                                context,
+                                skivvy.CODE_CONTACTS_REQUEST
+                            )
+                        ) {
+                            SearchContact().execute(msgCode)
+                        } else {
+                            speakOut(
+                                getString(
+                                    require_physical_permission
+                                )
+                            )
+                            requestThisPermission(skivvy.CODE_CONTACTS_REQUEST)
+                        }
+                    } else {
+                        lastTxt = text
+                        speakOut(getString(call_who_), skivvy.CODE_SPEECH_RECORD)
+                    }
+                }
+            }
+        } else {
+            lastTxt = text
+            speakOut(getString(call_who_), skivvy.CODE_SPEECH_RECORD)
+        }
+    }
+
+    private fun initiateEmailProcess(text:String, emailArray:Array<String>){
+        waitingView(getDrawable(ic_envelope_open))
+        val localTxt = input.removeBeforeLastStringsIn(text,arrayOf(emailArray)).trim()
+        temp.setEmail(localTxt.replace(space, nothing).trim())
         when {
-            text.contains(getString(call)) -> {
-                waitingView(getDrawable(ic_phone_dialer))
-                localTxt = text.replaceBeforeLast(getString(call), nothing).replace(getString(call), nothing, true).trim()
-                temp.setPhone(text.replace(skivvy.nonNumeralPattern, nothing))
-                if (temp.getPhone() != null) {
-                    when {
-                        temp.getPhone()!!.contains(skivvy.numberPattern) -> {
-                            temp.setPhone(formatPhoneNumber(temp.getPhone()!!))
-                            if (!skivvy.hasThisPermission(context, skivvy.CODE_CALL_REQUEST)) {
-                                speakOut(getString(require_physical_permission))
-                                requestThisPermission(skivvy.CODE_CALL_REQUEST)
-                            } else {
-                                speakOut(
-                                    getString(should_i_call) + "${temp.getPhone()}?",
-                                    skivvy.CODE_CALL_CONF
-                                )
-                            }
-                        }
-                        else -> {
-                            if (localTxt.length > 1) {
-                                msgCode.setValues(
-                                    localTxt,
-                                    skivvy.CODE_CALL_CONF
-                                )
-                                if (skivvy.hasThisPermission(
-                                        context,
-                                        skivvy.CODE_CONTACTS_REQUEST
-                                    )
-                                ) {
-                                    SearchContact().execute(msgCode)
-                                } else {
-                                    speakOut(
-                                        getString(
-                                            require_physical_permission
-                                        )
-                                    )
-                                    requestThisPermission(skivvy.CODE_CONTACTS_REQUEST)
-                                }
-                            } else {
-                                lastTxt = text
-                                speakOut(getString(call_who_), skivvy.CODE_SPEECH_RECORD)
-                            }
-                        }
-                    }
-                } else {
-                    lastTxt = text
-                    speakOut(getString(call_who_), skivvy.CODE_SPEECH_RECORD)
-                }
-            }
-            text.contains(getString(email)) -> {
-                waitingView(getDrawable(ic_envelope_open))
-                localTxt = text.replaceBeforeLast(getString(email), nothing).replace(getString(email), nothing, true).trim()
-                temp.setEmail(localTxt.replace(space, nothing).trim())
-                when {
-                    temp.getEmail()!!.matches(skivvy.emailPattern) -> {
-                        inputText.text = temp.getEmail()
-                        speakOut(
-                            getString(what_is_subject),
-                            skivvy.CODE_EMAIL_CONTENT
-                        )
-                    }
-                    localTxt.length > 1 -> {
-                        msgCode.setValues(localTxt, skivvy.CODE_EMAIL_CONF)
-                        if (skivvy.hasThisPermission(context, skivvy.CODE_CONTACTS_REQUEST)) {
-                            SearchContact().execute(msgCode)
-                        } else {
-                            speakOut(getString(require_physical_permission))
-                            requestThisPermission(skivvy.CODE_CONTACTS_REQUEST)
-                        }
-                    }
-                    else -> {
-                        lastTxt = text
-                        speakOut(getString(email_who_), skivvy.CODE_SPEECH_RECORD)
-                    }
-                }
-            }
-            text.contains(getString(R.string.text)) -> {
-                waitingView(getDrawable(ic_message))
-                localTxt = text.replace(getString(R.string.text), nothing, false)
-                localTxt = localTxt.trim()
-                temp.setPhone(
-                    localTxt.replace(
-                        skivvy.nonNumeralPattern,
-                        nothing
-                    )
+            temp.getEmail()!!.matches(skivvy.emailPattern) -> {
+                inputText.text = temp.getEmail()
+                speakOut(
+                    getString(what_is_subject),
+                    skivvy.CODE_EMAIL_CONTENT
                 )
-                when {
-                    temp.getPhone()!!.contains(skivvy.numberPattern) -> {
-                        speakOut(
-                            getString(what_is_message),
-                            skivvy.CODE_TEXT_MESSAGE_BODY
-                        )
-                    }
-                    localTxt.length > 1 -> {
-                        msgCode.setValues(localTxt, skivvy.CODE_SMS_CONF)
-                        if (skivvy.hasThisPermission(context, skivvy.CODE_CONTACTS_REQUEST)) {
-                            SearchContact().execute(msgCode)
-                        } else {
-                            speakOut(getString(require_physical_permission))
-                            requestThisPermission(skivvy.CODE_CONTACTS_REQUEST)
-                        }
-                    }
-                    else -> {
-                        lastTxt = text
-                        speakOut(getString(text_who_), skivvy.CODE_SPEECH_RECORD)
-                    }
+            }
+            localTxt.length > 1 -> {
+                msgCode.setValues(localTxt, skivvy.CODE_EMAIL_CONF)
+                if (skivvy.hasThisPermission(context, skivvy.CODE_CONTACTS_REQUEST)) {
+                    SearchContact().execute(msgCode)
+                } else {
+                    speakOut(getString(require_physical_permission))
+                    requestThisPermission(skivvy.CODE_CONTACTS_REQUEST)
                 }
             }
-            else -> return false
+            else -> {
+                lastTxt = text
+                speakOut(getString(email_who_), skivvy.CODE_SPEECH_RECORD)
+            }
+        }
+    }
+    private fun initiateSMSProcess(text:String, textArray:Array<String>){
+        waitingView(getDrawable(ic_message))
+        val localTxt = input.removeBeforeLastStringsIn(text,arrayOf(textArray)).trim()
+        temp.setPhone(
+            localTxt.replace(
+                skivvy.nonNumeralPattern,
+                nothing
+            )
+        )
+        when {
+            temp.getPhone()!!.contains(skivvy.numberPattern) -> {
+                speakOut(
+                    getString(what_is_message),
+                    skivvy.CODE_TEXT_MESSAGE_BODY
+                )
+            }
+            localTxt.length > 1 -> {
+                msgCode.setValues(localTxt, skivvy.CODE_SMS_CONF)
+                if (skivvy.hasThisPermission(context, skivvy.CODE_CONTACTS_REQUEST)) {
+                    SearchContact().execute(msgCode)
+                } else {
+                    speakOut(getString(require_physical_permission))
+                    requestThisPermission(skivvy.CODE_CONTACTS_REQUEST)
+                }
+            }
+            else -> {
+                lastTxt = text
+                speakOut(getString(text_who_), skivvy.CODE_SPEECH_RECORD)
+            }
+        }
+    }
+    //action invoking direct intents
+    // TODO: create array of call, email, text keywords and use them instead of single string.
+    private fun directActions(text: String): Boolean {
+        val calls:Array<String> = resources.getStringArray(R.array.calls)
+        val emails:Array<String> = resources.getStringArray(R.array.emails)
+        val texts:Array<String> = resources.getStringArray(R.array.texts)
+        val actions = arrayOf(calls, emails, texts)
+        when(input.indexOfFinallySaidArray(text,actions)){
+            actions.indexOf(calls)->{
+                initiateCallProcess(text,calls)
+            }
+            actions.indexOf(emails)-> {
+                initiateEmailProcess(text, emails)
+            }
+            actions.indexOf(texts)->{
+                initiateSMSProcess(text, texts)
+            }
+            else->{
+                Log.d("indexcheck", "nothing")
+                return false
+            }
         }
         return true
     }

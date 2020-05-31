@@ -18,9 +18,10 @@ class InputSpeechManager {
         return l.replace(space, nothing)
     }
 
-    /**Removes everything before (and including) any word  from [stringListArray] occurring in [line] at last, and returns the remaining.
+    /**Removes everything before (and including, if [excludeLast] is false) any word  from [stringListArray] occurring in [line] at last, and returns the remaining.
      * @param line: The given string which is to be truncated according to [stringListArray].
      * @param stringListArray:The array of list of strings from which [line] will be truncated as per the last occurrence of any string from it in [line].
+     * @param excludeLast: Whether to exclude the removal of last occurrence of string from [stringListArray] in [line] or not.
      * @return: The truncated string having remaining data as string or null.
      */
     fun removeBeforeLastStringsIn(
@@ -119,6 +120,15 @@ class InputSpeechManager {
             }
         }
         return newArray
+    }
+
+    fun indexOfFinallySaidArray(line: String,stringListArray: Array<Array<String>>):Int?{
+        val remaining = removeBeforeLastStringsIn(line, stringListArray, true)
+        for((index,k) in stringListArray.withIndex()) {
+            if(containsString(remaining, arrayOf(k), true))
+                return index
+        }
+        return null
     }
 
     //formats given string to expression form, irrespective of it is mathematical expression or not

@@ -128,6 +128,24 @@
     <string name="calling">Calling&#160;</string>
     <string name="app_tag_line">An experiment of Priyanshu Ranjan</string>
     <string name="call">call</string>
+    <string-array name="calls">
+        <item>call</item>
+        <item>call to</item>
+    </string-array>
+    <string name="email">email</string>
+    <string-array name="emails">
+        <item>email</item>
+        <item>email to</item>
+        <item>e-mail</item>
+        <item>e-mail to</item>
+    </string-array>
+    <string name="text">text</string>
+    <string-array name="texts">
+        <item>text</item>
+        <item>text to</item>
+        <item>message</item>
+        <item>message to</item>
+    </string-array>
     <string name="device_admin_failure">You didn\'t activate me as a device admin.</string>
     <string name="contact_not_found">No such contact.</string>
     <string name="no_contacts_available">You seem to have no contacts.</string>
@@ -137,7 +155,7 @@
     <string name="you_dont_seem_having">You don\'t seem to have&#160;</string>
     <string name="someone_email_address">\'s email address.</string>
     <string name="someones_phone_number">\'s phone number.</string>
-    <string name="email">email</string>
+
     <string name="what_is_subject">What is the subject?</string>
     <string name="subject_added">Subject added.&#160;</string>
     <string name="what_is_body">What\'s the body?</string>
@@ -181,7 +199,7 @@
     <string name="biometric_recommendation_passphrase_enabling">I recommend enabling biometric too, in case you forget the passphrase.</string>
     <string name="reset">Reset</string>
     <string name="enable_or_disable">Enable or Disable?</string>
-    <string name="text">text</string>
+
     <string name="vocal_auth_off_error">I could not disable vocal authentication.</string>
     <string name="generic_voice_rec_text">I\'m listening</string>
     <string name="grant_permissions">Grant permissions</string>
