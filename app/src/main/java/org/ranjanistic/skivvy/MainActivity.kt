@@ -1115,128 +1115,149 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    //TODO: Setup commands here
-    private fun settingsCommand(text: String): Boolean {
-        val setters = arrayOf("set", "change", "turn", "enable", "disable")
-        if (!input.finallySaidLineFromList(text, arrayOf(setters))) {
-            return false
+    private fun manageLogBase(action: String) {
+        if (action.contains(skivvy.numberPattern)) {
+            val base = action.replace(skivvy.nonNumeralPattern, nothing)
+            if (base.toFloat() == 0F)
+                speakOut(getString(invalid_log_base))
+            else {
+                skivvy.setMathsPref(logBase = base.toFloat().toInt())
+                speakOut("$base is the log base.")
+            }
+        } else {
+            lastTxt = action
+            speakOut("What should be the log base value?", skivvy.CODE_SPEECH_RECORD)
+        }
+    }
+
+    private fun manageVocalAuth(action: String) {
+        when {
+            action.contains("enable") -> {
+                if (!skivvy.getPhraseKeyStatus()) {
+                    if (skivvy.getVoiceKeyPhrase() != null) {
+                        skivvy.setSecurityPref(vocalAuthOn = true)
+                        speakOut(getString(vocal_auth_enabled))
+                    } else {
+                        speakOut(getString(vocal_auth_unset))
+                        startActivity(Intent(context, Setup::class.java))
+                    }
+                } else {
+                    speakOut(getString(vocal_auth_already_on))
+                }
+            }
+            action.contains("disable") -> {
+                if (!skivvy.getPhraseKeyStatus()) {
+                    speakOut(getString(vocal_auth_already_off))
+                } else {
+                    speakOut(
+                        getString(get_passphrase_text),
+                        skivvy.CODE_VOICE_AUTH_CONFIRM
+                    )
+                }
+            }
+            else -> {
+                if (action.replace("voice authentication", nothing).trim() == nothing) {
+                    lastTxt = action
+                    speakOut(
+                        "Vocal authentication what?",
+                        skivvy.CODE_SPEECH_RECORD
+                    )
+                }
+            }
+        }
+    }
+
+    private fun manageBiometrics(action: String) {
+        val enables = getArray(R.array.initiators)
+        val disables = getArray(R.array.finishers)
+
+        //when(input.indexOfFinallySaidArray())
+        if (skivvy.checkBioMetrics()) {
+            speakOut(getString(biometric_unsupported))
         } else {
             when {
-                text.contains("setup") || text.contains("set up") -> {
+                action.contains("enable") -> {
+                    if (skivvy.getBiometricStatus()) {
+                        speakOut(getString(biometric_already_on))
+                    } else {
+                        skivvy.setSecurityPref(biometricOn = true)
+                        if (skivvy.getBiometricStatus()) speakOut(
+                            getString(
+                                biometric_on
+                            )
+                        )
+                        else speakOut(getString(biometric_enable_error))
+                    }
+                }
+                action.contains("disable") -> {
+                    if (!skivvy.getBiometricStatus()) {
+                        speakOut(getString(biometric_already_off))
+                    } else {
+                        if (skivvy.getPhraseKeyStatus()) {
+                            speakOut(
+                                getString(get_passphrase_text),
+                                skivvy.CODE_BIOMETRIC_CONFIRM
+                            )
+                        } else {
+                            speakOut(getString(physical_auth_request))
+                            authStateAction(skivvy.CODE_BIOMETRIC_CONFIRM)
+                            biometricPrompt.authenticate(promptInfo)
+                        }
+                    }
+                }
+                else -> {
+                    if (action.replace("biometric", nothing).trim() == nothing) {
+                        lastTxt = action
+                        speakOut("Biometric what?", skivvy.CODE_SPEECH_RECORD)
+                    }
+                }
+            }
+        }
+    }
+
+    //TODO: Setup commands here
+    val TAG = "indexCheck"
+    private fun settingsCommand(text: String): Boolean {
+        val enables = getArray(R.array.initiators)
+        val disables = getArray(R.array.finishers)
+        val setups = getArray(R.array.setup_list)
+        val unmutes = arrayOf("unmute", "speak")
+        val mutes = arrayOf("mute", "stop speaking")
+        val logbases = arrayOf("log base", "base of log")
+        val voiceAuths = arrayOf("voice auth", "vocal auth")
+        val bioAuths = arrayOf("biometric", "fingerprint")
+        val permits = arrayOf("permissions", "grant permissions")
+        val setters = arrayOf("set", "change")
+        val actions = arrayOf(
+            setups, mutes, unmutes, logbases,
+            voiceAuths, bioAuths, permits
+        )
+        if (!input.containsString(text, arrayOf(enables, disables, setters))) {
+            Log.d(TAG, "settingsCommand: nodisableenable")
+            return false
+        } else {
+            when (input.indexOfFinallySaidArray(text, actions)) {
+                actions.indexOf(mutes) -> setSpeaking(false)
+                actions.indexOf(unmutes) -> setSpeaking(true)
+                actions.indexOf(logbases) -> {
+                    Log.d(TAG, "settingsCommand: logbase")
+                    manageLogBase(text)
+                }
+                actions.indexOf(voiceAuths) -> {
+                    Log.d(TAG, "settingsCommand: voiceauth")
+                    manageVocalAuth(text)
+                }
+                actions.indexOf(bioAuths) -> {
+                    Log.d(TAG, "settingsCommand: biomentruc")
+                    manageBiometrics(text)
+                }
+                actions.indexOf(setups) -> {
+                    Log.d(TAG, "settingsCommand: setup")
                     startActivity(Intent(context, Setup::class.java))
                     overridePendingTransition(R.anim.fade_on, R.anim.fade_off)
                 }
-                text.contains(skivvy.numberPattern) && text.contains("log base") -> {
-                    val base = text.replace(skivvy.nonNumeralPattern, nothing)
-                    skivvy.setMathsPref(logBase = base.toFloat().toInt())
-                    speakOut("$base is the log base.")
-                }
-                text.contains("voice authentication") -> {
-                    return when {
-                        text.contains("enable") && text.contains("disable") -> {
-                            txt = text.replace("enable", nothing)
-                            txt = txt!!.replace("disable", nothing)
-                            speakOut(
-                                getString(enable_or_disable),
-                                skivvy.CODE_SPEECH_RECORD
-                            )
-                            true
-                        }
-                        text.contains("enable") -> {
-                            if (!skivvy.getPhraseKeyStatus()) {
-                                if (skivvy.getVoiceKeyPhrase() != null) {
-                                    skivvy.setSecurityPref(vocalAuthOn = true)
-                                    speakOut(getString(vocal_auth_enabled))
-                                } else {
-                                    speakOut(getString(vocal_auth_unset))
-                                    startActivity(Intent(context, Setup::class.java))
-                                }
-                            } else {
-                                speakOut(getString(vocal_auth_already_on))
-                            }
-                            true
-                        }
-                        text.contains("disable") -> {
-                            if (!skivvy.getPhraseKeyStatus()) {
-                                speakOut(getString(vocal_auth_already_off))
-                            } else {
-                                speakOut(
-                                    getString(get_passphrase_text),
-                                    skivvy.CODE_VOICE_AUTH_CONFIRM
-                                )
-                            }
-                            true
-                        }
-                        else -> {
-                            if (text.replace("voice authentication", nothing)
-                                    .trim() == nothing
-                            ) {
-                                txt = text
-                                speakOut(
-                                    "Vocal authentication what?",
-                                    skivvy.CODE_SPEECH_RECORD
-                                )
-                                true
-                            } else false
-                        }
-                    }
-                }
-                text.contains("biometric") -> {
-                    if (!skivvy.checkBioMetrics()) {
-                        speakOut(getString(biometric_unsupported))
-                    } else {
-                        return when {
-                            text.contains("enable") && text.contains("disable") -> {
-                                txt = text.replace("enable", nothing)
-                                txt = txt!!.replace("disable", nothing)
-                                speakOut(
-                                    getString(enable_or_disable),
-                                    skivvy.CODE_SPEECH_RECORD
-                                )
-                                true
-                            }
-                            text.contains("enable") -> {
-                                if (skivvy.getBiometricStatus()) {
-                                    speakOut(getString(biometric_already_on))
-                                } else {
-                                    skivvy.setSecurityPref(biometricOn = true)
-                                    if (skivvy.getBiometricStatus()) speakOut(
-                                        getString(
-                                            biometric_on
-                                        )
-                                    )
-                                    else speakOut(getString(biometric_enable_error))
-                                }
-                                true
-                            }
-                            text.contains("disable") -> {
-                                if (!skivvy.getBiometricStatus()) {
-                                    speakOut(getString(biometric_already_off))
-                                } else {
-                                    if (skivvy.getPhraseKeyStatus()) {
-                                        speakOut(
-                                            getString(get_passphrase_text),
-                                            skivvy.CODE_BIOMETRIC_CONFIRM
-                                        )
-                                    } else {
-                                        speakOut(getString(physical_auth_request))
-                                        authStateAction(skivvy.CODE_BIOMETRIC_CONFIRM)
-                                        biometricPrompt.authenticate(promptInfo)
-                                    }
-                                }
-                                true
-                            }
-                            else -> {
-                                if (text.replace("biometric", nothing).trim() == nothing) {
-                                    txt = text
-                                    speakOut("Biometric what?", skivvy.CODE_SPEECH_RECORD)
-                                    true
-                                } else false
-                            }
-                        }
-                    }
-                }
-                text.contains("permission") -> {
+                actions.indexOf(permits) -> {
+                    Log.d(TAG, "settingsCommand: permissions")
                     if (!skivvy.hasPermissions(context)) {
                         speakOut(getString(need_all_permissions))
                         requestThisPermission(skivvy.CODE_ALL_PERMISSIONS)
@@ -1244,174 +1265,194 @@ open class MainActivity : AppCompatActivity() {
                         speakOut(getString(have_all_permits))
                     }
                 }
-                else -> return false
+                else -> {
+                    Log.d(TAG, "settingsCommand: nothing")
+                    return false
+                }
             }
         }
         return true
     }
 
-    //actions invoking quick commands
-    @ExperimentalStdlibApi
-    private fun respondToCommand(text: String): Boolean {
-        val array = arrayOf(
-            R.array.setup_list,
-            R.array.bt_list,
-            R.array.wifi_list,
-            R.array.gps_list,
-            R.array.lock_list,
-            R.array.snap_list
+    private fun inSystemToggles(text: String): Boolean {
+        val bts = arrayOf("bluetooth")
+        val wifis = getArray(R.array.wifi_list)
+        val gpss = getArray(R.array.gps_list)
+        val snaps = getArray(R.array.snap_list)
+        val flashes = arrayOf("flash", "flashlight", "torch")
+        val airplanes = arrayOf("airplane mode", "aeroplane", "airplane")
+        val actions = arrayOf(
+            bts, wifis, gpss, snaps, flashes, airplanes
         )
-        val deviceNames = arrayOf("screen", "phone", "device", "system", "yourself")
-        if (!settingsCommand(text))
-            when {
-                text.contains("volume") -> {
-                    volumeOps(text.replace("volume", nothing).trim())
-                }
-                text.contains("brightness") -> {
-                    brightnessOps(text.replace("brightness", nothing).trim())
-                }
-                text == "mute" -> {
-                    skivvy.setVoicePreference(voiceMute = true)
-                    speakOut("Muted")
-                }
-                text == "speak" || text == "unmute" -> {
-                    if (skivvy.getMuteStatus()) {
-                        skivvy.setVoicePreference(voiceMute = false)
-                        speakOut(getString(okay))
+        Log.d(TAG, "inSystemToggles: ${input.indexOfFinallySaidArray(text, actions)}")
+        when (input.indexOfFinallySaidArray(text, actions)) {
+            actions.indexOf(flashes) -> {
+                if (skivvy.isFlashAvailable()) {
+                    val mCameraManager =
+                        getSystemService(Context.CAMERA_SERVICE) as CameraManager
+                    if (text.contains("off")) {
+                        feature.setFlashLight(mCameraManager, false)
+                        speakOut(getString(flash_off))
                     } else {
-                        speakOut(getString(voice_output_on))
+                        if (!feature.setFlashLight(mCameraManager, false)) {
+                            speakOut(getString(flash_access_error))
+                        } else speakOut(getString(flash_on))
+                    }
+                } else {
+                    speakOut("Flashlight not available")
+                }
+            }
+            actions.indexOf(bts) -> {
+                //the first function of Skivvy  ;-)
+                if (text.contains("on")) {
+                    val stat = feature.bluetooth(true)
+                    if (stat == null) {
+                        successView(getDrawable(ic_bluetooth))
+                        speakOut(getString(bt_already_on))
+                    } else {
+                        successView(getDrawable(ic_bluetooth))
+                        speakOut(getString(bt_on))
+                    }
+                } else if (text.contains("off")) {
+                    val stat = feature.bluetooth(false)
+                    if (stat == null) {
+                        errorView(getDrawable(ic_bluetooth))
+                        speakOut(getString(bt_already_off))
+                    } else {
+                        errorView(getDrawable(ic_bluetooth))
+                        speakOut(getString(bt_off))
+                    }
+                } else {
+                    val stat = feature.bluetooth(null)
+                    if (stat!!) {
+                        successView(getDrawable(ic_bluetooth))
+                        speakOut(getString(bt_on))
+                    } else {
+                        errorView(getDrawable(ic_bluetooth))
+                        speakOut(getString(bt_off))
                     }
                 }
-                text.contains("battery level") || text.contains("battery status") || text.contains("battery") -> {
-                    speakOut("Battery at $batteryLevel%.")
-                }
-                //TODO: use this as external function, and return special codes for commands here just like isCooperative(): input.removeBeforeLastStringsIn(text, arrayOf(resources.getStringArray(R.array.bt_list)))
-                text.contains("bluetooth") -> {
-                    //the first function of Skivvy  ;-)
-                    if (text.contains("on")) {
-                        val stat = feature.bluetooth(true)
-                        if (stat == null) {
-                            successView(getDrawable(ic_bluetooth))
-                            speakOut(getString(bt_already_on))
-                        } else {
-                            successView(getDrawable(ic_bluetooth))
-                            speakOut(getString(bt_on))
-                        }
-                    } else if (text.contains("off")) {
-                        val stat = feature.bluetooth(false)
-                        if (stat == null) {
-                            errorView(getDrawable(ic_bluetooth))
-                            speakOut(getString(bt_already_off))
-                        } else {
-                            errorView(getDrawable(ic_bluetooth))
-                            speakOut(getString(bt_off))
-                        }
-                    } else {
-                        val stat = feature.bluetooth(null)
-                        if (stat!!) {
-                            successView(getDrawable(ic_bluetooth))
-                            speakOut(getString(bt_on))
-                        } else {
-                            errorView(getDrawable(ic_bluetooth))
-                            speakOut(getString(bt_off))
-                        }
-                    }
-                }
-                text.contains("wi-fi") || text.contains("wifi") -> {
-                    if (text.contains("on") || text.contains("enable")) {
-                        when (feature.wirelessFidelity(true, wifiManager)) {
-                            null -> {
-                                waitingView(getDrawable(ic_wifi_connected))
-                                speakOut(getString(wifi_already_on))
-                            }
-                            true -> {
-                                successView(getDrawable(ic_wifi_connected))
-                                speakOut(getString(wifi_on))
-                            }
-                        }
-                    } else if (text.contains("off")) {
-                        when (feature.wirelessFidelity(false, wifiManager)) {
-                            null -> {
-                                waitingView(getDrawable(ic_wifi_disconnected))
-                                speakOut(getString(wifi_already_off))
-                            }
-                            false -> {
-                                successView(getDrawable(ic_wifi_disconnected))
-                                speakOut(getString(wifi_off))
-                            }
-                        }
-                    } else {
-                        if (feature.wirelessFidelity(null, wifiManager)!!) {
+            }
+            actions.indexOf(wifis) -> {
+                if (text.contains("on") || text.contains("enable")) {
+                    when (feature.wirelessFidelity(true, wifiManager)) {
+                        null -> {
                             waitingView(getDrawable(ic_wifi_connected))
+                            speakOut(getString(wifi_already_on))
+                        }
+                        true -> {
+                            successView(getDrawable(ic_wifi_connected))
                             speakOut(getString(wifi_on))
-                        } else {
+                        }
+                    }
+                } else if (text.contains("off")) {
+                    when (feature.wirelessFidelity(false, wifiManager)) {
+                        null -> {
                             waitingView(getDrawable(ic_wifi_disconnected))
+                            speakOut(getString(wifi_already_off))
+                        }
+                        false -> {
+                            successView(getDrawable(ic_wifi_disconnected))
                             speakOut(getString(wifi_off))
                         }
                     }
-                }
-                resources.getStringArray(array[3]).contains(text) -> {
-                    waitingView(getDrawable(ic_location_pointer))
-                    startActivityForResult(
-                        Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
-                        skivvy.CODE_LOCATION_SERVICE
-                    )
-                }
-                //TODO: reset txt when new input has no enablers/disablers/on/off etc.
-                input.containsString(text, arrayOf(deviceNames)) -> {
-                    if (text.contains("lock"))
-                        deviceLockOps()
-                    else return false
-                }
-                text.contains("screenshot") || text.contains("snapshot") || text.contains("take ss") -> {
-                    if (!skivvy.hasThisPermission(context, skivvy.CODE_STORAGE_REQUEST)) {
-                        speakOut(getString(require_physical_permission))
-                        requestThisPermission(skivvy.CODE_STORAGE_REQUEST)
+                } else {
+                    if (feature.wirelessFidelity(null, wifiManager)!!) {
+                        waitingView(getDrawable(ic_wifi_connected))
+                        speakOut(getString(wifi_on))
                     } else {
-                        takeScreenshot()
+                        waitingView(getDrawable(ic_wifi_disconnected))
+                        speakOut(getString(wifi_off))
                     }
                 }
-                text.contains("airplane") -> {
-                    if (text.contains("on") || text.contains("enable")) {
-                        if (isAirplaneModeEnabled()) {
-                            speakOut(getString(R.string.airplane_already_on))
-                        } else {
-                            speakOut(getString(R.string.airplane_mode_on))
-                            setAirplaneMode(true)
-                        }
-                    } else if (text.contains("off") || text.contains("disable")) {
-                        if (!isAirplaneModeEnabled()) {
-                            speakOut(getString(R.string.airplane_already_off))
-                        } else {
-                            speakOut(getString(R.string.airplane_mode_off))
-                            setAirplaneMode(false)
-                        }
-                    }
-                }
-                text.contains("flash") -> {
-                    if (skivvy.isFlashAvailable()) {
-                        val mCameraManager =
-                            getSystemService(Context.CAMERA_SERVICE) as CameraManager
-                        if (text.contains("off")) {
-                            feature.setFlashLight(mCameraManager, false)
-                            speakOut(getString(flash_off))
-                        } else {
-                            if (!feature.setFlashLight(mCameraManager, false)) {
-                                speakOut(getString(flash_access_error))
-                            } else speakOut(getString(flash_on))
-                        }
-                    } else {
-                        speakOut("Flashlight not available")
-                    }
-                }
-                //TODO: Searching
-                text == getString(exit) -> {
-                    speakOut(getString(exit))
-                    finishAnimate()
-                    finish()
-                }
-                else -> return false
             }
+            actions.indexOf(gpss) -> {
+                waitingView(getDrawable(ic_location_pointer))
+                startActivityForResult(
+                    Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
+                    skivvy.CODE_LOCATION_SERVICE
+                )
+            }
+            //TODO: reset txt when new input has no enablers/disablers/on/off etc.
+            actions.indexOf(snaps) -> {
+                if (!skivvy.hasThisPermission(context, skivvy.CODE_STORAGE_REQUEST)) {
+                    speakOut(getString(require_physical_permission))
+                    requestThisPermission(skivvy.CODE_STORAGE_REQUEST)
+                } else {
+                    takeScreenshot()
+                }
+            }
+            actions.indexOf(airplanes) -> {
+                if (text.contains("on") || text.contains("enable")) {
+                    if (isAirplaneModeEnabled()) {
+                        speakOut(getString(airplane_already_on))
+                    } else {
+                        speakOut(getString(airplane_mode_on))
+                        setAirplaneMode(true)
+                    }
+                } else if (text.contains("off") || text.contains("disable")) {
+                    if (!isAirplaneModeEnabled()) {
+                        speakOut(getString(airplane_already_off))
+                    } else {
+                        speakOut(getString(airplane_mode_off))
+                        setAirplaneMode(false)
+                    }
+                }
+            }
+            else -> return false
+        }
+        return true
+    }
+
+    private fun setSpeaking(isSpeaking: Boolean) {
+        if (isSpeaking) {
+            if (skivvy.getMuteStatus()) {
+                skivvy.setVoicePreference(voiceMute = false)
+                speakOut(getString(okay))
+            } else {
+                speakOut(getString(voice_output_on))
+            }
+        } else {
+            skivvy.setVoicePreference(voiceMute = true)
+            speakOut("Muted")
+        }
+    }
+
+    //actions invoking quick commands
+    @ExperimentalStdlibApi
+    private fun respondToCommand(text: String): Boolean {
+        val locks = getArray(R.array.lock_list)
+        val volumes = arrayOf("volume", "sound")
+        val lights = arrayOf("brightness", "backlight")
+        val batteries = arrayOf("battery")
+        val deviceNames = arrayOf("screen", "phone", "device", "system", "yourself")
+        val exits = arrayOf("bye", "exit", "terminate")
+        val actions = arrayOf(locks, volumes, lights, exits)
+        Log.d(TAG, "respondToCommand: indexlock = ${actions.indexOf(locks)}")
+        Log.d(TAG, "respondTOCOMMAND")
+        if (!settingsCommand(text))
+            if (!inSystemToggles(text))
+                when (input.indexOfFinallySaidArray(text, actions)) {
+                    actions.indexOf(volumes) -> volumeOps(text)
+                    actions.indexOf(lights) -> brightnessOps(text)
+                    actions.indexOf(batteries) -> speakOut("Battery at $batteryLevel%.")
+                    actions.indexOf(locks) -> {
+                        Log.d(TAG, "respondToCommand: lockscreen")
+                        if (input.containsString(text, arrayOf(deviceNames), true))
+                            deviceLockOps()
+                        else return false
+                    }
+                    //TODO: Searching
+                    actions.indexOf(exits) -> {
+                        speakOut(getString(exit))
+                        finishAnimate()
+                        finish()
+                    }
+                    else -> {
+                        Log.d(TAG, "respondToCommand: nothing")
+                        return false
+                    }
+                }
         return true
     }
 
@@ -1839,9 +1880,9 @@ open class MainActivity : AppCompatActivity() {
 
     private var msgCode = MessageCode()
 
-    private fun initiateCallProcess(text:String, callingArray:Array<String>){
+    private fun initiateCallProcess(text: String, callingArray: Array<String>) {
         waitingView(getDrawable(ic_phone_dialer))
-        val localTxt = input.removeBeforeLastStringsIn(text,arrayOf(callingArray)).trim()
+        val localTxt = input.removeBeforeLastStringsIn(text, arrayOf(callingArray)).trim()
         temp.setPhone(text.replace(skivvy.nonNumeralPattern, nothing))
         if (temp.getPhone() != null) {
             when {
@@ -1889,9 +1930,9 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initiateEmailProcess(text:String, emailArray:Array<String>){
+    private fun initiateEmailProcess(text: String, emailArray: Array<String>) {
         waitingView(getDrawable(ic_envelope_open))
-        val localTxt = input.removeBeforeLastStringsIn(text,arrayOf(emailArray)).trim()
+        val localTxt = input.removeBeforeLastStringsIn(text, arrayOf(emailArray)).trim()
         temp.setEmail(localTxt.replace(space, nothing).trim())
         when {
             temp.getEmail()!!.matches(skivvy.emailPattern) -> {
@@ -1916,9 +1957,10 @@ open class MainActivity : AppCompatActivity() {
             }
         }
     }
-    private fun initiateSMSProcess(text:String, textArray:Array<String>){
+
+    private fun initiateSMSProcess(text: String, textArray: Array<String>) {
         waitingView(getDrawable(ic_message))
-        val localTxt = input.removeBeforeLastStringsIn(text,arrayOf(textArray)).trim()
+        val localTxt = input.removeBeforeLastStringsIn(text, arrayOf(textArray)).trim()
         temp.setPhone(
             localTxt.replace(
                 skivvy.nonNumeralPattern,
@@ -1947,27 +1989,18 @@ open class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     //action invoking direct intents
-    // TODO: create array of call, email, text keywords and use them instead of single string.
     private fun directActions(text: String): Boolean {
-        val calls:Array<String> = resources.getStringArray(R.array.calls)
-        val emails:Array<String> = resources.getStringArray(R.array.emails)
-        val texts:Array<String> = resources.getStringArray(R.array.texts)
+        val calls: Array<String> = resources.getStringArray(R.array.calls)
+        val emails: Array<String> = resources.getStringArray(R.array.emails)
+        val texts: Array<String> = resources.getStringArray(R.array.texts)
         val actions = arrayOf(calls, emails, texts)
-        when(input.indexOfFinallySaidArray(text,actions)){
-            actions.indexOf(calls)->{
-                initiateCallProcess(text,calls)
-            }
-            actions.indexOf(emails)-> {
-                initiateEmailProcess(text, emails)
-            }
-            actions.indexOf(texts)->{
-                initiateSMSProcess(text, texts)
-            }
-            else->{
-                Log.d("indexcheck", "nothing")
-                return false
-            }
+        when (input.indexOfFinallySaidArray(text, actions)) {
+            actions.indexOf(calls) -> initiateCallProcess(text, calls)
+            actions.indexOf(emails) -> initiateEmailProcess(text, emails)
+            actions.indexOf(texts) -> initiateSMSProcess(text, texts)
+            else -> return false
         }
         return true
     }
@@ -2047,7 +2080,7 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun handleSearchResults(result: ContactModel?) {
-        if (result == null ) {
+        if (result == null) {
             errorView()
             speakOut(getString(no_contacts_available))
         } else if (!temp.getContactPresence()) {
@@ -2096,7 +2129,11 @@ open class MainActivity : AppCompatActivity() {
                                             _phone_nums_of_
                                         ) + result.displayName, !tasksOngoing[NOTIFTASK]
                                     )
-                                    if (skivvy.hasThisPermission(context, skivvy.CODE_CALL_LOG_REQUEST)) {
+                                    if (skivvy.hasThisPermission(
+                                            context,
+                                            skivvy.CODE_CALL_LOG_REQUEST
+                                        )
+                                    ) {
                                         ArrangeViaLogs().execute(result.displayName)        //to arrange phone list according to recently called
                                     } else {
                                         speakOut(
@@ -2172,13 +2209,13 @@ open class MainActivity : AppCompatActivity() {
             var nc = 0
             nickNames = arrayOfNulls(it.count)
             while (it.moveToNext()) {
-                it.getString(0)?.let {it1->
+                it.getString(0)?.let { it1 ->
                     nickNames!![nc] = it1.toLowerCase(skivvy.locale)
                     ++nc
                 }
             }
             it.close()
-            return nickNames?.let{it1->input.removeDuplicateStrings(it1)}
+            return nickNames?.let { it1 -> input.removeDuplicateStrings(it1) }
         }
         cursor?.close()
         return nickNames
@@ -2198,13 +2235,13 @@ open class MainActivity : AppCompatActivity() {
             phones = arrayOfNulls(it.count)
             var k = 0
             while (it.moveToNext()) {
-                it.getString(0)?.let {it1->
+                it.getString(0)?.let { it1 ->
                     phones!![k] = formatPhoneNumber(it1)
                     ++k
                 }
             }
             it.close()
-            return phones?.let{it1->input.removeDuplicateStrings(it1)}
+            return phones?.let { it1 -> input.removeDuplicateStrings(it1) }
         }
         cursor?.close()
         return phones
@@ -2224,13 +2261,13 @@ open class MainActivity : AppCompatActivity() {
             emails = arrayOfNulls(it.count)
             var k = 0
             while (it.moveToNext()) {
-                it.getString(0)?.let{it1->
+                it.getString(0)?.let { it1 ->
                     emails!![k] = it1
-                        ++k
+                    ++k
                 }
             }
             it.close()
-            return emails?.let{it1->input.removeDuplicateStrings(it1)}
+            return emails?.let { it1 -> input.removeDuplicateStrings(it1) }
         }
         cursor?.close()
         return emails
@@ -2285,7 +2322,7 @@ open class MainActivity : AppCompatActivity() {
             if (it.count > 0) {
                 while (it.moveToNext()) {
                     contact.contactID = it.getString(0)
-                    it.getString(1)?.let{it1->contact.displayName = it1}
+                    it.getString(1)?.let { it1 -> contact.displayName = it1 }
                     contact.nickName = getNicknamesOf(contact.contactID)
                     temp.setContactReceived(keyPhrase.trim())
                     if (temp.getContactReceived() == contact.displayName.toLowerCase(skivvy.locale)
@@ -2703,12 +2740,12 @@ open class MainActivity : AppCompatActivity() {
             input.containsString(
                 response,
                 arrayOf(resources.getStringArray(R.array.denials)),
-                isSingle = true
+                isSingleLine = true
             ) -> false      //if response contains denial
             input.containsString(
                 response,
                 arrayOf(resources.getStringArray(R.array.acceptances)),
-                isSingle = true
+                isSingleLine = true
             ) -> true       //if response contains acceptance
             else -> null        //if response was invalid
         }
@@ -2748,7 +2785,7 @@ open class MainActivity : AppCompatActivity() {
                     resources.getStringArray(R.array.denials),
                     resources.getStringArray(R.array.disruptions)
                 ),
-                isSingle = true
+                isSingleLine = true
             ) -> false      //if response contains denial/cancellation
             input.containsString(
                 response,
@@ -2756,7 +2793,7 @@ open class MainActivity : AppCompatActivity() {
                     resources.getStringArray(R.array.initiators),
                     resources.getStringArray(R.array.acceptances)
                 ),
-                isSingle = true
+                isSingleLine = true
             ) -> true      //if response contains acceptance/initiatives
             else -> null
         }
@@ -3030,6 +3067,7 @@ open class MainActivity : AppCompatActivity() {
         return eng
     }
 
+    private fun getArray(id: Int): Array<String> = resources.getStringArray(id)
     private fun String.isLandLine(): Boolean {
         return this[0] == '0' && this[1] == '1' && this[2] == '2' && this[3] == '0'
     }

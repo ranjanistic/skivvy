@@ -1,5 +1,6 @@
 package org.ranjanistic.skivvy.manager
 
+import android.util.Log
 import java.util.*
 import kotlin.math.PI
 
@@ -63,13 +64,14 @@ class InputSpeechManager {
     fun containsString(
         line: String,
         stringListArray: Array<Array<String>>,
-        isSingle: Boolean = false
+        isSingleLine: Boolean = false,
+        isSingleWord: Boolean = true
     ): Boolean {
         for (r in stringListArray) {
             loop@ for (k in r) {
-                return when (isSingle) {
+                return when (isSingleLine) {
                     true -> {
-                        if (" $line ".contains(" $k "))
+                        if (" $line ".contains(k))
                             true
                         else continue@loop
                     }
@@ -122,11 +124,21 @@ class InputSpeechManager {
         return newArray
     }
 
-    fun indexOfFinallySaidArray(line: String,stringListArray: Array<Array<String>>):Int?{
+    /**
+     *  This returns the index of the array of strings from [stringListArray], if any string of it occurs at last in the [line]
+     *  else returns null.
+     *  @param line The line to be checked for occurrence
+     *  @param stringListArray The array of array of strings, from which the occurrence in [line] is to be checked.
+     */
+    val TAG = "indexCheck"
+    fun indexOfFinallySaidArray(line: String, stringListArray: Array<Array<String>>): Int? {
         val remaining = removeBeforeLastStringsIn(line, stringListArray, true)
-        for((index,k) in stringListArray.withIndex()) {
-            if(containsString(remaining, arrayOf(k), true))
+        Log.d(TAG, "indexoffilnnaly: remaining $remaining")
+        for ((index, k) in stringListArray.withIndex()) {
+            if (containsString(remaining, arrayOf(k))) {
+                Log.d(TAG, "indexoffilnea: indexlfonud = $index")
                 return index
+            }
         }
         return null
     }

@@ -190,9 +190,9 @@ class Skivvy : Application() {
                     Toast.LENGTH_SHORT
                 ).show()
         })
+
         //TODO: createNotificationChannel()
     }
-
     //gets all packages and respective details available on device
     private fun getLocalPackages() {
         var count = 0

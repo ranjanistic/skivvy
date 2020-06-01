@@ -374,7 +374,7 @@ class CalculationManager(var skivvy: Skivvy) {
                     ).toString()
                 }
                 func.contains("ln") -> {
-                    ln1p(func.replace(skivvy.textPattern, nothing).toFloat()).toString()
+                    log(func.replace(skivvy.textPattern, nothing).toFloat(), E.toFloat()).toString()
                 }
                 func.contains("sqrt") -> {
                     (func.replace(skivvy.textPattern, nothing).toFloat().pow(0.5F)).toString()
@@ -398,10 +398,10 @@ class CalculationManager(var skivvy: Skivvy) {
     /**
      * Calculates factorial of [num] and returns it. ([num]!)
      */
-    private fun factorialOf(num: Int): Long {
+    fun factorialOf(num: Int): Long {
         var result = 1L
         var i = 1
-        while (i<=num){
+        while (i <= num) {
             result *= i
             ++i
         }

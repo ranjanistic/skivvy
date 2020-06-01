@@ -35,13 +35,20 @@
 
     <string-array name="initiators">
         <item> on </item>
+        <item>turn on</item>
         <item>start</item>
         <item>open</item>
         <item>initiate</item>
         <item>enable</item>
     </string-array>
-
-
+    <string-array name="finishers">
+        <item>off</item>
+        <item>turn off</item>
+        <item>stop</item>
+        <item>close</item>
+        <item>end</item>
+        <item>disable</item>
+    </string-array>
 
     <string-array name="disruptions">
         <item>cancel</item>
@@ -53,12 +60,9 @@
     <string-array name="setup_list">
         <item>setup</item>
         <item>set up</item>
+        <item>your settings</item>
     </string-array>
-    <string-array name="bt_list">
-        <item>bluetooth</item>
-        <item>open bluetooth</item>
-        <item>turn bluetooth</item>
-    </string-array>
+
     <string-array name="wifi_list">
         <item>wi-fi</item>
         <item>wifi</item>
@@ -77,8 +81,6 @@
         <item>lock</item>
         <item>lockup</item>
         <item>lock up</item>
-        <item>screen lock</item>
-        <item>lock screen</item>
         <item>sleep</item>
     </string-array>
     <string-array name="snap_list">
