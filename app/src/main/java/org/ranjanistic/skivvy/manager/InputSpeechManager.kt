@@ -30,12 +30,13 @@ class InputSpeechManager {
         stringListArray: Array<Array<String>>,
         excludeLast: Boolean = false
     ): String {
-        var l = String()
+        var l = line
         for (r in stringListArray) {
             for (k in r) {
-                if (line.contains(k)) {
-                    l = if (excludeLast) line.replaceBeforeLast(k, nothing).trim()
-                    else line.replaceBeforeLast(k, nothing).replace(k, nothing).trim()
+                if (l.contains(k)) {
+                    l = if (excludeLast) l.replaceBeforeLast(k, nothing).trim()
+                    else l.replaceBeforeLast(k, nothing).replace(k, nothing).trim()
+                    Log.d(TAG, "removebefore: left = $l")
                 }
             }
         }
@@ -64,9 +65,9 @@ class InputSpeechManager {
     fun containsString(
         line: String,
         stringListArray: Array<Array<String>>,
-        isSingleLine: Boolean = false,
-        isSingleWord: Boolean = true
+        isSingleLine: Boolean = false
     ): Boolean {
+        Log.d(TAG, "checking contains in $line")
         for (r in stringListArray) {
             loop@ for (k in r) {
                 return when (isSingleLine) {
@@ -76,9 +77,10 @@ class InputSpeechManager {
                         else continue@loop
                     }
                     false -> {
-                        if (line.contains(k))
+                        if (line.contains(k)) {
+                            Log.d(TAG, "contains $k in $line")
                             true
-                        else continue@loop
+                        } else continue@loop
                     }
                 }
             }
@@ -130,17 +132,17 @@ class InputSpeechManager {
      *  @param line The line to be checked for occurrence
      *  @param stringListArray The array of array of strings, from which the occurrence in [line] is to be checked.
      */
+    data class Remaining(var index: Int?, var remaining: String?)
     val TAG = "indexCheck"
-    fun indexOfFinallySaidArray(line: String, stringListArray: Array<Array<String>>): Int? {
+    fun indexOfFinallySaidArray(line: String, stringListArray: Array<Array<String>>): Remaining {
         val remaining = removeBeforeLastStringsIn(line, stringListArray, true)
         Log.d(TAG, "indexoffilnnaly: remaining $remaining")
         for ((index, k) in stringListArray.withIndex()) {
             if (containsString(remaining, arrayOf(k))) {
-                Log.d(TAG, "indexoffilnea: indexlfonud = $index")
-                return index
+                return Remaining(index, remaining)
             }
         }
-        return null
+        return Remaining(null, remaining)
     }
 
     //formats given string to expression form, irrespective of it is mathematical expression or not

@@ -1115,9 +1115,11 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun manageLogBase(action: String) {
-        if (action.contains(skivvy.numberPattern)) {
-            val base = action.replace(skivvy.nonNumeralPattern, nothing)
+    private fun manageLogBase(action: String?) {
+        var l = nothing
+        action?.let { l = it }
+        if (l.contains(skivvy.numberPattern)) {
+            val base = l.replace(skivvy.nonNumeralPattern, nothing)
             if (base.toFloat() == 0F)
                 speakOut(getString(invalid_log_base))
             else {
@@ -1125,14 +1127,15 @@ open class MainActivity : AppCompatActivity() {
                 speakOut("$base is the log base.")
             }
         } else {
-            lastTxt = action
-            speakOut("What should be the log base value?", skivvy.CODE_SPEECH_RECORD)
+            speakOut("${skivvy.getLogBase()} is the log base.")
         }
     }
 
-    private fun manageVocalAuth(action: String) {
+    private fun manageVocalAuth(action: String?) {
+        var l = nothing
+        action?.let { l = it }
         when {
-            action.contains("enable") -> {
+            l.contains("enable") -> {
                 if (!skivvy.getPhraseKeyStatus()) {
                     if (skivvy.getVoiceKeyPhrase() != null) {
                         skivvy.setSecurityPref(vocalAuthOn = true)
@@ -1145,7 +1148,7 @@ open class MainActivity : AppCompatActivity() {
                     speakOut(getString(vocal_auth_already_on))
                 }
             }
-            action.contains("disable") -> {
+            l.contains("disable") -> {
                 if (!skivvy.getPhraseKeyStatus()) {
                     speakOut(getString(vocal_auth_already_off))
                 } else {
@@ -1156,7 +1159,7 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             else -> {
-                if (action.replace("voice authentication", nothing).trim() == nothing) {
+                if (l.replace("voice authentication", nothing).trim() == nothing) {
                     lastTxt = action
                     speakOut(
                         "Vocal authentication what?",
@@ -1167,49 +1170,46 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun manageBiometrics(action: String) {
+    private fun manageBiometrics(action: String?) {
         val enables = getArray(R.array.initiators)
         val disables = getArray(R.array.finishers)
-
-        //when(input.indexOfFinallySaidArray())
-        if (skivvy.checkBioMetrics()) {
-            speakOut(getString(biometric_unsupported))
-        } else {
-            when {
-                action.contains("enable") -> {
-                    if (skivvy.getBiometricStatus()) {
-                        speakOut(getString(biometric_already_on))
-                    } else {
-                        skivvy.setSecurityPref(biometricOn = true)
-                        if (skivvy.getBiometricStatus()) speakOut(
-                            getString(
-                                biometric_on
-                            )
+        val actions = arrayOf(enables, disables)
+        var l = nothing
+        action?.let { l = it }
+        when (input.indexOfFinallySaidArray(l, actions).index) {
+            actions.indexOf(enables) -> {
+                if (skivvy.getBiometricStatus()) {
+                    speakOut(getString(biometric_already_on))
+                } else {
+                    skivvy.setSecurityPref(biometricOn = true)
+                    if (skivvy.getBiometricStatus()) speakOut(
+                        getString(
+                            biometric_on
                         )
-                        else speakOut(getString(biometric_enable_error))
-                    }
+                    )
+                    else speakOut(getString(biometric_enable_error))
                 }
-                action.contains("disable") -> {
-                    if (!skivvy.getBiometricStatus()) {
-                        speakOut(getString(biometric_already_off))
+            }
+            actions.indexOf(disables) -> {
+                if (!skivvy.getBiometricStatus()) {
+                    speakOut(getString(biometric_already_off))
+                } else {
+                    if (skivvy.getPhraseKeyStatus()) {
+                        speakOut(
+                            getString(get_passphrase_text),
+                            skivvy.CODE_BIOMETRIC_CONFIRM
+                        )
                     } else {
-                        if (skivvy.getPhraseKeyStatus()) {
-                            speakOut(
-                                getString(get_passphrase_text),
-                                skivvy.CODE_BIOMETRIC_CONFIRM
-                            )
-                        } else {
-                            speakOut(getString(physical_auth_request))
-                            authStateAction(skivvy.CODE_BIOMETRIC_CONFIRM)
-                            biometricPrompt.authenticate(promptInfo)
-                        }
+                        speakOut(getString(physical_auth_request))
+                        authStateAction(skivvy.CODE_BIOMETRIC_CONFIRM)
+                        biometricPrompt.authenticate(promptInfo)
                     }
                 }
-                else -> {
-                    if (action.replace("biometric", nothing).trim() == nothing) {
-                        lastTxt = action
-                        speakOut("Biometric what?", skivvy.CODE_SPEECH_RECORD)
-                    }
+            }
+            else -> {
+                if (l.replace("biometric", nothing).trim() == nothing) {
+                    lastTxt = action
+                    speakOut("Biometric what?", skivvy.CODE_SPEECH_RECORD)
                 }
             }
         }
@@ -1236,20 +1236,22 @@ open class MainActivity : AppCompatActivity() {
             Log.d(TAG, "settingsCommand: nodisableenable")
             return false
         } else {
-            when (input.indexOfFinallySaidArray(text, actions)) {
+            val finally = input.indexOfFinallySaidArray(text, actions).remaining
+            val finalIndex = input.indexOfFinallySaidArray(text, actions).index
+            when (finalIndex) {
                 actions.indexOf(mutes) -> setSpeaking(false)
                 actions.indexOf(unmutes) -> setSpeaking(true)
                 actions.indexOf(logbases) -> {
                     Log.d(TAG, "settingsCommand: logbase")
-                    manageLogBase(text)
+                    manageLogBase(finally)
                 }
                 actions.indexOf(voiceAuths) -> {
                     Log.d(TAG, "settingsCommand: voiceauth")
-                    manageVocalAuth(text)
+                    manageVocalAuth(finally)
                 }
                 actions.indexOf(bioAuths) -> {
                     Log.d(TAG, "settingsCommand: biomentruc")
-                    manageBiometrics(text)
+                    manageBiometrics(finally)
                 }
                 actions.indexOf(setups) -> {
                     Log.d(TAG, "settingsCommand: setup")
@@ -1284,8 +1286,8 @@ open class MainActivity : AppCompatActivity() {
         val actions = arrayOf(
             bts, wifis, gpss, snaps, flashes, airplanes
         )
-        Log.d(TAG, "inSystemToggles: ${input.indexOfFinallySaidArray(text, actions)}")
-        when (input.indexOfFinallySaidArray(text, actions)) {
+        Log.d(TAG, "inSystemToggles: ${input.indexOfFinallySaidArray(text, actions).remaining}")
+        when (input.indexOfFinallySaidArray(text, actions).index) {
             actions.indexOf(flashes) -> {
                 if (skivvy.isFlashAvailable()) {
                     val mCameraManager =
@@ -1424,35 +1426,39 @@ open class MainActivity : AppCompatActivity() {
         val locks = getArray(R.array.lock_list)
         val volumes = arrayOf("volume", "sound")
         val lights = arrayOf("brightness", "backlight")
-        val batteries = arrayOf("battery")
+        val batteries = arrayOf("battery", "power")
         val deviceNames = arrayOf("screen", "phone", "device", "system", "yourself")
+        val searching = arrayOf("search", "search for")
         val exits = arrayOf("bye", "exit", "terminate")
-        val actions = arrayOf(locks, volumes, lights, exits)
-        Log.d(TAG, "respondToCommand: indexlock = ${actions.indexOf(locks)}")
-        Log.d(TAG, "respondTOCOMMAND")
-        if (!settingsCommand(text))
-            if (!inSystemToggles(text))
-                when (input.indexOfFinallySaidArray(text, actions)) {
-                    actions.indexOf(volumes) -> volumeOps(text)
-                    actions.indexOf(lights) -> brightnessOps(text)
-                    actions.indexOf(batteries) -> speakOut("Battery at $batteryLevel%.")
-                    actions.indexOf(locks) -> {
-                        Log.d(TAG, "respondToCommand: lockscreen")
-                        if (input.containsString(text, arrayOf(deviceNames), true))
-                            deviceLockOps()
-                        else return false
-                    }
-                    //TODO: Searching
-                    actions.indexOf(exits) -> {
-                        speakOut(getString(exit))
-                        finishAnimate()
-                        finish()
-                    }
-                    else -> {
-                        Log.d(TAG, "respondToCommand: nothing")
-                        return false
-                    }
-                }
+        val actions = arrayOf(locks, volumes, batteries, lights, exits, searching)
+        Log.d(TAG, "respondTOCOMMAND: ${input.indexOfFinallySaidArray(text, actions).remaining}")
+        val finally = input.indexOfFinallySaidArray(text, actions).remaining
+        val finalIndex = input.indexOfFinallySaidArray(text, actions).index
+        when (finalIndex) {
+            actions.indexOf(volumes) -> volumeOps(finally)
+            actions.indexOf(lights) -> brightnessOps(finally)
+            actions.indexOf(batteries) -> {
+                Log.d(TAG, "respondToCommand: battery")
+                speakOut("Battery at $batteryLevel%.")
+            }
+            actions.indexOf(locks) -> {
+                Log.d(TAG, "respondToCommand: lockscreen")
+                if (input.containsString(text, arrayOf(deviceNames), true))
+                    deviceLockOps()
+                else return false
+            }
+            //TODO: Searching
+            actions.indexOf(exits) -> {
+                speakOut(getString(exit))
+                finishAnimate()
+                finish()
+            }
+            else -> {
+                Log.d(TAG, "respondToCommand: nothing")
+                if (!inSystemToggles(text))
+                    return settingsCommand(text)
+            }
+        }
         return true
     }
 
@@ -1601,11 +1607,13 @@ open class MainActivity : AppCompatActivity() {
     }
 
     //TODO: Brightness specifications
-    private fun brightnessOps(action: String) {
+    private fun brightnessOps(action: String?) {
+        var l = nothing
+        action?.let { l = it }
         when {
-            action.contains(skivvy.numberPattern) -> {
+            l.contains(skivvy.numberPattern) -> {
                 val percent =
-                    action.replace(skivvy.nonNumeralPattern, nothing).toFloat().toInt()
+                    l.replace(skivvy.nonNumeralPattern, nothing).toFloat().toInt()
                 if (percent > 100) {
                     speakOut("Invalid brightness level")
                     return
@@ -1622,10 +1630,12 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun volumeOps(action: String) {
+    private fun volumeOps(action: String?) {
+        var l = nothing
+        action?.let { l = it }
         when {
-            action.contains(skivvy.numberPattern) -> {
-                val percent = action.replace(skivvy.nonNumeralPattern, nothing).toFloat()
+            l.contains(skivvy.numberPattern) -> {
+                val percent = l.replace(skivvy.nonNumeralPattern, nothing).toFloat()
                 if (percent > 100F) {
                     speakOut(getString(invalid_volume_level))
                     return
@@ -1646,8 +1656,8 @@ open class MainActivity : AppCompatActivity() {
                     )
                 }
             }
-            action.contains("up") || action.contains("increase") ||
-                    action.contains("raise") -> {
+            l.contains("up") || l.contains("increase") ||
+                    l.contains("raise") -> {
                 skivvy.setVoicePreference(normalizeVolume = false)
                 if (audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) ==
                     audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
@@ -1667,7 +1677,7 @@ open class MainActivity : AppCompatActivity() {
                     )
                 }
             }
-            action.contains("down") || action.contains("decrease") -> {
+            l.contains("down") || l.contains("decrease") -> {
                 skivvy.setVoicePreference(normalizeVolume = false)
                 if (
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -1691,8 +1701,8 @@ open class MainActivity : AppCompatActivity() {
                     )
                 }
             }
-            action.contains("max") ||
-                    action.contains("full") || action.contains("highest") -> {
+            l.contains("max") ||
+                    l.contains("full") || l.contains("highest") -> {
                 skivvy.setVoicePreference(normalizeVolume = false)
                 audioManager.setStreamVolume(
                     AudioManager.STREAM_MUSIC,
@@ -1701,7 +1711,7 @@ open class MainActivity : AppCompatActivity() {
                 )
                 speakOut(getString(volume_highest))
             }
-            action.contains("min") || action.contains("lowest") -> {
+            l.contains("min") || l.contains("lowest") -> {
                 skivvy.setVoicePreference(normalizeVolume = false)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     audioManager.setStreamVolume(
@@ -1719,7 +1729,7 @@ open class MainActivity : AppCompatActivity() {
                     volumeOps(getString(ten_percent))
                 }
             }
-            action.contains("silence") || action.contains("zero") -> {
+            l.contains("silence") || l.contains("zero") -> {
                 skivvy.setVoicePreference(normalizeVolume = false)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     audioManager.setStreamVolume(
@@ -1996,7 +2006,7 @@ open class MainActivity : AppCompatActivity() {
         val emails: Array<String> = resources.getStringArray(R.array.emails)
         val texts: Array<String> = resources.getStringArray(R.array.texts)
         val actions = arrayOf(calls, emails, texts)
-        when (input.indexOfFinallySaidArray(text, actions)) {
+        when (input.indexOfFinallySaidArray(text, actions).index) {
             actions.indexOf(calls) -> initiateCallProcess(text, calls)
             actions.indexOf(emails) -> initiateEmailProcess(text, emails)
             actions.indexOf(texts) -> initiateSMSProcess(text, texts)
