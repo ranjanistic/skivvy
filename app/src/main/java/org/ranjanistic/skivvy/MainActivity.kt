@@ -122,7 +122,7 @@ open class MainActivity : AppCompatActivity() {
     private var input = InputSpeechManager()
     private var contact = ContactModel()
     private var temp: TempDataManager = TempDataManager()
-    private var feature: SystemFeatureManager = SystemFeatureManager()
+    private lateinit var feature: SystemFeatureManager
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         context = this
@@ -195,6 +195,7 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun setViewAndDefaults() {
+        feature = SystemFeatureManager(skivvy)
         space = skivvy.space
         nothing = skivvy.nothing
         setting = findViewById(R.id.setting)
@@ -1115,11 +1116,9 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun manageLogBase(action: String?) {
-        var l = nothing
-        action?.let { l = it }
-        if (l.contains(skivvy.numberPattern)) {
-            val base = l.replace(skivvy.nonNumeralPattern, nothing)
+    private fun manageLogBase(action: String) {
+        if (action.contains(skivvy.numberPattern)) {
+            val base = action.replace(skivvy.nonNumeralPattern, nothing)
             if (base.toFloat() == 0F)
                 speakOut(getString(invalid_log_base))
             else {
@@ -1131,11 +1130,9 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun manageVocalAuth(action: String?) {
-        var l = nothing
-        action?.let { l = it }
+    private fun manageVocalAuth(action: String) {
         when {
-            l.contains("enable") -> {
+            action.contains("enable") -> {
                 if (!skivvy.getPhraseKeyStatus()) {
                     if (skivvy.getVoiceKeyPhrase() != null) {
                         skivvy.setSecurityPref(vocalAuthOn = true)
@@ -1148,7 +1145,7 @@ open class MainActivity : AppCompatActivity() {
                     speakOut(getString(vocal_auth_already_on))
                 }
             }
-            l.contains("disable") -> {
+            action.contains("disable") -> {
                 if (!skivvy.getPhraseKeyStatus()) {
                     speakOut(getString(vocal_auth_already_off))
                 } else {
@@ -1159,7 +1156,7 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             else -> {
-                if (l.replace("voice authentication", nothing).trim() == nothing) {
+                if (action.replace("voice authentication", nothing).trim() == nothing) {
                     lastTxt = action
                     speakOut(
                         "Vocal authentication what?",
@@ -1170,13 +1167,11 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun manageBiometrics(action: String?) {
+    private fun manageBiometrics(action: String) {
         val enables = getArray(R.array.initiators)
         val disables = getArray(R.array.finishers)
         val actions = arrayOf(enables, disables)
-        var l = nothing
-        action?.let { l = it }
-        when (input.indexOfFinallySaidArray(l, actions).index) {
+        when (input.indexOfFinallySaidArray(action, actions).index) {
             actions.indexOf(enables) -> {
                 if (skivvy.getBiometricStatus()) {
                     speakOut(getString(biometric_already_on))
@@ -1207,7 +1202,7 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             else -> {
-                if (l.replace("biometric", nothing).trim() == nothing) {
+                if (action.replace("biometric", nothing).trim() == nothing) {
                     lastTxt = action
                     speakOut("Biometric what?", skivvy.CODE_SPEECH_RECORD)
                 }
@@ -1237,8 +1232,7 @@ open class MainActivity : AppCompatActivity() {
             return false
         } else {
             val finally = input.indexOfFinallySaidArray(text, actions).remaining
-            val finalIndex = input.indexOfFinallySaidArray(text, actions).index
-            when (finalIndex) {
+            when (input.indexOfFinallySaidArray(text, actions).index) {
                 actions.indexOf(mutes) -> setSpeaking(false)
                 actions.indexOf(unmutes) -> setSpeaking(true)
                 actions.indexOf(logbases) -> {
@@ -1286,7 +1280,6 @@ open class MainActivity : AppCompatActivity() {
         val actions = arrayOf(
             bts, wifis, gpss, snaps, flashes, airplanes
         )
-        Log.d(TAG, "inSystemToggles: ${input.indexOfFinallySaidArray(text, actions).remaining}")
         when (input.indexOfFinallySaidArray(text, actions).index) {
             actions.indexOf(flashes) -> {
                 if (skivvy.isFlashAvailable()) {
@@ -1385,25 +1378,29 @@ open class MainActivity : AppCompatActivity() {
                 }
             }
             actions.indexOf(airplanes) -> {
-                if (text.contains("on") || text.contains("enable")) {
-                    if (isAirplaneModeEnabled()) {
-                        speakOut(getString(airplane_already_on))
-                    } else {
-                        speakOut(getString(airplane_mode_on))
-                        setAirplaneMode(true)
-                    }
-                } else if (text.contains("off") || text.contains("disable")) {
-                    if (!isAirplaneModeEnabled()) {
-                        speakOut(getString(airplane_already_off))
-                    } else {
-                        speakOut(getString(airplane_mode_off))
-                        setAirplaneMode(false)
-                    }
-                }
+                handleAirplaneMode(text)
             }
             else -> return false
         }
         return true
+    }
+
+    private fun handleAirplaneMode(action: String) {
+        if (action.contains("on") || action.contains("enable")) {
+            if (feature.isAirplaneModeEnabled()) {
+                speakOut(getString(airplane_already_on))
+            } else {
+                speakOut(getString(airplane_mode_on))
+                feature.setAirplaneMode(true)
+            }
+        } else if (action.contains("off") || action.contains("disable")) {
+            if (!feature.isAirplaneModeEnabled()) {
+                speakOut(getString(airplane_already_off))
+            } else {
+                speakOut(getString(airplane_mode_off))
+                feature.setAirplaneMode(false)
+            }
+        }
     }
 
     private fun setSpeaking(isSpeaking: Boolean) {
@@ -1433,8 +1430,7 @@ open class MainActivity : AppCompatActivity() {
         val actions = arrayOf(locks, volumes, batteries, lights, exits, searching)
         Log.d(TAG, "respondTOCOMMAND: ${input.indexOfFinallySaidArray(text, actions).remaining}")
         val finally = input.indexOfFinallySaidArray(text, actions).remaining
-        val finalIndex = input.indexOfFinallySaidArray(text, actions).index
-        when (finalIndex) {
+        when (input.indexOfFinallySaidArray(text, actions).index) {
             actions.indexOf(volumes) -> volumeOps(finally)
             actions.indexOf(lights) -> brightnessOps(finally)
             actions.indexOf(batteries) -> {
@@ -1607,13 +1603,11 @@ open class MainActivity : AppCompatActivity() {
     }
 
     //TODO: Brightness specifications
-    private fun brightnessOps(action: String?) {
-        var l = nothing
-        action?.let { l = it }
+    private fun brightnessOps(action: String) {
         when {
-            l.contains(skivvy.numberPattern) -> {
+            action.contains(skivvy.numberPattern) -> {
                 val percent =
-                    l.replace(skivvy.nonNumeralPattern, nothing).toFloat().toInt()
+                    action.replace(skivvy.nonNumeralPattern, nothing).toFloat().toInt()
                 if (percent > 100) {
                     speakOut("Invalid brightness level")
                     return
@@ -1630,12 +1624,10 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun volumeOps(action: String?) {
-        var l = nothing
-        action?.let { l = it }
+    private fun volumeOps(action: String) {
         when {
-            l.contains(skivvy.numberPattern) -> {
-                val percent = l.replace(skivvy.nonNumeralPattern, nothing).toFloat()
+            action.contains(skivvy.numberPattern) -> {
+                val percent = action.replace(skivvy.nonNumeralPattern, nothing).toFloat()
                 if (percent > 100F) {
                     speakOut(getString(invalid_volume_level))
                     return
@@ -1656,8 +1648,8 @@ open class MainActivity : AppCompatActivity() {
                     )
                 }
             }
-            l.contains("up") || l.contains("increase") ||
-                    l.contains("raise") -> {
+            action.contains("up") || action.contains("increase") ||
+                    action.contains("raise") -> {
                 skivvy.setVoicePreference(normalizeVolume = false)
                 if (audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) ==
                     audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
@@ -1677,7 +1669,7 @@ open class MainActivity : AppCompatActivity() {
                     )
                 }
             }
-            l.contains("down") || l.contains("decrease") -> {
+            action.contains("down") || action.contains("decrease") -> {
                 skivvy.setVoicePreference(normalizeVolume = false)
                 if (
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -1701,8 +1693,8 @@ open class MainActivity : AppCompatActivity() {
                     )
                 }
             }
-            l.contains("max") ||
-                    l.contains("full") || l.contains("highest") -> {
+            action.contains("max") ||
+                    action.contains("full") || action.contains("highest") -> {
                 skivvy.setVoicePreference(normalizeVolume = false)
                 audioManager.setStreamVolume(
                     AudioManager.STREAM_MUSIC,
@@ -1711,7 +1703,7 @@ open class MainActivity : AppCompatActivity() {
                 )
                 speakOut(getString(volume_highest))
             }
-            l.contains("min") || l.contains("lowest") -> {
+            action.contains("min") || action.contains("lowest") -> {
                 skivvy.setVoicePreference(normalizeVolume = false)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     audioManager.setStreamVolume(
@@ -1729,7 +1721,7 @@ open class MainActivity : AppCompatActivity() {
                     volumeOps(getString(ten_percent))
                 }
             }
-            l.contains("silence") || l.contains("zero") -> {
+            action.contains("silence") || action.contains("zero") -> {
                 skivvy.setVoicePreference(normalizeVolume = false)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     audioManager.setStreamVolume(
@@ -2421,38 +2413,6 @@ open class MainActivity : AppCompatActivity() {
     }
 
 //TODO:  airplane mode, power off, restart phone,auto rotation,hotspot, specific settings
-
-    private fun isAirplaneModeEnabled(): Boolean {
-        return Settings.System.getInt(
-            contentResolver,
-            Settings.System.AIRPLANE_MODE_ON,
-            0
-        ) == 1
-    }
-
-    //TODO: Airplane mode not turning on
-    private fun setAirplaneMode(status: Boolean) {
-        Settings.System.putInt(
-            contentResolver, Settings.System.AIRPLANE_MODE_ON,
-            if (status) 1
-            else 0
-        )
-        try {
-            sendBroadcast(
-                Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED).putExtra(
-                    "state", status
-                )
-            )
-        } catch (e: SecurityException) {
-            if (!Settings.System.canWrite(context)) {
-                speakOut(getString(request_settings_write_permit))
-                startActivityForResult(
-                    Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS),
-                    skivvy.CODE_SYSTEM_SETTINGS
-                )
-            }
-        }
-    }
 
     private fun saveCalculationResult(result: String) {
         getSharedPreferences(skivvy.PREF_HEAD_CALC, Context.MODE_PRIVATE).edit()

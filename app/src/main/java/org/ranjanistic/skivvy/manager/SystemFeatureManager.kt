@@ -3,6 +3,7 @@ package org.ranjanistic.skivvy.manager
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.content.ContentResolver
+import android.content.Intent
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
@@ -14,9 +15,10 @@ import android.telecom.TelecomManager
 import android.telephony.TelephonyManager
 import android.view.Window
 import android.view.WindowManager
+import org.ranjanistic.skivvy.Skivvy
 
 
-class SystemFeatureManager {
+class SystemFeatureManager(val skivvy: Skivvy) {
     //bluetooth toggle function
     fun bluetooth(on: Boolean?): Boolean? {
         val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -32,8 +34,7 @@ class SystemFeatureManager {
         return null
     }
     fun isBluetoothOn():Boolean{
-        val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        return mBluetoothAdapter.isEnabled
+        return BluetoothAdapter.getDefaultAdapter().isEnabled
     }
 
     //wifi toggle function
@@ -168,5 +169,32 @@ class SystemFeatureManager {
         //Apply attribute changes to this window
         window.attributes = layout
     }
+
+    fun isAirplaneModeEnabled(): Boolean {
+        return Settings.System.getInt(
+            skivvy.cResolver,
+            Settings.System.AIRPLANE_MODE_ON,
+            0
+        ) == 1
+    }
+
+    //TODO: Airplane mode not turning on
+    fun setAirplaneMode(status: Boolean) {
+        Settings.System.putInt(
+            skivvy.cResolver, Settings.System.AIRPLANE_MODE_ON,
+            if (status) 1
+            else 0
+        )
+        try {
+            skivvy.sendBroadcast(
+                Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED).putExtra(
+                    "state", status
+                )
+            )
+        } catch (e: SecurityException) {
+        }
+    }
+
+
     //TODO: GPS location for device security
 }

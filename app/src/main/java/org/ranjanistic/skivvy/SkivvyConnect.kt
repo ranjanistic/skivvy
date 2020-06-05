@@ -6,14 +6,12 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.content.Intent
-import android.net.wifi.p2p.WifiP2pDevice.CONNECTED
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.ArrayAdapter
 import android.widget.ListView
-import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import org.ranjanistic.skivvy.manager.SystemFeatureManager
@@ -96,9 +94,9 @@ class SkivvyConnect : AppCompatActivity() {
 
     private fun start_accepting_connection() {
         //call this on button click as suited by you
-        val acceptThread =  AcceptThread();
+        val acceptThread = AcceptThread()
         acceptThread.start()
-        Toast.makeText(applicationContext,"accepting",Toast.LENGTH_SHORT).show();
+        Toast.makeText(applicationContext, "accepting", Toast.LENGTH_SHORT).show()
     }
     fun initialize_clicks() {
         lv_paired_devices!!.onItemClickListener =
@@ -114,16 +112,21 @@ class SkivvyConnect : AppCompatActivity() {
                 ).show()
             }
     }
-    val feature = SystemFeatureManager()
+    val feature = SystemFeatureManager(skivvy)
     private fun initialize_layout() {
         lv_paired_devices = findViewById(R.id.lv_paired_devices)
-        adapter_paired_devices = ArrayAdapter<String>(applicationContext,R.layout.support_simple_spinner_dropdown_item)
-        lv_paired_devices!!.adapter = adapter_paired_devices;
+        adapter_paired_devices =
+            ArrayAdapter<String>(applicationContext, R.layout.support_simple_spinner_dropdown_item)
+        lv_paired_devices!!.adapter = adapter_paired_devices
     }
     fun initialize_bluetooth() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         if (bluetoothAdapter == null) {
-            Toast.makeText(applicationContext,"Your Device doesn't support bluetooth.",Toast.LENGTH_SHORT).show();
+            Toast.makeText(
+                applicationContext,
+                "Your Device doesn't support bluetooth.",
+                Toast.LENGTH_SHORT
+            ).show()
             //finish()
         }
         if (!feature.isBluetoothOn())
@@ -179,11 +182,11 @@ class SkivvyConnect : AppCompatActivity() {
         // because mmSocket is final
         constructor(device: BluetoothDevice) : this() {
             var tmp: BluetoothSocket? = null
-            mmDevice = device;
+            mmDevice = device
             // Get a BluetoothSocket to connect with the given BluetoothDevice
             try {
                 // MY_UUID is the app's UUID string, also used by the server code
-                tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
+                tmp = device.createRfcommSocketToServiceRecord(MY_UUID)
             } catch (e: IOException) {
             }
             mmSocket = tmp
@@ -195,7 +198,7 @@ class SkivvyConnect : AppCompatActivity() {
             try {
                 // Connect the device through the socket. This will block
                 // until it succeeds or throws an exception
-                mHandler.obtainMessage(CONNECTING).sendToTarget();
+                mHandler.obtainMessage(CONNECTING).sendToTarget()
                 mmSocket!!.connect()
             } catch (e:Exception) {
                 // Unable to connect; close the socket and get out
@@ -209,7 +212,7 @@ class SkivvyConnect : AppCompatActivity() {
         /** Will cancel an in-progress connection, and close the socket */
         fun cancel() {
             try {
-                mmSocket!!.close();
+                mmSocket!!.close()
             } catch (e:IOException) { }
         }
     }
@@ -219,19 +222,20 @@ class SkivvyConnect : AppCompatActivity() {
         private var  mmOutStream:OutputStream? = null
 
         fun ConnectedThread(socket:BluetoothSocket) {
-            mmSocket = socket;
-            var tmpIn:InputStream? = null;
-            var tmpOut:OutputStream? = null;
+            mmSocket = socket
+            var tmpIn: InputStream? = null
+            var tmpOut: OutputStream? = null
 
             // Get the input and output streams, using temp objects because
             // member streams are final
             try {
-                tmpIn = socket.inputStream;
-                tmpOut = socket.outputStream;
-            } catch (e:IOException) { }
+                tmpIn = socket.inputStream
+                tmpOut = socket.outputStream
+            } catch (e: IOException) {
+            }
 
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
+            mmInStream = tmpIn
+            mmOutStream = tmpOut
         }
 
         override fun run() {
@@ -242,12 +246,12 @@ class SkivvyConnect : AppCompatActivity() {
             while (true) {
                 try {
                     // Read from the InputStream
-                    bytes = mmInStream!!.read(buffer);
+                    bytes = mmInStream!!.read(buffer)
                     // Send the obtained bytes to the UI activity
-                    mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+                    mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget()
 
                 } catch (e:IOException) {
-                    break;
+                    break
                 }
             }
         }

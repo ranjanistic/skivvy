@@ -132,7 +132,8 @@ class InputSpeechManager {
      *  @param line The line to be checked for occurrence
      *  @param stringListArray The array of array of strings, from which the occurrence in [line] is to be checked.
      */
-    data class Remaining(var index: Int?, var remaining: String?)
+    data class Remaining(var index: Int = -1, var remaining: String = "")
+
     val TAG = "indexCheck"
     fun indexOfFinallySaidArray(line: String, stringListArray: Array<Array<String>>): Remaining {
         val remaining = removeBeforeLastStringsIn(line, stringListArray, true)
@@ -142,7 +143,7 @@ class InputSpeechManager {
                 return Remaining(index, remaining)
             }
         }
-        return Remaining(null, remaining)
+        return Remaining(-1, remaining)
     }
 
     //formats given string to expression form, irrespective of it is mathematical expression or not

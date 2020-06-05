@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Typeface
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -14,7 +13,6 @@ import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.view.animation.Animation
@@ -105,7 +103,7 @@ class Setup : AppCompatActivity() {
     private val maths = Maths()
     private val security = Security()
     private val temp = TempDataManager()
-    private val feature = SystemFeatureManager()
+    private lateinit var feature: SystemFeatureManager
 
     private lateinit var reveal: Animation
     private lateinit var slideIn: Animation
@@ -168,6 +166,7 @@ class Setup : AppCompatActivity() {
     }
 
     private fun setViewAndInitials() {
+        feature = SystemFeatureManager(skivvy)
         slideOut = AnimationUtils.loadAnimation(context, R.anim.slide_to_right)
         slideOut.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation?) {
