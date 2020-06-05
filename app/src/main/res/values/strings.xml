@@ -7,87 +7,93 @@
     <string name="theme">Theme</string>
     <string name="percent">%</string>
     <string name="bottom_sheet_behavior" translatable="false">com.google.android.material.bottomsheet.BottomSheetBehavior</string>
+
+    <!--In string list array, super strings must be given priority, and then followed by their substrings.
+            A method to achieve this is by arranging items in decreasing order of their length. -->
+
     <string-array name="acceptances">
+        <item>yeah</item>
+        <item>yups</item>
         <item>yes</item>
         <item>yep</item>
         <item>yup</item>
-        <item>yups</item>
-        <item>yeah</item>
         <item>yo</item>
     </string-array>
 
     <string-array name="allowances">
-        <item>do it</item>
-        <item>sure</item>
         <item>proceed</item>
         <item>allowed</item>
+        <item>sure</item>
+        <item>do it</item>
     </string-array>
 
     <string-array name="denials">
-        <item>no</item>
-        <item>nope</item>
+        <item>do not</item>
         <item>nopes</item>
-        <item>nah</item>
+        <item>nope</item>
         <item>don\'t</item>
         <item>stop</item>
-        <item>do not</item>
+        <item>nah</item>
+        <item>no</item>
     </string-array>
 
     <string-array name="initiators">
-        <item> on </item>
         <item>turn on</item>
-        <item>start</item>
-        <item>open</item>
         <item>initiate</item>
         <item>enable</item>
+        <item>open</item>
+        <item>start</item>
+        <item> on </item>
     </string-array>
+
     <string-array name="finishers">
-        <item>off</item>
         <item>turn off</item>
-        <item>stop</item>
-        <item>close</item>
-        <item>end</item>
         <item>disable</item>
+        <item>close</item>
+        <item>stop</item>
+        <item>end</item>
+        <item>off</item>
     </string-array>
 
     <string-array name="disruptions">
-        <item>cancel</item>
         <item>discard</item>
-        <item>stop</item>
         <item>nothing</item>
+        <item>cancel</item>
+        <item>stop</item>
     </string-array>
 
     <string-array name="setup_list">
+        <item>skivvy settings</item>
+        <item>your settings</item>
         <item>setup</item>
         <item>set up</item>
-        <item>your settings</item>
     </string-array>
 
     <string-array name="wifi_list">
+        <item>wireless fidelity</item>
         <item>wi-fi</item>
-        <item>wifi</item>
-        <item>open wifi</item>
-        <item>open wi-fi</item>
         <item>wi fi</item>
-        <item>open wi fi</item>
+        <item>wifi</item>
     </string-array>
+
     <string-array name="gps_list">
-        <item>gps</item>
         <item>global positioning system</item>
-        <item>open gps</item>
         <item>location</item>
+        <item>gps</item>
     </string-array>
+
     <string-array name="lock_list">
-        <item>lock</item>
         <item>lockup</item>
         <item>lock up</item>
         <item>sleep</item>
+        <item>lock</item>
     </string-array>
+
     <string-array name="snap_list">
-        <item>snapshot</item>
         <item>screenshot</item>
-        <item>take screenshot</item>
+        <item>snapshot</item>
     </string-array>
+
     <string name="exit" translatable="false">bye</string>
 
     <string name="device_admin_request">I need to be a device admin to lock screen</string>
@@ -129,25 +135,27 @@
     <string name="coming_soon">Coming soon</string>
     <string name="calling">Calling&#160;</string>
     <string name="app_tag_line">An experiment of Priyanshu Ranjan</string>
+
     <string name="call">call</string>
     <string-array name="calls">
-        <item>call</item>
         <item>call to</item>
+        <item>call</item>
     </string-array>
     <string name="email">email</string>
     <string-array name="emails">
-        <item>email</item>
+        <item>e-mail to</item>
         <item>email to</item>
         <item>e-mail</item>
-        <item>e-mail to</item>
+        <item>email</item>
     </string-array>
     <string name="text">text</string>
     <string-array name="texts">
-        <item>text</item>
-        <item>text to</item>
-        <item>message</item>
         <item>message to</item>
+        <item>message</item>
+        <item>text to</item>
+        <item>text</item>
     </string-array>
+
     <string name="device_admin_failure">You didn\'t activate me as a device admin.</string>
     <string name="contact_not_found">No such contact.</string>
     <string name="no_contacts_available">You seem to have no contacts.</string>

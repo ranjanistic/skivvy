@@ -64,7 +64,7 @@ open class MainActivity : AppCompatActivity() {
 
     lateinit var skivvy: Skivvy
 
-    //TODO: Create onboarding, with first preference as theme choice
+    //TODO: Create onBoarding, with first preference as theme choice
     //TODO: lock screen activity, its brightness, charging status, incoming notifications on lock screen view, charging view
     //TODO: widget for actions (calculations first, or a calculator widget)
     private lateinit var outputText: TextView
@@ -72,25 +72,25 @@ open class MainActivity : AppCompatActivity() {
     private lateinit var greet: TextView
     private lateinit var feedback: TextView
 
-    private class Animations {
-        lateinit var focusDefocusRotate: Animation
-        lateinit var zoomInOutRotate: Animation
-        lateinit var focusRotate: Animation
-        lateinit var zoomInRotate: Animation
-        lateinit var fadeOnFadeOff: Animation
-        lateinit var waveDamped: Animation
-        lateinit var fallDown: Animation
-        lateinit var riseUp: Animation
-        lateinit var extendDownStartSetup: Animation
-        lateinit var slideToRight: Animation
-        lateinit var rotateClock: Animation
-        lateinit var revolveRotateToLeft: Animation
-        lateinit var fadeOff: Animation
-        lateinit var fadeOn: Animation
-        lateinit var fadeOnFast: Animation
-    }
+    private data class Animations(
+        var fallDown: Animation,
+        var riseUp: Animation,
+        var waveDamped: Animation,
+        var zoomInOutRotate: Animation,
+        var focusDefocusRotate: Animation,
+        var focusRotate: Animation,
+        var zoomInRotate: Animation,
+        var fadeOnFadeOff: Animation,
+        var fadeOn: Animation,
+        var fadeOff: Animation,
+        var fadeOnFast: Animation,
+        var extendDownStartSetup: Animation,
+        var slideToRight: Animation,
+        var rotateClock: Animation,
+        var revolveRotateToLeft: Animation
+    )
 
-    private val anim = Animations()
+    private lateinit var anim: Animations
 
     private val CALLTASK = 0
     private val NOTIFTASK = 1
@@ -123,6 +123,7 @@ open class MainActivity : AppCompatActivity() {
     private var contact = ContactModel()
     private var temp: TempDataManager = TempDataManager()
     private lateinit var feature: SystemFeatureManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         context = this
@@ -226,26 +227,27 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun loadDefaultAnimations() {
-        anim.fallDown = AnimationUtils.loadAnimation(context, R.anim.fall_back)
+        anim = Animations(
+            AnimationUtils.loadAnimation(context, R.anim.fall_back),
+            AnimationUtils.loadAnimation(context, R.anim.rise_back),
+            AnimationUtils.loadAnimation(context, R.anim.bubble_wave),
+            AnimationUtils.loadAnimation(context, R.anim.rotate_emerge_demerge),
+            AnimationUtils.loadAnimation(context, R.anim.rotate_focus),
+            AnimationUtils.loadAnimation(context, R.anim.rotate_slow),
+            AnimationUtils.loadAnimation(context, R.anim.rotate_exit),
+            AnimationUtils.loadAnimation(context, R.anim.fade),
+            AnimationUtils.loadAnimation(context, R.anim.fade_on),
+            AnimationUtils.loadAnimation(context, R.anim.fade_off),
+            AnimationUtils.loadAnimation(context, R.anim.fade_on_quick),
+            AnimationUtils.loadAnimation(context, R.anim.extend_back),
+            AnimationUtils.loadAnimation(context, R.anim.slide_right),
+            AnimationUtils.loadAnimation(context, R.anim.rotate_clock),
+            AnimationUtils.loadAnimation(context, R.anim.pill_slide_left)
+        )
         backfall.startAnimation(anim.fallDown)
-        anim.riseUp = AnimationUtils.loadAnimation(context, R.anim.rise_back)
-        anim.waveDamped = AnimationUtils.loadAnimation(context, R.anim.bubble_wave)
         receiver.startAnimation(anim.waveDamped)
         greet.startAnimation(anim.waveDamped)
-        anim.zoomInOutRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_emerge_demerge)
-        anim.focusDefocusRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_focus)
-        anim.focusRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_slow)
-        anim.fadeOnFadeOff = AnimationUtils.loadAnimation(context, R.anim.fade)
-        anim.zoomInRotate = AnimationUtils.loadAnimation(context, R.anim.rotate_exit)
-        anim.fadeOff = AnimationUtils.loadAnimation(context, R.anim.fade_off)
-        anim.fadeOn = AnimationUtils.loadAnimation(context, R.anim.fade_on)
-        anim.fadeOnFast = AnimationUtils.loadAnimation(context, R.anim.fade_on_quick)
-        anim.revolveRotateToLeft = AnimationUtils.loadAnimation(context, R.anim.pill_slide_left)
         setting.startAnimation(anim.revolveRotateToLeft)
-        anim.rotateClock = AnimationUtils.loadAnimation(context, R.anim.rotate_clock)
-        anim.slideToRight = AnimationUtils.loadAnimation(context, R.anim.slide_right)
-        anim.extendDownStartSetup =
-            AnimationUtils.loadAnimation(context, R.anim.extend_back)
     }
 
     private fun startSettingAnimate() {
@@ -260,12 +262,7 @@ open class MainActivity : AppCompatActivity() {
     private fun finishAnimate() {
         loading.startAnimation(anim.zoomInRotate)
         setting.startAnimation(anim.slideToRight)
-        backfall.startAnimation(
-            AnimationUtils.loadAnimation(
-                context,
-                R.anim.extend_back
-            )
-        )
+        backfall.startAnimation(AnimationUtils.loadAnimation(context, R.anim.extend_back))
         greet.startAnimation(anim.fadeOff)
         outputText.startAnimation(anim.fadeOff)
         receiver.startAnimation(anim.fadeOff)
@@ -453,7 +450,7 @@ open class MainActivity : AppCompatActivity() {
             }
             skivvy.CODE_CONTACTS_REQUEST -> {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (msgCode.getMessage() != nothing && msgCode.getCode() != 0) {
+                    if (msgCode.message != nothing && msgCode.code != 0) {
                         SearchContact().execute(msgCode)
                     } else {
                         speakOut(getString(null_variable_error))
@@ -1275,8 +1272,8 @@ open class MainActivity : AppCompatActivity() {
         val wifis = getArray(R.array.wifi_list)
         val gpss = getArray(R.array.gps_list)
         val snaps = getArray(R.array.snap_list)
-        val flashes = arrayOf("flash", "flashlight", "torch")
-        val airplanes = arrayOf("airplane mode", "aeroplane", "airplane")
+        val flashes = arrayOf("flashlight", "flash", "torch")
+        val airplanes = arrayOf("airplane mode", "aeroplane mode", "aeroplane", "airplane")
         val actions = arrayOf(
             bts, wifis, gpss, snaps, flashes, airplanes
         )
@@ -1458,6 +1455,16 @@ open class MainActivity : AppCompatActivity() {
         return true
     }
 
+    /**
+     * To check if [rawExpression] is expression and operate calculation upon it further if it is, and present output to user if valid expression.
+     * @param rawExpression The string of expression spoken by user, passed raw to be validated and evaluated if so.
+     * @param reusing This parameter is for short term usage in the method, for if the [rawExpression] contains two operands and one
+     * operator only (binary operation), then it will not undergo the further complex methods, and will be evaluated
+     * and presented at the beginning (for faster results). This parameter is used to check if the expression already has undergone the
+     * binary operation check at the beginning, and is needed to go through the
+     * actual complex methods of expression evaluation. This is achieved via recursion in the method itself.
+     * @return Boolean value if the operation was successful or not (for further skivvy operations).
+     */
     private fun computerOps(
         rawExpression: String,
         reusing: Boolean = false
@@ -1475,10 +1482,11 @@ open class MainActivity : AppCompatActivity() {
                 if (res != null) {
                     speakOut(calculation.returnValidResult(arrayOf(res.toString())))
                     return true
-                } else {
-                    computerOps(rawExpression, true)
                 }
+                //Will be caught further, and no 'else' here as returning in 'if' itself.
+                throw Exception()
             } catch (e: Exception) {
+                //to be evaluated again but as a non binary operation.
                 computerOps(rawExpression, true)
             }
         }
@@ -1558,10 +1566,11 @@ open class MainActivity : AppCompatActivity() {
             k += 2
         }
 
-        val midOutput = arrayOfExpression.contentToString().replace("[", nothing)
-            .replace("]", nothing).replace(",", nothing).replace(space, nothing)
-        if (midOutput != rawExpression.replace(space, nothing))
-            setFeedback(midOutput, !anyTaskRunning())      //segmentized expression to user
+        setFeedback(
+            arrayOfExpression.contentToString().replace("[", nothing)
+                .replace("]", nothing).replace(",", nothing).replace(space, nothing),
+            !anyTaskRunning() || tasksOngoing[CALCUTASK]
+        )      //segmentized expression to user
 
         if (operatorsAndFunctionsBoolean[1].contains(true)) {      //If expression has mathematical functions
             val temp =
@@ -1836,6 +1845,7 @@ open class MainActivity : AppCompatActivity() {
         return false
     }
 
+    //TODO: set feedback of calculating expression if calculation was the last thing
     private fun formatPhoneNumber(number: String): String {
         var num = number.replace(space, nothing).trim()
         when {
@@ -1902,7 +1912,7 @@ open class MainActivity : AppCompatActivity() {
                 }
                 else -> {
                     if (localTxt.length > 1) {
-                        msgCode.setValues(
+                        msgCode = MessageCode(
                             localTxt,
                             skivvy.CODE_CALL_CONF
                         )
@@ -1945,7 +1955,7 @@ open class MainActivity : AppCompatActivity() {
                 )
             }
             localTxt.length > 1 -> {
-                msgCode.setValues(localTxt, skivvy.CODE_EMAIL_CONF)
+                msgCode = MessageCode(localTxt, skivvy.CODE_EMAIL_CONF)
                 if (skivvy.hasThisPermission(context, skivvy.CODE_CONTACTS_REQUEST)) {
                     SearchContact().execute(msgCode)
                 } else {
@@ -1977,7 +1987,7 @@ open class MainActivity : AppCompatActivity() {
                 )
             }
             localTxt.length > 1 -> {
-                msgCode.setValues(localTxt, skivvy.CODE_SMS_CONF)
+                msgCode = MessageCode(localTxt, skivvy.CODE_SMS_CONF)
                 if (skivvy.hasThisPermission(context, skivvy.CODE_CONTACTS_REQUEST)) {
                     SearchContact().execute(msgCode)
                 } else {
@@ -2049,17 +2059,7 @@ open class MainActivity : AppCompatActivity() {
         )
     }
 
-    inner class MessageCode {
-        private var message: String = nothing
-        private var code: Int = 0
-        fun setValues(message: String, code: Int) {
-            this.message = message
-            this.code = code
-        }
-
-        fun getMessage(): String = this.message
-        fun getCode(): Int = this.code
-    }
+    data class MessageCode(val message: String = "", val code: Int = -1)
 
     inner class SearchContact : AsyncTask<MessageCode, Void, ContactModel>() {
         override fun onPreExecute() {
@@ -2071,8 +2071,8 @@ open class MainActivity : AppCompatActivity() {
         }
 
         override fun doInBackground(vararg params: MessageCode): ContactModel? {
-            temp.setContactCode(params[0].getCode())
-            return contactOps(params[0].getMessage())
+            temp.setContactCode(params[0].code)
+            return contactOps(params[0].message)
         }
 
         override fun onPostExecute(result: ContactModel?) {
@@ -2121,7 +2121,7 @@ open class MainActivity : AppCompatActivity() {
                                 }
                                 result.phoneList!!.size == 1 -> {
                                     speakOut(
-                                        getString(should_i_call) + result.displayName,
+                                        getString(should_i_call) + "${result.displayName}?",
                                         skivvy.CODE_CALL_CONF
                                     )
                                 }

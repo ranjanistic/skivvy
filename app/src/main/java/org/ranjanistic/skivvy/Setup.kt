@@ -38,56 +38,65 @@ class Setup : AppCompatActivity() {
 
     lateinit var skivvy: Skivvy
 
-    private class ChildLayout {
-        lateinit var settingsContainer: ConstraintLayout
-        lateinit var accessPermitGrid: GridLayout
-        lateinit var scrollView: ScrollView
-    }
+    private data class ChildLayout(
+        var settingsContainer: ConstraintLayout,
+        var accessPermitGrid: GridLayout,
+        var scrollView: ScrollView
+    )
 
-    private class Voice {
-        lateinit var mute: Switch
-        lateinit var urgentVolume: Switch
-        lateinit var urgentSeek: SeekBar
-        lateinit var normalizeVolume: Switch
-        lateinit var normalizeSeek: SeekBar
-    }
+    private data class SpecialPermits(
+        var permissions: TextView,
+        var deviceAdmin: TextView,
+        var writeSettings: TextView,
+        var accessNotifications: TextView,
+        var drawOver: TextView,
+        var batteryOptimize: TextView
+    )
 
-    private class AppSetup {
-        lateinit var theme: Switch
-        lateinit var themeChoices: RadioGroup
-        lateinit var saveTheme: TextView
-        lateinit var colorSkivvy:Switch
-        lateinit var response: Switch
-        lateinit var handy: Switch
-        lateinit var onStartup: Switch
-        lateinit var retryFailure: Switch
-        lateinit var continueInput: Switch
-        lateinit var fullScreen: Switch
-    }
+    private data class Voice(
+        var mute: Switch,
+        var normalizeVolume: Switch,
+        var normalizeSeek: SeekBar,
+        var urgentVolume: Switch,
+        var urgentSeek: SeekBar
+    )
 
-    private class Notify {
-        lateinit var notifications: Switch
-        lateinit var battery: Switch
-    }
+    private data class AppSetup(
+        var theme: Switch,
+        var themeChoices: RadioGroup,
+        var saveTheme: TextView,
+        var response: Switch,
+        var colorSkivvy: Switch,
+        var handy: Switch,
+        var onStartup: Switch,
+        var retryFailure: Switch,
+        var continueInput: Switch,
+        var fullScreen: Switch
+    )
 
-    private class Maths {
-        lateinit var angleUnit: Switch
-        lateinit var logBaseText: TextView
-        lateinit var logBaseEditor: LinearLayout
-        lateinit var logBaseInput: EditText
-        lateinit var logBaseSave: TextView
-    }
+    private data class Notify(
+        var notifications: Switch,
+        var battery: Switch
+    )
 
-    private class Security {
-        lateinit var biometrics: Switch
-        lateinit var voiceAuth: Switch
-        lateinit var deleteVoiceSetup: TextView
-        lateinit var executor: Executor
-        lateinit var biometricPrompt: BiometricPrompt
-        lateinit var promptInfo: BiometricPrompt.PromptInfo
-    }
+    private data class Maths(
+        var angleUnit: Switch,
+        var logBaseEditor: LinearLayout,
+        var logBaseText: TextView,
+        var logBaseInput: EditText,
+        var logBaseSave: TextView
+    )
 
-    //Switch properties on one class
+    private data class Security(
+        var biometrics: Switch,
+        var voiceAuth: Switch,
+        var deleteVoiceSetup: TextView,
+        var executor: Executor? = null,
+        var biometricPrompt: BiometricPrompt? = null,
+        var promptInfo: BiometricPrompt.PromptInfo? = null
+    )
+
+    //Switch properties in one class
     private class SwitchAttribute(size: Int = 0) {
         var total = size
         var switch = arrayOfNulls<Switch>(size)
@@ -96,14 +105,15 @@ class Setup : AppCompatActivity() {
         var offText = arrayOfNulls<String>(size)
     }
 
-    private val childLayout = ChildLayout()
-    private val voice = Voice()
-    private val appSetup = AppSetup()
-    private val notify = Notify()
-    private val maths = Maths()
-    private val security = Security()
-    private val temp = TempDataManager()
+    private lateinit var childLayout: ChildLayout
+    private lateinit var special: SpecialPermits
+    private lateinit var voice: Voice
+    private lateinit var appSetup: AppSetup
+    private lateinit var notify: Notify
+    private lateinit var maths: Maths
+    private lateinit var security: Security
     private lateinit var feature: SystemFeatureManager
+    private val temp = TempDataManager()
 
     private lateinit var reveal: Animation
     private lateinit var slideIn: Animation
@@ -112,16 +122,6 @@ class Setup : AppCompatActivity() {
     private lateinit var settingIcon: ImageView
     private lateinit var noteView: TextView
 
-    class SpecialPermits {
-        lateinit var permissions: TextView
-        lateinit var deviceAdmin: TextView
-        lateinit var writeSettings: TextView
-        lateinit var accessNotifications: TextView
-        lateinit var drawOver: TextView
-        lateinit var batteryOptimize: TextView
-    }
-
-    private val special = SpecialPermits()
     private lateinit var context: Context
     private lateinit var recognitionIntent: Intent
 
@@ -185,41 +185,59 @@ class Setup : AppCompatActivity() {
         back.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_backarrowskivvy, 0, 0, 0)
         settingIcon = findViewById(R.id.settingIcon)
         noteView = findViewById(R.id.end_note)
-        childLayout.scrollView = findViewById(R.id.settingScrollView)
-        childLayout.settingsContainer = findViewById(R.id.preferences_container)
-        childLayout.accessPermitGrid = findViewById(R.id.accessGrid)
-        voice.mute = findViewById(R.id.muteUnmuteBtn)
-        voice.normalizeVolume = findViewById(R.id.normalizeVolume)
-        voice.normalizeSeek = findViewById(R.id.normal_volume_seek)
-        voice.urgentVolume = findViewById(R.id.urgentVolume)
-        voice.urgentSeek = findViewById(R.id.urgent_volume_seek)
-        appSetup.theme = findViewById(R.id.theme_switch)
-        appSetup.themeChoices = findViewById(R.id.themeChoices)
-        appSetup.saveTheme = findViewById(R.id.save_theme)
-        appSetup.response = findViewById(R.id.parallelResponseBtn)
-        appSetup.colorSkivvy = findViewById(R.id.coloredIcon)
-        appSetup.handy = findViewById(R.id.handDirectionBtn)
-        appSetup.onStartup = findViewById(R.id.recordOnStart)
-        appSetup.retryFailure = findViewById(R.id.retryAfterFailure)
-        appSetup.continueInput = findViewById(R.id.continueConversation)
-        appSetup.fullScreen = findViewById(R.id.fullScreenMode)
-        notify.notifications = findViewById(R.id.showNotification)
-        notify.battery = findViewById(R.id.batteryStatus)
-        maths.angleUnit = findViewById(R.id.angleUnitBtn)
-        maths.logBaseText = findViewById(R.id.logBaseText)
-        maths.logBaseEditor = findViewById(R.id.logBaseEditor)
-        maths.logBaseInput = findViewById(R.id.logBaseInput)
-        maths.logBaseSave = findViewById(R.id.saveLogBase)
-        maths.logBaseSave.text = "Save"
-        security.biometrics = findViewById(R.id.biometricsBtn)
-        security.voiceAuth = findViewById(R.id.voice_auth_switch)
-        security.deleteVoiceSetup = findViewById(R.id.delete_voice_key)
-        special.permissions = findViewById(R.id.permissionBtn)
-        special.deviceAdmin = findViewById(R.id.deviceAdminBtn)
-        special.writeSettings = findViewById(R.id.writeSettingsBtn)
-        special.accessNotifications = findViewById(R.id.notificationAccessBtn)
-        special.drawOver = findViewById(R.id.drawOverBtn)
-        special.batteryOptimize = findViewById(R.id.batteryOptBtn)
+
+        childLayout = ChildLayout(
+            findViewById(R.id.preferences_container),
+            findViewById(R.id.accessGrid),
+            findViewById(R.id.settingScrollView)
+        )
+
+        voice = Voice(
+            findViewById(R.id.muteUnmuteBtn),
+            findViewById(R.id.normalizeVolume),
+            findViewById(R.id.normal_volume_seek),
+            findViewById(R.id.urgentVolume),
+            findViewById(R.id.urgent_volume_seek)
+        )
+        appSetup = AppSetup(
+            findViewById(R.id.theme_switch),
+            findViewById(R.id.themeChoices),
+            findViewById(R.id.save_theme),
+            findViewById(R.id.parallelResponseBtn),
+            findViewById(R.id.coloredIcon),
+            findViewById(R.id.handDirectionBtn),
+            findViewById(R.id.recordOnStart),
+            findViewById(R.id.retryAfterFailure),
+            findViewById(R.id.continueConversation),
+            findViewById(R.id.fullScreenMode)
+        )
+        notify = Notify(
+            findViewById(R.id.showNotification),
+            findViewById(R.id.batteryStatus)
+        )
+        maths = Maths(
+            findViewById(R.id.angleUnitBtn),
+            findViewById(R.id.logBaseEditor),
+            findViewById(R.id.logBaseText),
+            findViewById(R.id.logBaseInput),
+            findViewById(R.id.saveLogBase)
+        )
+        maths.logBaseSave.text = getString(R.string.save)
+
+        security = Security(
+            findViewById(R.id.biometricsBtn),
+            findViewById(R.id.voice_auth_switch),
+            findViewById(R.id.delete_voice_key), null, null
+        )
+
+        special = SpecialPermits(
+            findViewById(R.id.permissionBtn),
+            findViewById(R.id.deviceAdminBtn),
+            findViewById(R.id.writeSettingsBtn),
+            findViewById(R.id.notificationAccessBtn),
+            findViewById(R.id.drawOverBtn),
+            findViewById(R.id.batteryOptBtn)
+        )
         val text = "${BuildConfig.VERSION_NAME}\n${getString(R.string.app_tag_line)}"
         noteView.text = text
         findViewById<TextView>(R.id.voice_group_head).text = getString(R.string.voice_and_volume)
@@ -230,6 +248,7 @@ class Setup : AppCompatActivity() {
             getString(R.string.maths_and_setup)
         findViewById<TextView>(R.id.security_group_head).text =
             getString(R.string.security_and_setup)
+        //Set default view of required device permissions in grid.
         setPermissionGridData(
             arrayOf(
                 special.permissions,
@@ -256,6 +275,7 @@ class Setup : AppCompatActivity() {
                 R.drawable.ic_skivvyinbattery
             )
         )
+        //Set default visibility of certain views according to their last saved preference.
         setVisibilityOf(
             views =
             arrayOf(
@@ -276,7 +296,9 @@ class Setup : AppCompatActivity() {
                 skivvy.getPhraseKeyStatus()
             )
         )
+        //save theme text button is inactive by default, will be activated if any other theme is chosen.
         setActivenessOf(appSetup.saveTheme, alive = false)
+
         if (skivvy.getVolumeNormal()) {
             voice.normalizeSeek.progress = skivvy.getNormalVolume()
         }
@@ -296,6 +318,8 @@ class Setup : AppCompatActivity() {
             appSetup.themeChoices.check(getRadioForTheme(skivvy.getThemeState()))
         }
         setLogBaseUI(false)
+
+        //Set default state of all the switches according to last saved preferences.
         val switches: Array<Switch?> = arrayOf(
             voice.mute,
             voice.normalizeVolume,
@@ -632,7 +656,6 @@ class Setup : AppCompatActivity() {
         }
     }
 
-    //TODO: log base selector
     private fun restarter() {
         startActivity(
             Intent(
@@ -950,16 +973,12 @@ class Setup : AppCompatActivity() {
         }
         maths.logBaseSave.setOnClickListener {
             try {
-                var base = maths.logBaseInput.text.toString().toFloat().toInt()
+                val base = maths.logBaseInput.text.toString().toFloat().toInt()
                 if (!maths.logBaseInput.text.isNullOrBlank() && base > 1) {
                     skivvy.setMathsPref(logBase = base)
                     setLogBaseUI(false)
                 } else {
-                    speakOut(
-                        getString(R.string.invalid_log_base),
-                        showSnackbar = true,
-                        isPositiveForSnackbar = false
-                    )
+                    throw NumberFormatException()
                 }
             } catch (e: NumberFormatException1) {
                 speakOut(
@@ -1366,7 +1385,8 @@ class Setup : AppCompatActivity() {
             .setDescription(getString(R.string.biometric_auth_explanation))
             .setNegativeButtonText(getString(R.string.discard))
             .build()
-        security.biometricPrompt = BiometricPrompt(this, security.executor,
+        security.biometricPrompt = BiometricPrompt(
+            this, security.executor!!,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(
                     result: BiometricPrompt.AuthenticationResult
@@ -1446,7 +1466,7 @@ class Setup : AppCompatActivity() {
                     }
                 }
             })
-        security.biometricPrompt.authenticate(security.promptInfo)
+        security.biometricPrompt!!.authenticate(security.promptInfo!!)
     }
 
     private fun defaultVoiceAuthUIState() {
@@ -1461,6 +1481,7 @@ class Setup : AppCompatActivity() {
 
     private fun isNotificationServiceRunning(): Boolean =
         NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
+
 //  To get list of all packages having notification access    
 //  val packageNames: Set<String> = NotificationManagerCompat.getEnabledListenerPackages(context)
 
