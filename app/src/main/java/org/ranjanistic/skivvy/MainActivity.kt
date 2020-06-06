@@ -567,22 +567,27 @@ open class MainActivity : AppCompatActivity() {
     //TODO: when output is 'okay', continue listening if preferred.
     //TODO: check for other commands in agreements or denial inputs
     private fun inGlobalCommands(text: String?): Boolean {
-        if (!respondToCommand(text!!)) {        //the commands which skivvy can respond promptly and execute directly by itself.
-            if (!directActions(text)) {     //the commands which require intrusion of other services of device, such as calling or SMS functionality.
-                if (!computerOps(text)) {       //the commands which are mathematical in nature, performed directly by Skivvy itself.
+        if (!directActions(text!!)) {     //the commands which require intrusion of other services of device, such as calling or SMS functionality.
+            if (!computerOps(text)) {       //the commands which are mathematical in nature, performed directly by Skivvy itself.
+                if (!respondToCommand(text)) {        //the commands which skivvy can respond promptly and execute directly by itself.
                     tasksOngoing[CALCUTASK] = false
                     if (!appOptions(text)) {        //the commands requiring other apps or intents on the device to be opened, leaving Skivvy in the background.
                         speakOut(getString(recognize_error))
                         return false
                     }
                 } else {
-                    tasksOngoing[CALCUTASK] = true
                     if (skivvy.shouldContinueInput() && !tasksOngoing[PERMITASK])        //TODO: Requiring permissions should not invoke this.
                         startVoiceRecIntent(
                             skivvy.CODE_SPEECH_RECORD,
                             getString(generic_voice_rec_text)
                         )
                 }
+            } else {
+                if (skivvy.shouldContinueInput() && !tasksOngoing[PERMITASK])
+                    startVoiceRecIntent(
+                        skivvy.CODE_SPEECH_RECORD,
+                        getString(generic_voice_rec_text)
+                    )
             }
         } else {
             if (skivvy.shouldContinueInput() && !tasksOngoing[PERMITASK])
@@ -1414,6 +1419,10 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun handleWebSearch(query: String) {
+        speakOut("Searching for $query")
+    }
+
     //actions invoking quick commands
     @ExperimentalStdlibApi
     private fun respondToCommand(text: String): Boolean {
@@ -1421,35 +1430,45 @@ open class MainActivity : AppCompatActivity() {
         val volumes = arrayOf("volume", "sound")
         val lights = arrayOf("brightness", "backlight")
         val batteries = arrayOf("battery", "power")
-        val deviceNames = arrayOf("screen", "phone", "device", "system", "yourself")
-        val searching = arrayOf("search", "search for")
+        val searching = arrayOf("search for", "search", "what is")
         val exits = arrayOf("bye", "exit", "terminate")
         val actions = arrayOf(locks, volumes, batteries, lights, exits, searching)
-        Log.d(TAG, "respondTOCOMMAND: ${input.indexOfFinallySaidArray(text, actions).remaining}")
+
         val finally = input.indexOfFinallySaidArray(text, actions).remaining
-        when (input.indexOfFinallySaidArray(text, actions).index) {
-            actions.indexOf(volumes) -> volumeOps(finally)
-            actions.indexOf(lights) -> brightnessOps(finally)
-            actions.indexOf(batteries) -> {
-                Log.d(TAG, "respondToCommand: battery")
-                speakOut("Battery at $batteryLevel%.")
+        val extras = input.indexOfFinallySaidArray(text, actions).extras
+        val index = input.indexOfFinallySaidArray(text, actions).index
+
+        //The actions that may need a following argument apart from the command itself.
+        fun nonBlanks(pos: Int): Boolean {
+            when (pos) {
+                actions.indexOf(volumes) -> volumeOps(extras)
+                actions.indexOf(lights) -> brightnessOps(extras)
+                actions.indexOf(searching) -> handleWebSearch(extras)
+                else -> return false
             }
-            actions.indexOf(locks) -> {
-                Log.d(TAG, "respondToCommand: lockscreen")
-                if (input.containsString(text, arrayOf(deviceNames), true))
-                    deviceLockOps()
-                else return false
-            }
-            //TODO: Searching
-            actions.indexOf(exits) -> {
-                speakOut(getString(exit))
-                finishAnimate()
-                finish()
-            }
-            else -> {
-                Log.d(TAG, "respondToCommand: nothing")
+            return true
+        }
+
+        if (!extras.isBlank()) {
+            if (!nonBlanks(index))
                 if (!inSystemToggles(text))
                     return settingsCommand(text)
+        } else {
+            when (index) {
+                actions.indexOf(batteries) -> {
+                    speakOut(getString(batttery_at_) + "$batteryLevel" + getString(percent))
+                }
+                actions.indexOf(locks) -> deviceLockOps()
+                actions.indexOf(exits) -> {
+                    speakOut(getString(exit))
+                    finishAnimate()
+                    finish()
+                }
+                else -> {
+                    if (!nonBlanks(index))
+                        if (!inSystemToggles(text))
+                            return settingsCommand(text)
+                }
             }
         }
         return true
@@ -1618,7 +1637,7 @@ open class MainActivity : AppCompatActivity() {
                 val percent =
                     action.replace(skivvy.nonNumeralPattern, nothing).toFloat().toInt()
                 if (percent > 100) {
-                    speakOut("Invalid brightness level")
+                    speakOut(getString(invalid_brightness))
                     return
                 }
                 setBrightness(percent)
@@ -1627,7 +1646,7 @@ open class MainActivity : AppCompatActivity() {
                 if (feature.getSystemBrightness(skivvy.cResolver) != null) {
                     speakOut("${feature.getSystemBrightness(skivvy.cResolver)}%")
                 } else {
-                    speakOut("I couldn't access brightness")
+                    speakOut(getString(brightness_inaccessible))
                 }
             }
         }

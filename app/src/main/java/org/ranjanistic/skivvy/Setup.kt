@@ -32,8 +32,8 @@ import java.util.*
 import java.util.concurrent.Executor
 import kotlin.NumberFormatException as NumberFormatException1
 
-
 @ExperimentalStdlibApi
+//TODO: extend this to onCheckChangeListener
 class Setup : AppCompatActivity() {
 
     lateinit var skivvy: Skivvy
@@ -657,14 +657,14 @@ class Setup : AppCompatActivity() {
     }
 
     private fun restarter() {
+        finishAffinity()
         startActivity(
             Intent(
                 context,
-                MainActivity::class.java
+                Splash::class.java
             ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
-        finish()
     }
 
     private fun setListeners() {

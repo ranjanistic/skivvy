@@ -392,4 +392,6 @@
     <string name="if_u_allow_call_logs">" if you allow me to access call logs."</string>
     <string name="_at_their_recent_num">&#160;at their recent number</string>
     <string name="i_can_call_">I can call&#160;</string>
+    <string name="batttery_at_"><![CDATA[Battery at&#160;]]></string>
+    <string name="invalid_brightness">Invalid brightness level</string>
 </resources>

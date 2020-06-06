@@ -312,4 +312,6 @@
     <string name="if_u_allow_call_logs">यदि आप मुझे अनुमति दें.</string>
     <string name="_at_their_recent_num">&#160;को उनके हाल ही के नंबर पर</string>
     <string name="i_can_call_">मै कॉल कर सकती हूँ&#160;</string>
+    <string name="batttery_at_"><![CDATA[Battery at&#160;]]></string>
+    <string name="invalid_brightness">Invalid brightness level</string>
 </resources>
