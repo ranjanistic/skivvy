@@ -161,19 +161,18 @@ class InputSpeechManager {
             arrayOf("naturallogarithmof", "naturallogarithm", "naturallogof", "naturallog")
         val toBeLog = arrayOf("logarithmof", "logarithm", "logof")
         val toBeMultiplied = arrayOf("x", "multipliedby", "times", "into")
-        val toBeDivided = arrayOf("dividedby", "by", "upon", "over", "÷", "divideby", "divide")
+        val toBeDivided = arrayOf("dividedby", "upon", "over", "÷", "divideby", "divide", "by")
         val toBeAdded = arrayOf("add", "plus")
         val toBeSubtracted = arrayOf("minus", "negative", "subtract")
         val toBePowered = arrayOf(
             "raisedtothepowerof", "raisetothepowerof", "raisedtothepower", "raisetothepower",
             "tothepowerof", "tothepower", "raisedto", "raiseto", "raised", "raise", "kipower"
         )
-        val toBeCuberooted = arrayOf("cuberoot", "thirdroot")
-        val toBeRooted = arrayOf("squareroot", "root", "secondroot")
+        val toBeCuberooted = arrayOf("cuberootof", "cuberoot", "thirdroot")
+        val toBeRooted = arrayOf("squarerootof", "squareroot", "secondroot", "underroot", "root")
         val toBeSquared = arrayOf("square")
         val toBeCubed = arrayOf("cube")
-        val toBePI = arrayOf("pi")
-
+        val toBePI = arrayOf("pi", "Pi")
         val formatArrays = arrayOf(
             toBeRemoved, toBeFactorial, toBePercented, toBeModded, toBeLogged, toBeLog,
             toBeMultiplied, toBeDivided, toBeAdded, toBeSubtracted, toBePowered,

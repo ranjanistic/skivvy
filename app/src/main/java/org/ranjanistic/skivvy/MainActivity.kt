@@ -16,6 +16,10 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.hardware.camera2.CameraManager
 import android.location.LocationManager
 import android.media.AudioManager
@@ -57,6 +61,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 import java.util.concurrent.Executor
+import kotlin.ConcurrentModificationException
 import kotlin.collections.ArrayList
 
 @ExperimentalStdlibApi
@@ -92,10 +97,13 @@ open class MainActivity : AppCompatActivity() {
 
     private lateinit var anim: Animations
 
-    private val CALLTASK = 0
-    private val NOTIFTASK = 1
-    private val CALCUTASK = 2
-    private val PERMITASK = 3
+    companion object {
+        private val CALLTASK = 0
+        private val NOTIFTASK = 1
+        private val CALCUTASK = 2
+        private val PERMITASK = 3
+    }
+
     private var lastTxt: String? = null
     private var tasksOngoing: ArrayList<Boolean> = arrayListOf(false, false, false, false)
     private fun anyTaskRunning(): Boolean {
@@ -125,11 +133,11 @@ open class MainActivity : AppCompatActivity() {
     private lateinit var feature: SystemFeatureManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        skivvy = this.application as Skivvy
+        setTheme(skivvy.getThemeState())
         super.onCreate(savedInstanceState)
         context = this
-        skivvy = this.application as Skivvy
         skivvy.isHomePageRunning = true
-        setTheme(skivvy.getThemeState())
         setContentView(R.layout.activity_homescreen)
         window.statusBarColor = when (skivvy.shouldFullScreen()) {
             true -> ContextCompat.getColor(context, android.R.color.transparent)
@@ -333,6 +341,7 @@ open class MainActivity : AppCompatActivity() {
             startService(Intent(this, NotificationWatcher::class.java))
         }
         setTheme(skivvy.getThemeState())
+        lightSensor()
     }
 
     private fun hideSysUI() {
@@ -567,31 +576,27 @@ open class MainActivity : AppCompatActivity() {
     //TODO: when output is 'okay', continue listening if preferred.
     //TODO: check for other commands in agreements or denial inputs
     private fun inGlobalCommands(text: String?): Boolean {
-        if (!directActions(text!!)) {     //the commands which require intrusion of other services of device, such as calling or SMS functionality.
-            if (!computerOps(text)) {       //the commands which are mathematical in nature, performed directly by Skivvy itself.
-                if (!respondToCommand(text)) {        //the commands which skivvy can respond promptly and execute directly by itself.
+        try {
+            if (!directActions(text!!)) {     //the commands which require intrusion of other services of device, such as calling or SMS functionality.
+                if (!computerOps(text)) {       //the commands which are mathematical in nature, performed directly by Skivvy itself.
                     tasksOngoing[CALCUTASK] = false
-                    if (!appOptions(text)) {        //the commands requiring other apps or intents on the device to be opened, leaving Skivvy in the background.
-                        speakOut(getString(recognize_error))
-                        return false
+                    if (!respondToCommand(text)) {        //the commands which skivvy can respond promptly and execute directly by itself.
+                        if (!appOptions(text))        //the commands requiring other apps or intents on the device to be opened, leaving Skivvy in the background.
+                            throw IllegalArgumentException()
+                    } else {
+                        throw ConcurrentModificationException()
                     }
                 } else {
-                    if (skivvy.shouldContinueInput() && !tasksOngoing[PERMITASK])        //TODO: Requiring permissions should not invoke this.
-                        startVoiceRecIntent(
-                            skivvy.CODE_SPEECH_RECORD,
-                            getString(generic_voice_rec_text)
-                        )
+                    tasksOngoing[CALCUTASK] = true
+                    throw ConcurrentModificationException()
                 }
-            } else {
-                if (skivvy.shouldContinueInput() && !tasksOngoing[PERMITASK])
-                    startVoiceRecIntent(
-                        skivvy.CODE_SPEECH_RECORD,
-                        getString(generic_voice_rec_text)
-                    )
             }
-        } else {
+        } catch (e: IllegalArgumentException) {
+            return false
+        } catch (e: ConcurrentModificationException) {
+            //If a permission task is ongoing, always false so that input window doesn't show up.
             if (skivvy.shouldContinueInput() && !tasksOngoing[PERMITASK])
-                startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD, getString(generic_voice_rec_text))
+                startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
         }
         return true
     }
@@ -1313,10 +1318,10 @@ open class MainActivity : AppCompatActivity() {
                 } else if (text.contains("off")) {
                     val stat = feature.bluetooth(false)
                     if (stat == null) {
-                        errorView(getDrawable(ic_bluetooth))
+                        waitingView(getDrawable(ic_bluetooth))
                         speakOut(getString(bt_already_off))
                     } else {
-                        errorView(getDrawable(ic_bluetooth))
+                        waitingView(getDrawable(ic_bluetooth))
                         speakOut(getString(bt_off))
                     }
                 } else {
@@ -1325,7 +1330,7 @@ open class MainActivity : AppCompatActivity() {
                         successView(getDrawable(ic_bluetooth))
                         speakOut(getString(bt_on))
                     } else {
-                        errorView(getDrawable(ic_bluetooth))
+                        waitingView(getDrawable(ic_bluetooth))
                         speakOut(getString(bt_off))
                     }
                 }
@@ -1509,16 +1514,18 @@ open class MainActivity : AppCompatActivity() {
                 computerOps(rawExpression, true)
             }
         }
+        val operatorsAndFunctionsArray = arrayOf(calculation.operators, calculation.mathFunctions)
+        val operators = operatorsAndFunctionsArray.indexOf(calculation.operators)
+        val functions = operatorsAndFunctionsArray.indexOf(calculation.mathFunctions)
+        val operatorsAndFunctionsBoolean = arrayOf(
+            arrayOfNulls<Boolean>(operatorsAndFunctionsArray[operators].size),
+            arrayOfNulls(operatorsAndFunctionsArray[functions].size)
+        )
+
         /**
          * Storing availability of all operators and functions in given expression,
-         * to arrays of booleans as true.
+         * to arrays of booleans.
          */
-        val operatorsAndFunctionsArray =
-            arrayOf(calculation.operators, calculation.mathFunctions)
-        val operatorsAndFunctionsBoolean = arrayOf(
-            arrayOfNulls<Boolean>(operatorsAndFunctionsArray[0].size),
-            arrayOfNulls(operatorsAndFunctionsArray[1].size)
-        )
         var of = 0
         while (of < operatorsAndFunctionsBoolean.size) {
             var f = 0
@@ -1529,79 +1536,78 @@ open class MainActivity : AppCompatActivity() {
             }
             ++of
         }
-        if (!operatorsAndFunctionsBoolean[0].contains(true)) {     //if no operators
-            if (operatorsAndFunctionsBoolean[1].contains(true)) {       //has a mathematical function
-                if (expression.contains(skivvy.numberPattern)) {
-                    setFeedback(expression, !anyTaskRunning())
-                    saveCalculationResult(calculation.operateFuncWithConstant(expression)!!)
-                    if (getLastCalculationResult().let {
-                            calculation.handleExponentialTerm(
-                                it
-                            )
-                        } == nothing) {
-                        errorView()
-                        speakOut(getString(invalid_expression))
-                    } else
-                        speakOut(
-                            calculation.formatToProperValue(
-                                calculation.handleExponentialTerm(
-                                    getLastCalculationResult()
+
+        if (!operatorsAndFunctionsBoolean[operators].contains(true)) {     //if no operators
+            if (operatorsAndFunctionsBoolean[functions].contains(true)) {       //has a mathematical function
+                try {
+                    if (expression.contains(skivvy.numberPattern)) {
+                        setFeedback(
+                            calculation.formatExpression(arrayOf(expression)),
+                            !anyTaskRunning() || tasksOngoing[CALCUTASK]
+                        )
+                        calculation.operateFuncWithConstant(expression)
+                            ?.let { saveCalculationResult(it) }
+                        if (calculation.handleExponentialTerm(getLastCalculationResult()) == nothing) {
+                            throw IllegalArgumentException()
+                        } else
+                            speakOut(
+                                calculation.formatToProperValue(
+                                    calculation.handleExponentialTerm(
+                                        getLastCalculationResult()
+                                    )
                                 )
                             )
-                        )
-                    return true
-                } else {
+                        return true
+                    } else throw IllegalArgumentException()
+                } catch (e: IllegalArgumentException) {
                     errorView()
                     speakOut(getString(invalid_expression))
                     return true
                 }
-            }
-            return false
+            } else return false
         }
 
         val totalOps = calculation.totalOperatorsInExpression(expression)
-        if (totalOps == 0 || !calculation.isExpressionOperatable(expression) || calculation.segmentizeExpression(
-                expression,
-                2 * totalOps + 1
-            ) == null
-        )
+        val segmented = calculation.segmentizeExpression(expression, 2 * totalOps + 1)
+        if (totalOps == 0 || !calculation.isExpressionOperatable(expression) || segmented == null)
             return false
 
-        var arrayOfExpression =
-            calculation.segmentizeExpression(expression, 2 * totalOps + 1)!!
+        var arrayOfExpression = segmented
 
-        var l = 0
-        var k = 0
-        while (l < arrayOfExpression.size && k < arrayOfExpression.size) {  //operator in place validity check
-            if (arrayOfExpression[l] != null && arrayOfExpression[k] != null) {
-                if (arrayOfExpression[k]!!.contains(skivvy.nonNumeralPattern)
-                    && !arrayOfExpression[k]!!.contains(".")        //if decimal
-                    && !operatorsAndFunctionsBoolean[1].contains(true)
+        //operator in place validity check (odd indices), proper segmented expression check.
+        var index = 0
+        var operand = 0
+        while (index < arrayOfExpression.size && operand < arrayOfExpression.size) {
+            if (arrayOfExpression[index] != null && arrayOfExpression[operand] != null) {
+                if (arrayOfExpression[operand]!!.contains(skivvy.nonNumeralPattern)
+                    && !operatorsAndFunctionsBoolean[functions].contains(true)  //neither has any functions
+                    && !arrayOfExpression[operand]!!.contains(".")        //nor does contains a decimal point
                 ) {
                     return false
                 }
             } else return false
-            ++l
-            k += 2
+            ++index
+            operand += 2
         }
 
+        //segmentized expression to user as feedback
         setFeedback(
-            arrayOfExpression.contentToString().replace("[", nothing)
-                .replace("]", nothing).replace(",", nothing).replace(space, nothing),
+            calculation.formatExpression(arrayOfExpression),
             !anyTaskRunning() || tasksOngoing[CALCUTASK]
-        )      //segmentized expression to user
+        )
 
-        if (operatorsAndFunctionsBoolean[1].contains(true)) {      //If expression has mathematical functions
+        if (operatorsAndFunctionsBoolean[functions].contains(true)) {      //If expression has mathematical functions
             val temp =
                 calculation.evaluateFunctionsInExpressionArray(arrayOfExpression)
             if (temp == null) {
                 return false
             } else {
+                //all functions solved, now only operands and operators in arrayOfExpression
                 arrayOfExpression = temp
             }
         }
-
-        if (!calculation.isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression))     //if array contains invalid values
+        //if array contains invalid values
+        if (!calculation.isExpressionArrayOnlyNumbersAndOperators(arrayOfExpression))
             return false
         else {
             saveCalculationResult(calculation.expressionCalculation(arrayOfExpression))
@@ -1676,6 +1682,7 @@ open class MainActivity : AppCompatActivity() {
                     )
                 }
             }
+            //TODO: Volume actions by using last command method, index of.
             action.contains("up") || action.contains("increase") ||
                     action.contains("raise") -> {
                 skivvy.setVoicePreference(normalizeVolume = false)
@@ -1778,7 +1785,7 @@ open class MainActivity : AppCompatActivity() {
     }
 
     //TODO: specific app actions
-//actions invoking other applications
+    // actions invoking other applications
     private fun appOptions(text: String?): Boolean {
         var localText: String
         if (text != null) {
@@ -1801,7 +1808,7 @@ open class MainActivity : AppCompatActivity() {
                 while (i < packages.getTotalPackages()) {
                     if (packages.packageAppName() == null || packages.packagesName() == null || packages.packagesMain() == null) {
                         speakOut(
-                            "What?",
+                            getString(what_),
                             skivvy.CODE_SPEECH_RECORD,
                             parallelReceiver = true
                         )
@@ -1907,6 +1914,44 @@ open class MainActivity : AppCompatActivity() {
             else -> return number
         }
         return num
+    }
+
+    private fun lightSensor(regist: Boolean = true) {
+        val mySensorManager: SensorManager =
+            getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+        val lightSensor: Sensor? = mySensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
+        if (lightSensor != null) {
+            //outputText.text = "Sensor.TYPE_LIGHT Available"
+            if (regist) {
+                mySensorManager.registerListener(
+                    lightSensorListener,
+                    lightSensor,
+                    SensorManager.SENSOR_DELAY_NORMAL
+                )
+            } else {
+                mySensorManager.unregisterListener(lightSensorListener)
+            }
+        } else {
+            //outputText.text = "Sensor.TYPE_LIGHT NOT Available"
+        }
+    }
+
+    private val lightSensorListener = object : SensorEventListener {
+        override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
+            // TODO Auto-generated method stub
+        }
+
+        override fun onSensorChanged(event: SensorEvent) {
+            if (event.sensor.type == Sensor.TYPE_LIGHT) {
+                //feedback.text = event.values[0].toString()
+                if (event.values[0] > 100) {
+                    //setFeedback("Brighter")
+                } else if (event.values[0] < 100) {
+                    //TODO :set theme according to value
+                }
+            }
+        }
     }
 
     private var msgCode = MessageCode()
@@ -2855,7 +2900,7 @@ open class MainActivity : AppCompatActivity() {
         loading.setImageDrawable(getDrawable(dots_in_circle_red))
         image?.let { icon.setImageDrawable(image) }
         if (skivvy.shouldRetry())
-            startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD, getString(generic_voice_rec_text))
+            startVoiceRecIntent(skivvy.CODE_SPEECH_RECORD)
     }
 
     private fun successView(image: Drawable?) {
@@ -2982,6 +3027,7 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun requestThisPermission(code: Int) {
+        tasksOngoing[PERMITASK] = true
         if (code == skivvy.CODE_ALL_PERMISSIONS) {
             ActivityCompat.requestPermissions(
                 this, skivvy.permissions,
