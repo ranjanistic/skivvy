@@ -8,7 +8,7 @@ An android device's maid.
 
 ### Run stable
 - The stable version(s) have been released under releases section of the repository.
-- The release rights are still under the owner(s) of repository. You can contribute, or create a pull request when you want the owner(s) to consider releasing a new version.
+- The release rights are still under the owner(s) of repository. You can contribute, or create a pull request when you want the owner(s) to consider releasing a new version, or otherwise allowed by the license.
 
 ## Features
 ### A Calculator++
