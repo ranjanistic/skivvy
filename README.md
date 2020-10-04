@@ -1,5 +1,5 @@
 # Skivvy
-Device's maid.
+An android device's maid.
 
 ## How to
 ### Run development
